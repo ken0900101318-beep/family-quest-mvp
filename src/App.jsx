@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Login from './pages/Login'
 import ChildDashboard from './pages/ChildDashboard'
 import ParentDashboard from './pages/ParentDashboard'
+import TaskSquare from './pages/TaskSquare'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -40,7 +41,15 @@ function App() {
           path="/child" 
           element={
             currentUser && currentUser.role === 'child' ? 
-              <ChildDashboard user={currentUser} onLogout={handleLogout} /> : 
+              <ChildWrapper user={currentUser} onLogout={handleLogout} /> : 
+              <Navigate to="/login" />
+          } 
+        />
+        <Route 
+          path="/child/square" 
+          element={
+            currentUser && currentUser.role === 'child' ? 
+              <TaskSquareWrapper user={currentUser} /> : 
               <Navigate to="/login" />
           } 
         />
@@ -59,6 +68,18 @@ function App() {
       </Routes>
     </BrowserRouter>
   )
+}
+
+// Child Dashboard Wrapper
+function ChildWrapper({ user, onLogout }) {
+  const navigate = useNavigate()
+  return <ChildDashboard user={user} onLogout={onLogout} onNavigate={(page) => navigate(`/child/${page}`)} />
+}
+
+// Task Square Wrapper
+function TaskSquareWrapper({ user }) {
+  const navigate = useNavigate()
+  return <TaskSquare user={user} onBack={() => navigate('/child')} />
 }
 
 export default App

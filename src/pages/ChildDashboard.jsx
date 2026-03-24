@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
 
-export default function ChildDashboard({ user, onLogout }) {
+export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -204,7 +204,7 @@ export default function ChildDashboard({ user, onLogout }) {
             padding: '1rem'
           }}>
             <NavIcon icon="🏠" label="首頁" active />
-            <NavIcon icon="🏛️" label="廣場" />
+            <NavIcon icon="🏛️" label="廣場" onClick={() => onNavigate && onNavigate('square')} />
             <NavIcon icon="🎁" label="商店" />
             <button onClick={onLogout} style={{
               display: 'flex',
@@ -362,9 +362,9 @@ function TaskCard({ title, subtitle, icon, task, onComplete }) {
 }
 
 // 導覽圖示組件
-function NavIcon({ icon, label, active }) {
+function NavIcon({ icon, label, active, onClick }) {
   return (
-    <button style={{
+    <button onClick={onClick} style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
