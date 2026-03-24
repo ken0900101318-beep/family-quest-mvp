@@ -28,24 +28,36 @@ export default function TaskSquare({ user, onBack }) {
     const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
     const userSubmissions = stored.filter(s => s.userId === user.id)
     
+    console.log('TaskSquare: 讀取提交記錄', userSubmissions)
+    
     // 轉換成歷史記錄格式
     const historyRecords = []
+    
+    // 先獲取任務列表（避免重複請求）
+    const userTasks = await mockAPI.getTasks(user.id)
+    console.log('TaskSquare: 用戶任務列表', userTasks)
+    
     for (const sub of userSubmissions) {
-      // 從 API 獲取最新任務資料
-      const userTasks = await mockAPI.getTasks(user.id)
       const task = userTasks.find(t => t.id === sub.taskId)
+      
+      console.log('TaskSquare: 處理提交', { 
+        submissionId: sub.id, 
+        taskId: sub.taskId, 
+        foundTask: task?.title 
+      })
       
       historyRecords.push({
         id: sub.id,
-        title: task ? task.title : `任務 #${sub.taskId}`,
+        title: task ? task.title : `任務 #${sub.taskId || 'unknown'}`,
         points: task ? task.points : 10,
         status: sub.status === 'approved' ? 'completed' : sub.status,
-        completedAt: sub.status === 'approved' ? sub.timestamp.split('T')[0] : null,
-        updatedAt: sub.timestamp.split('T')[0],
+        completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
+        updatedAt: sub.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0],
         rejectReason: sub.rejectReason
       })
     }
     
+    console.log('TaskSquare: 最終歷史記錄', historyRecords)
     setHistory(historyRecords)
     
     setLoading(false)
