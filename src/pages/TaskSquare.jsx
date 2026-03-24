@@ -37,9 +37,21 @@ export default function TaskSquare({ user, onBack }) {
 
   const handleRequestTask = (taskData) => {
     // 提交申請
+    const newRequest = {
+      id: Date.now(), // 臨時 ID
+      title: taskData.title,
+      points: parseInt(taskData.points),
+      description: taskData.description,
+      status: 'pending',
+      createdAt: new Date().toISOString().split('T')[0]
+    }
+    
+    // 加入申請列表
+    setMyRequests([newRequest, ...myRequests])
+    
     alert('✅ 任務申請已送出！等待家長審核')
     setShowRequestForm(false)
-    loadData()
+    setActiveTab('myRequests') // 切換到「我的申請」分頁
   }
 
   return (
