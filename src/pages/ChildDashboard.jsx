@@ -194,8 +194,6 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
             {tasksByTime.morning.length > 0 && (
               <TaskCard
                 title="Morning"
-                subtitle="勇者床鋪堡壘"
-                icon="🛏️"
                 task={tasksByTime.morning[0]}
                 onComplete={handleComplete}
               />
@@ -205,8 +203,6 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
             {tasksByTime.afternoon.length > 0 && (
               <TaskCard
                 title="Afternoon"
-                subtitle="知識圖書館"
-                icon="📚"
                 task={tasksByTime.afternoon[0]}
                 onComplete={handleComplete}
               />
@@ -216,8 +212,6 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
             {tasksByTime.evening.length > 0 && (
               <TaskCard
                 title="Challenge"
-                subtitle="彩虹牙刷挑戰"
-                icon="🌈"
                 task={tasksByTime.evening[0]}
                 onComplete={handleComplete}
               />
@@ -288,7 +282,7 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
 }
 
 // 任務卡片組件
-function TaskCard({ title, subtitle, icon, task, onComplete }) {
+function TaskCard({ title, task, onComplete }) {
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
@@ -308,7 +302,7 @@ function TaskCard({ title, subtitle, icon, task, onComplete }) {
         fontSize: '80px',
         opacity: 0.08
       }}>
-        {icon}
+        {task.icon}
       </div>
 
       <div style={{ position: 'relative', zIndex: 10 }}>
@@ -329,12 +323,12 @@ function TaskCard({ title, subtitle, icon, task, onComplete }) {
         {/* 主要內容 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {/* 左側圖示 */}
-          <div style={{ fontSize: '50px', flexShrink: 0 }}>{icon}</div>
+          <div style={{ fontSize: '50px', flexShrink: 0 }}>{task.icon}</div>
 
           {/* 中間內容 */}
           <div style={{ flex: 1 }}>
             <h3 style={{ color: '#581c87', fontSize: '18px', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.2' }}>
-              {subtitle}
+              {task.title}
             </h3>
             
             {/* 進度條 */}
