@@ -1,16 +1,244 @@
-# React + Vite
+# 家庭任務管理系統 MVP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一個樂園主題的兒童行為管理 Web App，幫助家長管理孩子的日常任務與獎勵。
 
-Currently, two official plugins are available:
+## 🎯 專案特色
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 🎨 **樂園主題視覺** - 紫色系、摩天輪、旋轉木馬插圖
+- 📱 **手機友善** - 響應式設計，適合平板和手機使用
+- 📸 **拍照上傳** - 兒童完成任務時可拍照記錄
+- 💰 **點數系統** - 獲得點數、兌換獎勵、存摺記錄
+- 🔄 **完全離線** - 使用 localStorage 儲存，無需後端
+- 👨‍👩‍👧‍👦 **多用戶** - 支援家長 + 多個兒童帳號
 
-## React Compiler
+## 🚀 線上預覽
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+https://family-quest-mvp.vercel.app
 
-## Expanding the ESLint configuration
+## 📋 測試帳號
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| 角色 | PIN 碼 |
+|------|--------|
+| 媽媽（家長） | 1234 |
+| 哥哥（兒童） | 1111 |
+| 妹妹（兒童） | 2222 |
+
+## 🎮 功能清單
+
+### 兒童端
+
+#### 🏠 首頁
+- 樂園主題背景
+- Point Bank 顯示（點擊查看存摺）
+- 今日完成進度
+- 時段任務卡片（早/中/晚）
+- 「我完成了」拍照上傳
+
+#### 🏛️ 任務大廳
+- **進行中** - 當前任務列表
+- **我的申請** - 申請新任務
+- **歷史記錄** - 完整任務歷史
+  - 時間範圍篩選（近7天/近30天/全部）
+  - 日期選擇器
+  - 狀態標籤（完成/審核中/被退回/過期）
+  - 時間軸分組
+
+#### 🎁 商店
+- **商店** - 預設商品兌換（零食/玩具/特權）
+- **兌換記錄** - 查看待發放/已發放
+- **我的願望** - 許願功能 + 歷史清單
+  - 待審核/全部篩選
+  - 清除記錄按鈕
+
+#### 💰 存摺
+- 目前餘額顯示
+- 總獲得/總消費統計
+- 交易記錄列表（獲得/消費篩選）
+
+### 家長端
+
+#### ⏰ 待審核
+- **頂部摘要** - 待審核數量、總點數、已選擇數
+- **批次操作** - 全選、批次核准
+- **審核卡片**
+  - 選擇框（多選）
+  - 照片顯示（點擊放大）
+  - 調整點數
+  - 核准/拒絕（含原因）
+
+#### 📋 任務管理
+- **成員切換** - 全部/哥哥/妹妹
+- **任務卡片視圖**
+  - 任務類型（每日/單次/挑戰）
+  - 獎勵點數
+  - 分配對象
+  - 進度顯示
+- **創建/編輯任務**
+  - 10種圖示選擇
+  - 任務類型（每日例行/單次任務/長期挑戰）
+  - 獎勵點數
+  - 分配對象（全部/哥哥/妹妹）
+  - 長期挑戰天數設定
+- **啟用/停用** 任務
+
+#### 🎁 商店管理
+- **待發放** - 查看兌換商品、標記已發放
+- **許願清單** - 核准/拒絕兒童許願
+- **金庫帳本**
+  - 總覽卡片（總獲得/總消費/淨結餘）
+  - 交易列表（全部/獲得/消費篩選）
+  - **CSV 匯出** - 下載帳本資料
+
+#### 📊 數據統計
+- **總覽卡片** - 累積點數、完成任務、待審核
+- **孩子表現對比** - 點數、完成、達成率
+- **趨勢圖表**
+  - 近7天/近30天切換
+  - 雙色長條圖（哥哥/妹妹對比）
+
+## 🛠️ 技術架構
+
+- **框架**: React 18 + Vite
+- **樣式**: Tailwind CSS + 內聯樣式
+- **路由**: React Router v6
+- **狀態**: useState + localStorage
+- **部署**: Vercel
+- **資料庫**: Mock API + localStorage（未來可接 Supabase）
+
+## 📦 專案結構
+
+```
+family-quest-mvp/
+├── public/
+│   └── playground-bg.png          # 樂園背景圖
+├── src/
+│   ├── components/                # UI 組件庫
+│   │   ├── Toast.jsx             # Toast 通知
+│   │   ├── Loading.jsx           # 加載動畫
+│   │   ├── ConfirmDialog.jsx     # 確認對話框
+│   │   └── SuccessAnimation.jsx  # 成功動畫
+│   ├── pages/
+│   │   ├── Login.jsx             # 登入頁
+│   │   ├── ChildDashboard.jsx    # 兒童端首頁
+│   │   ├── TaskSquare.jsx        # 任務大廳
+│   │   ├── Shop.jsx              # 商店
+│   │   ├── Passbook.jsx          # 存摺
+│   │   ├── ParentDashboard.jsx   # 家長端（舊）
+│   │   └── ParentHub.jsx         # 家長端管理中心
+│   ├── lib/
+│   │   └── supabase.js           # Mock API
+│   ├── App.jsx                   # 路由設定
+│   └── main.jsx
+├── vercel.json                   # Vercel SPA 路由配置
+└── package.json
+```
+
+## 🚀 本地開發
+
+### 安裝
+
+```bash
+npm install
+```
+
+### 開發
+
+```bash
+npm run dev
+```
+
+開啟 http://localhost:5173
+
+### 建置
+
+```bash
+npm run build
+```
+
+### 預覽
+
+```bash
+npm run preview
+```
+
+## 📝 資料持久化
+
+目前使用 localStorage 儲存以下資料：
+
+- `currentUser` - 當前登入用戶
+- `submissions` - 任務提交記錄
+- `purchases` - 商品兌換記錄
+- `wishes` - 許願清單
+- `taskRequests` - 任務申請記錄
+- `parentNotifications` - 家長通知
+
+## 🔜 未來功能
+
+- [ ] Supabase 真實資料庫整合
+- [ ] 多家庭支援（註冊系統）
+- [ ] 推播通知
+- [ ] 更多圖表類型
+- [ ] 願望清單價格估算
+- [ ] 家長手機 App
+
+## 📄 開發記錄
+
+### Phase 1: 兒童端視覺改造 (2026-03-25 00:00-01:00)
+- ✅ Tailwind CSS 顏色問題（改用內聯樣式）
+- ✅ 樂園背景圖更換
+- ✅ 任務卡片白色半透明 60%
+- ✅ 手機友善設計
+
+### Phase 1.5: 任務大廳 (2026-03-25 00:47-01:19)
+- ✅ 3 分頁（進行中/我的申請/歷史記錄）
+- ✅ 申請任務功能
+- ✅ 歷史記錄系統（時間範圍、日期篩選）
+- ✅ Vercel SPA 路由修復
+
+### 家長端 Phase 1: 審核牆 (2026-03-25 01:26-01:34)
+- ✅ 3 分頁（待審核/任務管理/數據統計）
+- ✅ 審核卡片系統
+- ✅ 核准/拒絕功能（點數調整、拒絕原因）
+
+### 拍照上傳功能 (2026-03-25 01:37-02:06)
+- ✅ 兒童端拍照/選擇照片
+- ✅ 照片預覽和提交
+- ✅ localStorage 持久化
+- ✅ 家長端照片顯示
+- ✅ 任務標題顯示修復
+
+### 商店功能 (2026-03-25 02:36-03:01)
+- ✅ 混合模式（預設商品+許願）
+- ✅ 直接兌換、通知家長
+- ✅ 點數扣除修復
+- ✅ 我的願望歷史清單
+
+### 家長端完整版 (2026-03-25 03:01-04:00)
+- ✅ 審核牆優化（頂部摘要、批次核准）
+- ✅ 任務管理（成員切換、創建任務表單）
+- ✅ 商店管理（待發放、許願清單、金庫帳本）
+- ✅ 數據統計（總覽、孩子對比、趨勢圖表）
+- ✅ 財務總管（流水帳、CSV 匯出）
+
+### 兒童端存摺 (2026-03-25 04:00-04:10)
+- ✅ 餘額顯示
+- ✅ 交易記錄
+- ✅ 篩選器
+
+### 功能完善 (2026-03-25 04:10-04:15)
+- ✅ 任務編輯/停用功能
+- ✅ 批次核准 API 整合
+- ✅ UI 組件庫（Toast、Loading、ConfirmDialog、SuccessAnimation）
+
+## 👤 作者
+
+專案由 Emily Hsu 設計，小兔助理實作完成。
+
+## 📜 授權
+
+MIT License
+
+---
+
+**總開發時間**: 5 小時 10 分鐘  
+**最後更新**: 2026-03-25 04:15 AM (GMT+8)
