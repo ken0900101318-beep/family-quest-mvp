@@ -364,7 +364,7 @@ function TaskCard({ title, subtitle, icon, task, onComplete }) {
 
         {/* 完成按鈕 */}
         <button
-          onClick={() => onComplete(task.id)}
+          onClick={() => onComplete(task)}
           style={{
             width: '100%',
             marginTop: '0.75rem',
