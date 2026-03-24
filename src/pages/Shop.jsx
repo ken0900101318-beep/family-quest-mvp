@@ -270,40 +270,10 @@ export default function Shop({ user, onNavigate }) {
 
             {/* 我的願望分頁 */}
             {activeTab === 'wish' && (
-              <div>
-                <div style={{
-                  background: 'rgba(236, 72, 153, 0.1)',
-                  borderRadius: '1rem',
-                  padding: '1rem',
-                  marginBottom: '1rem',
-                  border: '2px dashed #ec4899'
-                }}>
-                  <div style={{ fontSize: '16px', color: '#be185d', fontWeight: '600' }}>
-                    💡 許願說明
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#9d174d', marginTop: '0.5rem' }}>
-                    想要的獎勵不在商店裡？點下方許願按鈕，告訴家長你想要什麼！
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowWishForm(true)}
-                  style={{
-                    width: '100%',
-                    background: 'linear-gradient(to right, #ec4899, #d946ef)',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '18px',
-                    padding: '1.25rem',
-                    borderRadius: '1rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 10px 30px rgba(236, 72, 153, 0.4)'
-                  }}
-                >
-                  ✨ 許願
-                </button>
-              </div>
+              <WishTab
+                userId={user.id}
+                onOpenWishForm={() => setShowWishForm(true)}
+              />
             )}
           </>
         )}
@@ -487,6 +457,228 @@ function PurchaseCard({ purchase }) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// 我的願望分頁
+function WishTab({ userId, onOpenWishForm }) {
+  const [wishes, setWishes] = useState([])
+  const [filter, setFilter] = useState('pending') // pending / all
+
+  useEffect(() => {
+    loadWishes()
+  }, [filter])
+
+  const loadWishes = () => {
+    const allWishes = JSON.parse(localStorage.getItem('wishes') || '[]')
+    const userWishes = allWishes.filter(w => w.userId === userId)
+    
+    if (filter === 'pending') {
+      setWishes(userWishes.filter(w => w.status === 'pending'))
+    } else {
+      setWishes(userWishes)
+    }
+  }
+
+  const handleClearHistory = () => {
+    if (confirm('確定要清除所有許願記錄嗎？')) {
+      const allWishes = JSON.parse(localStorage.getItem('wishes') || '[]')
+      const otherWishes = allWishes.filter(w => w.userId !== userId)
+      localStorage.setItem('wishes', JSON.stringify(otherWishes))
+      setWishes([])
+      alert('✅ 已清除所有許願記錄')
+    }
+  }
+
+  const statusConfig = {
+    pending: { label: '待審核', color: '#f59e0b', bg: '#fef3c7' },
+    approved: { label: '已核准', color: '#10b981', bg: '#d1fae5' },
+    rejected: { label: '已拒絕', color: '#ef4444', bg: '#fee2e2' }
+  }
+
+  return (
+    <div>
+      <div style={{
+        background: 'rgba(236, 72, 153, 0.1)',
+        borderRadius: '1rem',
+        padding: '1rem',
+        marginBottom: '1rem',
+        border: '2px dashed #ec4899'
+      }}>
+        <div style={{ fontSize: '16px', color: '#be185d', fontWeight: '600' }}>
+          💡 許願說明
+        </div>
+        <div style={{ fontSize: '14px', color: '#9d174d', marginTop: '0.5rem' }}>
+          想要的獎勵不在商店裡？點下方許願按鈕，告訴家長你想要什麼！
+        </div>
+      </div>
+
+      {/* 篩選器 */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1rem',
+        background: 'rgba(255, 255, 255, 0.7)',
+        padding: '0.5rem',
+        borderRadius: '0.75rem'
+      }}>
+        <button
+          onClick={() => setFilter('pending')}
+          style={{
+            flex: 1,
+            background: filter === 'pending'
+              ? 'linear-gradient(to right, #ec4899, #d946ef)'
+              : 'transparent',
+            color: filter === 'pending' ? 'white' : '#ec4899',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          ⏰ 待審核
+        </button>
+        <button
+          onClick={() => setFilter('all')}
+          style={{
+            flex: 1,
+            background: filter === 'all'
+              ? 'linear-gradient(to right, #ec4899, #d946ef)'
+              : 'transparent',
+            color: filter === 'all' ? 'white' : '#ec4899',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          📜 全部
+        </button>
+      </div>
+
+      {/* 許願按鈕 */}
+      <button
+        onClick={onOpenWishForm}
+        style={{
+          width: '100%',
+          background: 'linear-gradient(to right, #ec4899, #d946ef)',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '18px',
+          padding: '1.25rem',
+          borderRadius: '1rem',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 10px 30px rgba(236, 72, 153, 0.4)',
+          marginBottom: '1rem'
+        }}
+      >
+        ✨ 許願
+      </button>
+
+      {/* 許願列表 */}
+      {wishes.length === 0 ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '3rem',
+          color: '#ec4899',
+          fontSize: '16px'
+        }}>
+          {filter === 'pending' ? '目前沒有待審核的許願' : '還沒有許願記錄'}
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+            {wishes.map(wish => {
+              const config = statusConfig[wish.status] || statusConfig.pending
+              return (
+                <div
+                  key={wish.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '1rem',
+                    padding: '1rem',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                    border: '2px solid #fce7f3'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#881337', flex: 1 }}>
+                      {wish.name}
+                    </h4>
+                    <div style={{
+                      background: config.bg,
+                      color: config.color,
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '0.5rem',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      {config.label}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#be185d', marginBottom: '0.5rem' }}>
+                    💰 {wish.price} 點
+                  </div>
+                  {wish.description && (
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#9d174d',
+                      background: 'rgba(236, 72, 153, 0.05)',
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      marginBottom: '0.5rem'
+                    }}>
+                      {wish.description}
+                    </div>
+                  )}
+                  {wish.rejectReason && (
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#dc2626',
+                      background: '#fee2e2',
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      marginBottom: '0.5rem'
+                    }}>
+                      ❌ 拒絕原因：{wish.rejectReason}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '12px', color: '#db2777' }}>
+                    許願時間：{new Date(wish.createdAt).toLocaleString('zh-TW')}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* 清除按鈕 */}
+          {filter === 'all' && wishes.length > 0 && (
+            <button
+              onClick={handleClearHistory}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(to right, #ef4444, #dc2626)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+              }}
+            >
+              🗑️ 清除所有許願記錄
+            </button>
+          )}
+        </>
+      )}
     </div>
   )
 }
