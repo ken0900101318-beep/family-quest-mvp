@@ -103,7 +103,7 @@ function TaskSquareWrapper({ user }) {
 // Shop Wrapper
 function ShopWrapper({ user }) {
   const navigate = useNavigate()
-  return <Shop user={user} onNavigate={(page) => navigate(`/child/${page}`)} />
+  return <Shop user={user} onNavigate={(page) => page === 'home' ? navigate('/child') : navigate(`/child/${page}`)} />
 }
 
 // Parent Dashboard Wrapper
