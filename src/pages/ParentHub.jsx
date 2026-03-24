@@ -1111,7 +1111,43 @@ function Statistics({ stats }) {
 
 // 商店管理
 function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish }) {
-  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes
+  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes / ledger
+
+  // 從 localStorage 獲取所有交易記錄
+  const getAllTransactions = () => {
+    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
+    
+    const transactions = []
+    
+    // 獲得點數（已核准的任務）
+    submissions
+      .filter(s => s.status === 'approved')
+      .forEach(s => {
+        transactions.push({
+          id: `earn-${s.id}`,
+          type: 'earn',
+          amount: s.points || 10,
+          description: s.taskTitle || '完成任務',
+          userName: s.userName,
+          timestamp: s.approvedAt || s.timestamp
+        })
+      })
+    
+    // 消費點數（兌換商品）
+    purchaseData.forEach(p => {
+      transactions.push({
+        id: `spend-${p.id}`,
+        type: 'spend',
+        amount: p.price,
+        description: p.productName,
+        userName: p.userName,
+        timestamp: p.createdAt
+      })
+    })
+    
+    return transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  }
 
   return (
     <div>
@@ -1160,6 +1196,24 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
         >
           ✨ 許願清單 ({wishes.length})
         </button>
+        <button
+          onClick={() => setActiveSubTab('ledger')}
+          style={{
+            flex: 1,
+            background: activeSubTab === 'ledger'
+              ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+              : 'transparent',
+            color: activeSubTab === 'ledger' ? 'white' : '#9333ea',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          💰 金庫帳本
+        </button>
       </div>
 
       {/* 待發放商品 */}
@@ -1203,6 +1257,11 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
             </div>
           )}
         </div>
+      )}
+
+      {/* 金庫帳本 */}
+      {activeSubTab === 'ledger' && (
+        <FinanceLedger transactions={getAllTransactions()} />
       )}
     </div>
   )
@@ -1383,6 +1442,202 @@ function WishCard({ wish, onApprove, onReject }) {
               確認拒絕
             </button>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 金庫帳本
+function FinanceLedger({ transactions }) {
+  const [filter, setFilter] = useState('all') // all / earn / spend
+  const [sortBy, setSortBy] = useState('date') // date / amount
+
+  const filteredTransactions = transactions.filter(t => {
+    if (filter === 'all') return true
+    return t.type === filter
+  })
+
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    if (sortBy === 'date') {
+      return new Date(b.timestamp) - new Date(a.timestamp)
+    } else {
+      return b.amount - a.amount
+    }
+  })
+
+  // 計算統計
+  const totalEarned = transactions.filter(t => t.type === 'earn').reduce((sum, t) => sum + t.amount, 0)
+  const totalSpent = transactions.filter(t => t.type === 'spend').reduce((sum, t) => sum + t.amount, 0)
+  const balance = totalEarned - totalSpent
+
+  const handleExportCSV = () => {
+    const headers = ['日期', '類型', '金額', '說明', '成員']
+    const rows = sortedTransactions.map(t => [
+      new Date(t.timestamp).toLocaleString('zh-TW'),
+      t.type === 'earn' ? '獲得' : '消費',
+      t.type === 'earn' ? `+${t.amount}` : `-${t.amount}`,
+      t.description,
+      t.userName
+    ])
+    
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `金庫帳本_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+  }
+
+  return (
+    <div>
+      {/* 總覽卡片 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>總獲得</div>
+          <div style={{ fontSize: '32px', fontWeight: '900' }}>+{totalEarned}</div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>總消費</div>
+          <div style={{ fontSize: '32px', fontWeight: '900' }}>-{totalSpent}</div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>淨結餘</div>
+          <div style={{ fontSize: '32px', fontWeight: '900' }}>{balance}</div>
+        </div>
+      </div>
+
+      {/* 篩選器和匯出 */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.5rem',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
+          {[
+            { value: 'all', label: '全部', icon: '📝' },
+            { value: 'earn', label: '獲得', icon: '💰' },
+            { value: 'spend', label: '消費', icon: '🛒' }
+          ].map(option => (
+            <button
+              key={option.value}
+              onClick={() => setFilter(option.value)}
+              style={{
+                background: filter === option.value ? '#a78bfa' : '#e9d5ff',
+                color: filter === option.value ? 'white' : '#7e22ce',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {option.icon} {option.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={handleExportCSV}
+          style={{
+            background: 'linear-gradient(to right, #10b981, #059669)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.5rem 1.5rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+          }}
+        >
+          📊 匯出 CSV
+        </button>
+      </div>
+
+      {/* 交易列表 */}
+      {sortedTransactions.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+          目前沒有交易記錄
+        </div>
+      ) : (
+        <div style={{
+          background: 'white',
+          borderRadius: '1rem',
+          padding: '1rem',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+        }}>
+          {sortedTransactions.map(transaction => (
+            <div
+              key={transaction.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '1rem',
+                borderBottom: '1px solid #e9d5ff'
+              }}
+            >
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: transaction.type === 'earn'
+                  ? 'linear-gradient(135deg, #10b981, #059669)'
+                  : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                marginRight: '1rem'
+              }}>
+                {transaction.type === 'earn' ? '💰' : '🛒'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#581c87',
+                  marginBottom: '0.25rem'
+                }}>
+                  {transaction.description}
+                </div>
+                <div style={{ fontSize: '14px', color: '#9333ea' }}>
+                  {transaction.userName} • {new Date(transaction.timestamp).toLocaleString('zh-TW')}
+                </div>
+              </div>
+              <div style={{
+                fontSize: '20px',
+                fontWeight: '900',
+                color: transaction.type === 'earn' ? '#10b981' : '#ef4444'
+              }}>
+                {transaction.type === 'earn' ? '+' : '-'}{transaction.amount}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
