@@ -44,52 +44,36 @@ export default function ChildDashboard({ user, onLogout }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #d8b4fe, #e9d5ff, #f3e8ff)',
       position: 'relative',
       overflow: 'hidden',
       padding: '1rem'
     }}>
-      {/* 樂園背景裝飾 */}
+      {/* 樂園背景圖片 */}
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        opacity: 0.2
-      }}>
-        {/* 摩天輪 */}
-        <div style={{
-          position: 'absolute',
-          bottom: '40px',
-          left: '40px',
-          fontSize: '120px',
-          animation: 'spin 20s linear infinite'
-        }}>🎡</div>
-        {/* 旋轉木馬 */}
-        <div style={{
-          position: 'absolute',
-          bottom: '40px',
-          right: '40px',
-          fontSize: '100px'
-        }}>🎠</div>
-        {/* 彩旗 */}
-        <div style={{
-          position: 'absolute',
-          top: '80px',
-          left: 0,
-          right: 0,
-          display: 'flex',
-          justifyContent: 'space-around',
-          fontSize: '40px'
-        }}>
-          <span>🚩</span><span>🚩</span><span>🚩</span><span>🚩</span><span>🚩</span>
-        </div>
-      </div>
+        backgroundImage: 'url(/playground-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        zIndex: 0
+      }} />
+      
+      {/* 半透明遮罩（讓文字更清楚） */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(to bottom, rgba(216, 180, 254, 0.3), rgba(233, 213, 255, 0.2))',
+        zIndex: 1
+      }} />
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10, paddingBottom: '100px' }}>
         {/* 頂部資訊欄 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           {/* 左側：頭像+等級 */}
