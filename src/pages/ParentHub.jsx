@@ -74,13 +74,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
   }
 
   const handleApprove = (request, adjustedPoints) => {
+    // 從待審核列表中移除
+    setPendingRequests(prev => prev.filter(r => r.id !== request.id))
     alert(`✅ 已核准「${request.title}」\n獎勵點數：${adjustedPoints || request.points} 點`)
-    loadData()
   }
 
   const handleReject = (request, reason) => {
+    // 從待審核列表中移除
+    setPendingRequests(prev => prev.filter(r => r.id !== request.id))
     alert(`❌ 已拒絕「${request.title}」\n原因：${reason}`)
-    loadData()
   }
 
   const handleCreateTask = (taskData) => {
