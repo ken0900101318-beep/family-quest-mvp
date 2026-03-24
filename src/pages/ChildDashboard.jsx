@@ -39,70 +39,140 @@ export default function ChildDashboard({ user, onLogout }) {
 
   const tasksByTime = getTasksByTime()
   const totalTasks = tasks.length
-  const completedTasks = 0 // 之後從狀態計算
+  const completedTasks = 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-300 via-purple-200 to-purple-100 relative overflow-hidden">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom, #d8b4fe, #e9d5ff, #f3e8ff)',
+      position: 'relative',
+      overflow: 'hidden',
+      padding: '1rem'
+    }}>
       {/* 樂園背景裝飾 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        opacity: 0.2
+      }}>
         {/* 摩天輪 */}
-        <div className="absolute bottom-10 left-10 text-9xl animate-spin-slow">🎡</div>
+        <div style={{
+          position: 'absolute',
+          bottom: '40px',
+          left: '40px',
+          fontSize: '120px',
+          animation: 'spin 20s linear infinite'
+        }}>🎡</div>
         {/* 旋轉木馬 */}
-        <div className="absolute bottom-10 right-10 text-8xl">🎠</div>
+        <div style={{
+          position: 'absolute',
+          bottom: '40px',
+          right: '40px',
+          fontSize: '100px'
+        }}>🎠</div>
         {/* 彩旗 */}
-        <div className="absolute top-20 left-0 right-0 flex justify-around text-4xl">
+        <div style={{
+          position: 'absolute',
+          top: '80px',
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'space-around',
+          fontSize: '40px'
+        }}>
           <span>🚩</span><span>🚩</span><span>🚩</span><span>🚩</span><span>🚩</span>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-4 md:p-6 relative z-10">
+      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
         {/* 頂部資訊欄 */}
-        <div className="flex justify-between items-center mb-8">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           {/* 左側：頭像+等級 */}
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-5xl border-4 border-white shadow-xl">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #f472b6, #a855f7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '50px',
+              border: '4px solid white',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+            }}>
               {user.name === '哥哥' ? '👦' : '👧'}
             </div>
             <div>
-              <div className="text-purple-900 font-bold text-lg">{user.name}</div>
-              <div className="text-purple-700 text-sm">Lv.{user.level} 冒險家</div>
+              <div style={{ color: '#581c87', fontWeight: 'bold', fontSize: '18px' }}>{user.name}</div>
+              <div style={{ color: '#7e22ce', fontSize: '14px' }}>Lv.{user.level} 冒險家</div>
             </div>
           </div>
 
           {/* 右側：Point Bank */}
-          <div className="bg-white rounded-2xl px-6 py-3 shadow-lg border-2 border-purple-300">
-            <div className="text-purple-600 text-xs font-semibold mb-1">Point Bank</div>
-            <div className="text-3xl font-black text-purple-900 flex items-center gap-2">
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
+            padding: '0.75rem 1.5rem',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+            border: '2px solid #d8b4fe'
+          }}>
+            <div style={{ color: '#9333ea', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Point Bank</div>
+            <div style={{ fontSize: '32px', fontWeight: '900', color: '#581c87', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {user.points}
-              <span className="text-yellow-500 animate-bounce">💰</span>
+              <span style={{ fontSize: '32px', animation: 'bounce 1s infinite' }}>💰</span>
             </div>
           </div>
         </div>
 
         {/* 中央進度環 */}
-        <div className="text-center mb-8">
-          <div className="inline-block bg-white rounded-full p-6 shadow-xl border-4 border-purple-300">
-            <div className="text-5xl font-black text-purple-900">{completedTasks}/{totalTasks}</div>
-            <div className="text-purple-600 text-sm font-semibold mt-1">今日完成</div>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            display: 'inline-block',
+            background: 'white',
+            borderRadius: '50%',
+            padding: '1.5rem',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
+            border: '4px solid #d8b4fe'
+          }}>
+            <div style={{ fontSize: '48px', fontWeight: '900', color: '#581c87' }}>
+              {completedTasks}/{totalTasks}
+            </div>
+            <div style={{ color: '#9333ea', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>
+              今日完成
+            </div>
           </div>
         </div>
 
         {/* 標題 */}
-        <h2 className="text-3xl font-black text-purple-900 mb-6 text-center">
+        <h2 style={{
+          fontSize: '32px',
+          fontWeight: '900',
+          color: '#581c87',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          textShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
           🌟 我的今日冒險
         </h2>
 
         {loading ? (
-          <div className="text-center py-20 text-purple-700 text-xl">載入中...</div>
+          <div style={{ textAlign: 'center', padding: '5rem', color: '#7e22ce', fontSize: '20px' }}>載入中...</div>
         ) : (
-          <div className="space-y-6 mb-20">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '5rem' }}>
             {/* Morning Card */}
             {tasksByTime.morning.length > 0 && (
               <TaskCard
                 title="Morning"
                 subtitle="勇者床鋪堡壘"
                 icon="🛏️"
-                color="blue"
+                bgGradient="linear-gradient(135deg, #60a5fa, #3b82f6)"
+                borderColor="#2563eb"
                 task={tasksByTime.morning[0]}
                 onComplete={handleComplete}
               />
@@ -114,7 +184,8 @@ export default function ChildDashboard({ user, onLogout }) {
                 title="Afternoon"
                 subtitle="知識圖書館"
                 icon="📚"
-                color="green"
+                bgGradient="linear-gradient(135deg, #4ade80, #22c55e)"
+                borderColor="#16a34a"
                 task={tasksByTime.afternoon[0]}
                 onComplete={handleComplete}
               />
@@ -126,7 +197,8 @@ export default function ChildDashboard({ user, onLogout }) {
                 title="Challenge"
                 subtitle="彩虹牙刷挑戰"
                 icon="🌈"
-                color="purple"
+                bgGradient="linear-gradient(135deg, #a78bfa, #8b5cf6)"
+                borderColor="#7c3aed"
                 task={tasksByTime.evening[0]}
                 onComplete={handleComplete}
               />
@@ -135,14 +207,38 @@ export default function ChildDashboard({ user, onLogout }) {
         )}
 
         {/* 底部導覽 */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-purple-300 shadow-2xl">
-          <div className="max-w-5xl mx-auto flex justify-around items-center py-4">
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'white',
+          borderTop: '4px solid #d8b4fe',
+          boxShadow: '0 -5px 30px rgba(0,0,0,0.15)',
+          zIndex: 100
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            padding: '1rem'
+          }}>
             <NavIcon icon="🏠" label="首頁" active />
             <NavIcon icon="🏛️" label="廣場" />
             <NavIcon icon="🎁" label="商店" />
-            <button onClick={onLogout} className="flex flex-col items-center">
-              <div className="text-3xl">🚪</div>
-              <div className="text-xs text-gray-600 mt-1">登出</div>
+            <button onClick={onLogout} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              opacity: 0.7
+            }}>
+              <div style={{ fontSize: '32px' }}>🚪</div>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>登出</div>
             </button>
           </div>
         </div>
@@ -150,12 +246,13 @@ export default function ChildDashboard({ user, onLogout }) {
 
       {/* CSS 動畫 */}
       <style>{`
-        @keyframes spin-slow {
+        @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
       `}</style>
     </div>
@@ -163,69 +260,88 @@ export default function ChildDashboard({ user, onLogout }) {
 }
 
 // 任務卡片組件
-function TaskCard({ title, subtitle, icon, color, task, onComplete }) {
-  const colorClasses = {
-    blue: {
-      bg: 'from-blue-400 to-blue-500',
-      border: 'border-blue-600',
-      text: 'text-blue-900'
-    },
-    green: {
-      bg: 'from-green-400 to-green-500',
-      border: 'border-green-600',
-      text: 'text-green-900'
-    },
-    purple: {
-      bg: 'from-purple-400 to-purple-500',
-      border: 'border-purple-600',
-      text: 'text-purple-900'
-    }
-  }
-
-  const colors = colorClasses[color]
-
+function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComplete }) {
   return (
-    <div className={`bg-gradient-to-br ${colors.bg} rounded-3xl p-6 shadow-2xl border-4 ${colors.border} relative overflow-hidden`}>
+    <div style={{
+      background: bgGradient,
+      borderRadius: '1.5rem',
+      padding: '1.5rem',
+      boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
+      border: `4px solid ${borderColor}`,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
       {/* 裝飾性圖示背景 */}
-      <div className="absolute -right-10 -bottom-10 text-9xl opacity-20">
+      <div style={{
+        position: 'absolute',
+        right: '-40px',
+        bottom: '-40px',
+        fontSize: '150px',
+        opacity: 0.2
+      }}>
         {icon}
       </div>
 
-      <div className="relative z-10">
+      <div style={{ position: 'relative', zIndex: 10 }}>
         {/* 頂部標籤 */}
-        <div className={`inline-block bg-white px-4 py-1 rounded-full text-sm font-bold ${colors.text} mb-4`}>
+        <div style={{
+          display: 'inline-block',
+          background: 'white',
+          padding: '0.25rem 1rem',
+          borderRadius: '1rem',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: borderColor,
+          marginBottom: '1rem'
+        }}>
           {title}
         </div>
 
         {/* 主要內容 */}
-        <div className="flex items-start gap-6">
+        <div style={{ display: 'flex', alignItems: 'start', gap: '1.5rem' }}>
           {/* 左側圖示 */}
-          <div className="text-7xl">{icon}</div>
+          <div style={{ fontSize: '80px', flexShrink: 0 }}>{icon}</div>
 
           {/* 中間內容 */}
-          <div className="flex-1">
-            <h3 className="text-white text-2xl font-black mb-3">{subtitle}</h3>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', marginBottom: '1rem' }}>
+              {subtitle}
+            </h3>
             
             {/* 進度條 */}
             {task.progress !== undefined && (
-              <div className="bg-white/30 rounded-full h-3 mb-3 overflow-hidden">
-                <div
-                  className="bg-white h-full rounded-full transition-all duration-500"
-                  style={{ width: `${task.progress}%` }}
-                />
+              <div style={{
+                background: 'rgba(255,255,255,0.3)',
+                borderRadius: '1rem',
+                height: '12px',
+                marginBottom: '0.75rem',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  background: 'white',
+                  height: '100%',
+                  borderRadius: '1rem',
+                  width: `${task.progress}%`,
+                  transition: 'width 0.5s ease'
+                }} />
               </div>
             )}
 
             {/* 進度文字 */}
             {task.current && (
-              <div className="text-white text-sm mb-3">
+              <div style={{ color: 'white', fontSize: '14px', marginBottom: '0.75rem' }}>
                 {task.current} / {task.target} 天
               </div>
             )}
 
             {/* 獎勵標籤 */}
-            <div className="inline-block bg-white px-4 py-2 rounded-full">
-              <span className="text-yellow-600 font-black text-lg">
+            <div style={{
+              display: 'inline-block',
+              background: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '1rem'
+            }}>
+              <span style={{ color: '#d97706', fontWeight: '900', fontSize: '18px' }}>
                 Reward {task.points} pts 🎁
               </span>
             </div>
@@ -235,7 +351,28 @@ function TaskCard({ title, subtitle, icon, color, task, onComplete }) {
         {/* 完成按鈕 */}
         <button
           onClick={() => onComplete(task.id)}
-          className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 font-black text-xl py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-yellow-600"
+          style={{
+            width: '100%',
+            marginTop: '1.5rem',
+            background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+            color: '#581c87',
+            fontWeight: '900',
+            fontSize: '20px',
+            padding: '1rem',
+            borderRadius: '1rem',
+            border: '4px solid #fcd34d',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = 'scale(1.05)'
+            e.target.style.boxShadow = '0 15px 40px rgba(0,0,0,0.4)'
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = 'scale(1)'
+            e.target.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)'
+          }}
         >
           我完成了！✨
         </button>
@@ -247,9 +384,18 @@ function TaskCard({ title, subtitle, icon, color, task, onComplete }) {
 // 導覽圖示組件
 function NavIcon({ icon, label, active }) {
   return (
-    <button className={`flex flex-col items-center ${active ? 'opacity-100' : 'opacity-50'} hover:opacity-100 transition-all`}>
-      <div className="text-3xl">{icon}</div>
-      <div className="text-xs text-gray-600 mt-1">{label}</div>
+    <button style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      opacity: active ? 1 : 0.5,
+      transition: 'opacity 0.3s ease'
+    }}>
+      <div style={{ fontSize: '32px' }}>{icon}</div>
+      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{label}</div>
     </button>
   )
 }
