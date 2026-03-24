@@ -115,7 +115,7 @@ export const mockAPI = {
         const user = mockData.users.find(u => u.id === userId)
         
         const submission = {
-          id: mockData.submissions.length + 1,
+          id: Date.now(),
           taskId,
           userId,
           userName: user.name,
@@ -124,6 +124,11 @@ export const mockAPI = {
           status: 'pending',
           photo: photoData
         }
+        
+        // 儲存到 localStorage
+        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+        stored.push(submission)
+        localStorage.setItem('submissions', JSON.stringify(stored))
         
         mockData.submissions.push(submission)
         resolve(submission)
@@ -134,7 +139,9 @@ export const mockAPI = {
   getPendingSubmissions: () => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const pending = mockData.submissions.filter(s => s.status === 'pending')
+        // 從 localStorage 讀取
+        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+        const pending = stored.filter(s => s.status === 'pending')
         resolve(pending)
       }, 300)
     })
@@ -143,9 +150,13 @@ export const mockAPI = {
   approveSubmission: (submissionId, adjustedPoints) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const submission = mockData.submissions.find(s => s.id === submissionId)
+        // 從 localStorage 更新狀態
+        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+        const submission = stored.find(s => s.id === submissionId)
+        
         if (submission) {
           submission.status = 'approved'
+          localStorage.setItem('submissions', JSON.stringify(stored))
           
           const task = mockData.tasks.find(t => t.id === submission.taskId)
           const points = adjustedPoints || task.points
@@ -170,10 +181,14 @@ export const mockAPI = {
   rejectSubmission: (submissionId, reason) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const submission = mockData.submissions.find(s => s.id === submissionId)
+        // 從 localStorage 更新狀態
+        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+        const submission = stored.find(s => s.id === submissionId)
+        
         if (submission) {
           submission.status = 'rejected'
           submission.rejectReason = reason
+          localStorage.setItem('submissions', JSON.stringify(stored))
         }
         resolve(submission)
       }, 500)
