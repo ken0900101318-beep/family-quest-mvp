@@ -25,11 +25,25 @@ export default function TaskSquare({ user, onBack }) {
       { id: 102, title: '整理書櫃', points: 30, status: 'approved', createdAt: '2026-03-23' }
     ])
     
-    // Mock 歷史記錄
+    // Mock 歷史記錄（含所有狀態）
     setHistory([
-      { id: 201, title: '整理床鋪', points: 10, status: 'completed', completedAt: '2026-03-24' },
-      { id: 202, title: '完成作業', points: 20, status: 'completed', completedAt: '2026-03-23' },
-      { id: 203, title: '刷牙', points: 5, status: 'completed', completedAt: '2026-03-23' }
+      // 今天
+      { id: 201, title: '整理床鋪', points: 10, status: 'completed', completedAt: '2026-03-24', updatedAt: '2026-03-24' },
+      { id: 202, title: '寫功課', points: 15, status: 'pending', completedAt: null, updatedAt: '2026-03-24' },
+      
+      // 昨天
+      { id: 203, title: '完成作業', points: 20, status: 'completed', completedAt: '2026-03-23', updatedAt: '2026-03-23' },
+      { id: 204, title: '幫忙倒垃圾', points: 10, status: 'rejected', rejectReason: '沒有綁好垃圾袋', completedAt: null, updatedAt: '2026-03-23' },
+      { id: 205, title: '刷牙', points: 5, status: 'completed', completedAt: '2026-03-23', updatedAt: '2026-03-23' },
+      
+      // 前天
+      { id: 206, title: '練習鋼琴', points: 30, status: 'completed', completedAt: '2026-03-22', updatedAt: '2026-03-22' },
+      { id: 207, title: '洗碗', points: 15, status: 'expired', completedAt: null, updatedAt: '2026-03-22' },
+      
+      // 更早
+      { id: 208, title: '整理房間', points: 25, status: 'completed', completedAt: '2026-03-20', updatedAt: '2026-03-20' },
+      { id: 209, title: '遛狗', points: 10, status: 'completed', completedAt: '2026-03-19', updatedAt: '2026-03-19' },
+      { id: 210, title: '讀書', points: 20, status: 'completed', completedAt: '2026-03-15', updatedAt: '2026-03-15' }
     ])
     
     setLoading(false)
@@ -252,19 +266,139 @@ function MyRequests({ requests }) {
 
 // 歷史記錄
 function History({ records }) {
+  const [timeRange, setTimeRange] = useState('7days') // 7days, 30days, all
+
+  // 按時間範圍篩選
+  const filterByTimeRange = (records) => {
+    const now = new Date()
+    const cutoffDays = timeRange === '7days' ? 7 : timeRange === '30days' ? 30 : 9999
+    const cutoffDate = new Date(now.getTime() - cutoffDays * 24 * 60 * 60 * 1000)
+    
+    return records.filter(r => {
+      const recordDate = new Date(r.completedAt || r.updatedAt)
+      return recordDate >= cutoffDate
+    })
+  }
+
+  // 按日期分組
+  const groupByDate = (records) => {
+    const groups = {}
+    records.forEach(record => {
+      const date = record.completedAt || record.updatedAt
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(record)
+    })
+    return groups
+  }
+
+  const filteredRecords = filterByTimeRange(records)
+  const groupedRecords = groupByDate(filteredRecords)
+  const dates = Object.keys(groupedRecords).sort().reverse()
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      {records.length === 0 ? (
+    <div>
+      {/* 時間範圍切換 */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.7)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '1rem',
+        padding: '0.5rem',
+        marginBottom: '1rem',
+        display: 'flex',
+        gap: '0.5rem'
+      }}>
+        <TimeRangeButton
+          active={timeRange === '7days'}
+          onClick={() => setTimeRange('7days')}
+          label="近 7 天"
+        />
+        <TimeRangeButton
+          active={timeRange === '30days'}
+          onClick={() => setTimeRange('30days')}
+          label="近 30 天"
+        />
+        <TimeRangeButton
+          active={timeRange === 'all'}
+          onClick={() => setTimeRange('all')}
+          label="全部"
+        />
+      </div>
+
+      {/* 時間軸顯示 */}
+      {dates.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
-          還沒有完成任何任務
+          {timeRange === '7days' ? '近 7 天沒有記錄' : timeRange === '30days' ? '近 30 天沒有記錄' : '還沒有任何記錄'}
         </div>
       ) : (
-        records.map(record => (
-          <HistoryCard key={record.id} record={record} />
-        ))
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {dates.map(date => (
+            <div key={date}>
+              {/* 日期標籤 */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '0.75rem',
+                padding: '0.5rem 1rem',
+                marginBottom: '0.75rem',
+                display: 'inline-block'
+              }}>
+                <span style={{ color: '#7e22ce', fontWeight: 'bold', fontSize: '14px' }}>
+                  📅 {formatDate(date)}
+                </span>
+              </div>
+              {/* 該日期的任務 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {groupedRecords[date].map(record => (
+                  <HistoryCard key={record.id} record={record} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
+}
+
+// 時間範圍按鈕
+function TimeRangeButton({ active, onClick, label }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1,
+        background: active ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)' : 'transparent',
+        color: active ? 'white' : '#7e22ce',
+        border: 'none',
+        borderRadius: '0.75rem',
+        padding: '0.5rem',
+        fontSize: '13px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+// 日期格式化
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  const today = new Date()
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  
+  if (dateStr === today.toISOString().split('T')[0]) {
+    return '今天'
+  } else if (dateStr === yesterday.toISOString().split('T')[0]) {
+    return '昨天'
+  } else {
+    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+    return `${date.getMonth() + 1}月${date.getDate()}日`
+  }
 }
 
 // 任務卡片
@@ -357,6 +491,39 @@ function RequestCard({ request }) {
 
 // 歷史卡片
 function HistoryCard({ record }) {
+  const statusConfig = {
+    completed: { 
+      icon: '✅', 
+      label: '已完成', 
+      color: '#10b981', 
+      bg: 'linear-gradient(135deg, #10b981, #059669)',
+      showPoints: true 
+    },
+    pending: { 
+      icon: '⏳', 
+      label: '待審核', 
+      color: '#f59e0b', 
+      bg: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+      showPoints: false 
+    },
+    rejected: { 
+      icon: '❌', 
+      label: '已拒絕', 
+      color: '#ef4444', 
+      bg: 'linear-gradient(135deg, #f87171, #ef4444)',
+      showPoints: false 
+    },
+    expired: { 
+      icon: '🕒', 
+      label: '已過期', 
+      color: '#6b7280', 
+      bg: 'linear-gradient(135deg, #9ca3af, #6b7280)',
+      showPoints: false 
+    }
+  }
+  
+  const config = statusConfig[record.status] || statusConfig.completed
+  
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
@@ -369,24 +536,48 @@ function HistoryCard({ record }) {
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <div>
-        <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900', marginBottom: '0.25rem' }}>
-          {record.title}
-        </h3>
-        <div style={{ color: '#9333ea', fontSize: '12px' }}>
-          {record.completedAt}
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+          <span style={{ fontSize: '18px' }}>{config.icon}</span>
+          <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900' }}>
+            {record.title}
+          </h3>
         </div>
+        <div style={{
+          display: 'inline-block',
+          background: `${config.color}20`,
+          color: config.color,
+          padding: '0.15rem 0.5rem',
+          borderRadius: '0.5rem',
+          fontSize: '11px',
+          fontWeight: 'bold'
+        }}>
+          {config.label}
+        </div>
+        {record.rejectReason && (
+          <div style={{ 
+            color: '#ef4444', 
+            fontSize: '12px', 
+            marginTop: '0.5rem',
+            fontStyle: 'italic'
+          }}>
+            原因：{record.rejectReason}
+          </div>
+        )}
       </div>
-      <div style={{
-        background: 'linear-gradient(135deg, #10b981, #059669)',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        borderRadius: '0.75rem',
-        fontWeight: '900',
-        fontSize: '16px'
-      }}>
-        +{record.points}
-      </div>
+      {config.showPoints && (
+        <div style={{
+          background: config.bg,
+          color: 'white',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.75rem',
+          fontWeight: '900',
+          fontSize: '16px',
+          whiteSpace: 'nowrap'
+        }}>
+          +{record.points}
+        </div>
+      )}
     </div>
   )
 }
