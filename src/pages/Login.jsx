@@ -38,21 +38,52 @@ export default function Login({ onLogin }) {
         backgroundImage: 'url(/login-bg.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundRepeat: 'no-repeat',
+        position: 'relative'
       }}
     >
+      {/* 中央淡白漸層遮罩（UI 安全區）*/}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 60%)',
+        pointerEvents: 'none'
+      }} />
+
       <div 
-        className="rounded-3xl shadow-2xl p-8 w-full max-w-md"
+        className="w-full max-w-md"
         style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(25px)',
+          borderRadius: '24px',
+          padding: '2.5rem',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(255,255,255,0.5)',
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏡</div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">家庭任務管理</h1>
-          <p className="text-gray-600">請輸入你的 PIN 碼登入</p>
+          <div style={{ fontSize: '72px', marginBottom: '1rem', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>
+            🏰
+          </div>
+          <h1 style={{ 
+            fontSize: '28px', 
+            fontWeight: 'bold', 
+            background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '0.75rem',
+            letterSpacing: '0.5px'
+          }}>
+            冒險樂園
+          </h1>
+          <p style={{ color: '#7e22ce', fontSize: '15px', fontWeight: '500' }}>
+            ✨ 輸入密碼開始冒險 ✨
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -63,14 +94,44 @@ export default function Login({ onLogin }) {
               maxLength="4"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              placeholder="輸入 4 位數 PIN 碼"
-              className="w-full px-4 py-4 text-center text-2xl font-mono border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none tracking-widest"
+              placeholder="••••"
+              style={{
+                width: '100%',
+                padding: '1.25rem 1.5rem',
+                textAlign: 'center',
+                fontSize: '28px',
+                fontFamily: 'monospace',
+                border: '2px solid #e9d5ff',
+                borderRadius: '18px',
+                outline: 'none',
+                letterSpacing: '1rem',
+                background: 'rgba(255,255,255,0.8)',
+                transition: 'all 0.3s',
+                boxShadow: '0 2px 8px rgba(139,92,246,0.08)'
+              }}
+              onFocus={(e) => {
+                e.target.style.border = '2px solid #a78bfa'
+                e.target.style.boxShadow = '0 4px 16px rgba(139,92,246,0.2)'
+              }}
+              onBlur={(e) => {
+                e.target.style.border = '2px solid #e9d5ff'
+                e.target.style.boxShadow = '0 2px 8px rgba(139,92,246,0.08)'
+              }}
               autoFocus
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            <div style={{
+              background: 'rgba(254, 202, 202, 0.8)',
+              border: '2px solid #fca5a5',
+              color: '#dc2626',
+              padding: '1rem 1.25rem',
+              borderRadius: '16px',
+              fontSize: '14px',
+              fontWeight: '500',
+              textAlign: 'center'
+            }}>
               {error}
             </div>
           )}
@@ -78,33 +139,128 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={pin.length !== 4 || loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all transform hover:scale-105"
+            style={{
+              width: '100%',
+              background: pin.length === 4 && !loading
+                ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+                : 'linear-gradient(135deg, #d8b4fe, #c4b5fd)',
+              color: 'white',
+              padding: '1.25rem',
+              borderRadius: '18px',
+              fontWeight: 'bold',
+              fontSize: '17px',
+              border: 'none',
+              cursor: pin.length === 4 && !loading ? 'pointer' : 'not-allowed',
+              boxShadow: pin.length === 4 && !loading 
+                ? '0 6px 20px rgba(139,92,246,0.35)' 
+                : '0 2px 8px rgba(139,92,246,0.15)',
+              transition: 'all 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem'
+            }}
+            onMouseEnter={(e) => {
+              if (pin.length === 4 && !loading) {
+                e.target.style.transform = 'translateY(-2px)'
+                e.target.style.boxShadow = '0 8px 25px rgba(139,92,246,0.45)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = pin.length === 4 && !loading 
+                ? '0 6px 20px rgba(139,92,246,0.35)' 
+                : '0 2px 8px rgba(139,92,246,0.15)'
+            }}
           >
-            {loading ? '登入中...' : '登入'}
+            <span style={{ fontSize: '20px' }}>🗺️</span>
+            <span>{loading ? '傳送中...' : '進入冒險樂園'}</span>
           </button>
         </form>
 
         {/* 測試用快速登入 */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center mb-3">測試用快速登入：</p>
-          <div className="flex gap-2">
+        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(233,213,255,0.5)' }}>
+          <p style={{ fontSize: '12px', color: '#9333ea', textAlign: 'center', marginBottom: '0.875rem', fontWeight: '500' }}>
+            🎯 測試快速通道
+          </p>
+          <div style={{ display: 'flex', gap: '0.625rem' }}>
             <button
               onClick={() => quickLogin('1234')}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm"
+              style={{
+                flex: 1,
+                background: 'linear-gradient(135deg, rgba(233,213,255,0.6), rgba(216,180,254,0.6))',
+                color: '#7e22ce',
+                padding: '0.75rem 0.5rem',
+                borderRadius: '14px',
+                fontSize: '13px',
+                fontWeight: '600',
+                border: '1.5px solid #e9d5ff',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(10px)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(216,180,254,0.8), rgba(168,85,247,0.6))'
+                e.target.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(233,213,255,0.6), rgba(216,180,254,0.6))'
+                e.target.style.transform = 'translateY(0)'
+              }}
             >
-              👩 媽媽 (1234)
+              👩 媽媽
             </button>
             <button
               onClick={() => quickLogin('1111')}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm"
+              style={{
+                flex: 1,
+                background: 'linear-gradient(135deg, rgba(191,219,254,0.6), rgba(147,197,253,0.6))',
+                color: '#1e40af',
+                padding: '0.75rem 0.5rem',
+                borderRadius: '14px',
+                fontSize: '13px',
+                fontWeight: '600',
+                border: '1.5px solid #bfdbfe',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(10px)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(147,197,253,0.8), rgba(96,165,250,0.6))'
+                e.target.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(191,219,254,0.6), rgba(147,197,253,0.6))'
+                e.target.style.transform = 'translateY(0)'
+              }}
             >
-              👦 哥哥 (1111)
+              👦 哥哥
             </button>
             <button
               onClick={() => quickLogin('2222')}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm"
+              style={{
+                flex: 1,
+                background: 'linear-gradient(135deg, rgba(252,231,243,0.6), rgba(251,207,232,0.6))',
+                color: '#be185d',
+                padding: '0.75rem 0.5rem',
+                borderRadius: '14px',
+                fontSize: '13px',
+                fontWeight: '600',
+                border: '1.5px solid #fce7f3',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(10px)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(251,207,232,0.8), rgba(249,168,212,0.6))'
+                e.target.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(252,231,243,0.6), rgba(251,207,232,0.6))'
+                e.target.style.transform = 'translateY(0)'
+              }}
             >
-              👧 妹妹 (2222)
+              👧 妹妹
             </button>
           </div>
         </div>
