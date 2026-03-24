@@ -32,8 +32,23 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: 'url(/login-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div 
+        className="rounded-3xl shadow-2xl p-8 w-full max-w-md"
+        style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        }}
+      >
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🏡</div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">家庭任務管理</h1>
