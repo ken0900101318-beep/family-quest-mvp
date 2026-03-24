@@ -864,11 +864,247 @@ function TaskCard({ task }) {
   )
 }
 
-// 數據統計（簡化版，之後補完）
+// 數據統計
 function Statistics({ stats }) {
+  const [period, setPeriod] = useState('week') // week / month
+
+  // Mock 14天趨勢數據
+  const trendData = period === 'week' ? [
+    { day: '週一', brother: 4, sister: 3 },
+    { day: '週二', brother: 5, sister: 4 },
+    { day: '週三', brother: 3, sister: 5 },
+    { day: '週四', brother: 4, sister: 4 },
+    { day: '週五', brother: 5, sister: 3 },
+    { day: '週六', brother: 6, sister: 6 },
+    { day: '週日', brother: 4, sister: 5 }
+  ] : [
+    { day: '第1週', brother: 28, sister: 26 },
+    { day: '第2週', brother: 30, sister: 28 },
+    { day: '第3週', brother: 27, sister: 29 },
+    { day: '第4週', brother: 29, sister: 27 }
+  ]
+
+  const maxValue = Math.max(...trendData.flatMap(d => [d.brother, d.sister]))
+
   return (
-    <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
-      數據統計（開發中...）
+    <div>
+      {/* 總覽卡片 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        marginBottom: '2rem'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>累積點數</div>
+          <div style={{ fontSize: '36px', fontWeight: '900' }}>{stats.totalPoints}</div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>完成任務</div>
+          <div style={{ fontSize: '36px', fontWeight: '900' }}>{stats.completedTasks}</div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(245, 158, 11, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>待審核</div>
+          <div style={{ fontSize: '36px', fontWeight: '900' }}>{stats.pendingReviews}</div>
+        </div>
+      </div>
+
+      {/* 孩子表現對比 */}
+      <div style={{
+        background: 'white',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+        marginBottom: '2rem',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+      }}>
+        <h3 style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#581c87',
+          marginBottom: '1.5rem'
+        }}>
+          👦👧 孩子表現對比
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          {stats.childStats.map(child => (
+            <div
+              key={child.name}
+              style={{
+                background: 'rgba(168, 85, 247, 0.05)',
+                borderRadius: '1rem',
+                padding: '1.5rem',
+                border: '2px solid #e9d5ff'
+              }}
+            >
+              <div style={{
+                fontSize: '48px',
+                textAlign: 'center',
+                marginBottom: '1rem'
+              }}>
+                {child.name === '哥哥' ? '👦' : '👧'}
+              </div>
+              <h4 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#581c87',
+                textAlign: 'center',
+                marginBottom: '1rem'
+              }}>
+                {child.name}
+              </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '0.5rem'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>點數</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.points}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>完成</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.completed}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>達成率</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.rate}%</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 趨勢圖表 */}
+      <div style={{
+        background: 'white',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#581c87'
+          }}>
+            📈 完成趨勢
+          </h3>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setPeriod('week')}
+              style={{
+                background: period === 'week' ? '#a78bfa' : '#e9d5ff',
+                color: period === 'week' ? 'white' : '#7e22ce',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              近7天
+            </button>
+            <button
+              onClick={() => setPeriod('month')}
+              style={{
+                background: period === 'month' ? '#a78bfa' : '#e9d5ff',
+                color: period === 'month' ? 'white' : '#7e22ce',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              近30天
+            </button>
+          </div>
+        </div>
+
+        {/* 簡易長條圖 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {trendData.map(data => (
+            <div key={data.day}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#7e22ce',
+                marginBottom: '0.5rem'
+              }}>
+                {data.day}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ width: '50px', fontSize: '12px', color: '#9333ea' }}>👦 哥哥</div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{
+                    height: '24px',
+                    width: `${(data.brother / maxValue) * 100}%`,
+                    background: 'linear-gradient(to right, #60a5fa, #3b82f6)',
+                    borderRadius: '0.25rem',
+                    minWidth: '2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    paddingRight: '0.5rem',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    {data.brother}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                <div style={{ width: '50px', fontSize: '12px', color: '#9333ea' }}>👧 妹妹</div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{
+                    height: '24px',
+                    width: `${(data.sister / maxValue) * 100}%`,
+                    background: 'linear-gradient(to right, #f472b6, #ec4899)',
+                    borderRadius: '0.25rem',
+                    minWidth: '2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    paddingRight: '0.5rem',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    {data.sister}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
