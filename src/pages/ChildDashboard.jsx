@@ -155,8 +155,6 @@ export default function ChildDashboard({ user, onLogout }) {
                 title="Morning"
                 subtitle="勇者床鋪堡壘"
                 icon="🛏️"
-                bgGradient="linear-gradient(135deg, #60a5fa, #3b82f6)"
-                borderColor="#2563eb"
                 task={tasksByTime.morning[0]}
                 onComplete={handleComplete}
               />
@@ -168,8 +166,6 @@ export default function ChildDashboard({ user, onLogout }) {
                 title="Afternoon"
                 subtitle="知識圖書館"
                 icon="📚"
-                bgGradient="linear-gradient(135deg, #4ade80, #22c55e)"
-                borderColor="#16a34a"
                 task={tasksByTime.afternoon[0]}
                 onComplete={handleComplete}
               />
@@ -181,8 +177,6 @@ export default function ChildDashboard({ user, onLogout }) {
                 title="Challenge"
                 subtitle="彩虹牙刷挑戰"
                 icon="🌈"
-                bgGradient="linear-gradient(135deg, #a78bfa, #8b5cf6)"
-                borderColor="#7c3aed"
                 task={tasksByTime.evening[0]}
                 onComplete={handleComplete}
               />
@@ -244,14 +238,15 @@ export default function ChildDashboard({ user, onLogout }) {
 }
 
 // 任務卡片組件
-function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComplete }) {
+function TaskCard({ title, subtitle, icon, task, onComplete }) {
   return (
     <div style={{
-      background: bgGradient,
+      background: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(10px)',
       borderRadius: '1.5rem',
       padding: '1.5rem',
-      boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
-      border: `4px solid ${borderColor}`,
+      boxShadow: '0 15px 40px rgba(0,0,0,0.15)',
+      border: '3px solid rgba(255, 255, 255, 0.9)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -261,7 +256,7 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
         right: '-40px',
         bottom: '-40px',
         fontSize: '150px',
-        opacity: 0.2
+        opacity: 0.1
       }}>
         {icon}
       </div>
@@ -270,12 +265,12 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
         {/* 頂部標籤 */}
         <div style={{
           display: 'inline-block',
-          background: 'white',
+          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
           padding: '0.25rem 1rem',
           borderRadius: '1rem',
           fontSize: '14px',
           fontWeight: 'bold',
-          color: borderColor,
+          color: 'white',
           marginBottom: '1rem'
         }}>
           {title}
@@ -288,21 +283,21 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
 
           {/* 中間內容 */}
           <div style={{ flex: 1 }}>
-            <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', marginBottom: '1rem' }}>
+            <h3 style={{ color: '#581c87', fontSize: '24px', fontWeight: '900', marginBottom: '1rem' }}>
               {subtitle}
             </h3>
             
             {/* 進度條 */}
             {task.progress !== undefined && (
               <div style={{
-                background: 'rgba(255,255,255,0.3)',
+                background: 'rgba(168, 85, 247, 0.2)',
                 borderRadius: '1rem',
                 height: '12px',
                 marginBottom: '0.75rem',
                 overflow: 'hidden'
               }}>
                 <div style={{
-                  background: 'white',
+                  background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
                   height: '100%',
                   borderRadius: '1rem',
                   width: `${task.progress}%`,
@@ -313,7 +308,7 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
 
             {/* 進度文字 */}
             {task.current && (
-              <div style={{ color: 'white', fontSize: '14px', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#7e22ce', fontSize: '14px', marginBottom: '0.75rem', fontWeight: '600' }}>
                 {task.current} / {task.target} 天
               </div>
             )}
@@ -321,11 +316,11 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
             {/* 獎勵標籤 */}
             <div style={{
               display: 'inline-block',
-              background: 'white',
+              background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
               padding: '0.5rem 1rem',
               borderRadius: '1rem'
             }}>
-              <span style={{ color: '#d97706', fontWeight: '900', fontSize: '18px' }}>
+              <span style={{ color: 'white', fontWeight: '900', fontSize: '18px' }}>
                 Reward {task.points} pts 🎁
               </span>
             </div>
@@ -339,23 +334,23 @@ function TaskCard({ title, subtitle, icon, bgGradient, borderColor, task, onComp
             width: '100%',
             marginTop: '1.5rem',
             background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
-            color: '#581c87',
+            color: 'white',
             fontWeight: '900',
             fontSize: '20px',
             padding: '1rem',
             borderRadius: '1rem',
-            border: '4px solid #fcd34d',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            border: '3px solid #fcd34d',
+            boxShadow: '0 10px 30px rgba(251, 191, 36, 0.4)',
             cursor: 'pointer',
             transition: 'all 0.3s ease'
           }}
           onMouseOver={(e) => {
             e.target.style.transform = 'scale(1.05)'
-            e.target.style.boxShadow = '0 15px 40px rgba(0,0,0,0.4)'
+            e.target.style.boxShadow = '0 15px 40px rgba(251, 191, 36, 0.6)'
           }}
           onMouseOut={(e) => {
             e.target.style.transform = 'scale(1)'
-            e.target.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)'
+            e.target.style.boxShadow = '0 10px 30px rgba(251, 191, 36, 0.4)'
           }}
         >
           我完成了！✨
