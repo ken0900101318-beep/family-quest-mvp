@@ -58,7 +58,7 @@ function App() {
           path="/parent" 
           element={
             currentUser && currentUser.role === 'parent' ? 
-              <ParentWrapper user={currentUser} onLogout={handleLogout} /> : 
+              <Navigate to="/parent/hub" /> : 
               <Navigate to="/login" />
           } 
         />
@@ -66,7 +66,7 @@ function App() {
           path="/parent/hub" 
           element={
             currentUser && currentUser.role === 'parent' ? 
-              <ParentHubWrapper user={currentUser} /> : 
+              <ParentHubWrapper user={currentUser} onLogout={handleLogout} /> : 
               <Navigate to="/login" />
           } 
         />
@@ -98,9 +98,9 @@ function ParentWrapper({ user, onLogout }) {
 }
 
 // Parent Hub Wrapper
-function ParentHubWrapper({ user }) {
+function ParentHubWrapper({ user, onLogout }) {
   const navigate = useNavigate()
-  return <ParentHub user={user} onBack={() => navigate('/parent')} />
+  return <ParentHub user={user} onBack={() => navigate('/parent')} onLogout={onLogout} />
 }
 
 export default App

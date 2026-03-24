@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
 
-export default function ParentHub({ user, onBack }) {
+export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats
   const [pendingRequests, setPendingRequests] = useState([])
   const [allTasks, setAllTasks] = useState([])
@@ -133,7 +133,7 @@ export default function ParentHub({ user, onBack }) {
             👩 家長管理中心
           </h1>
           <button
-            onClick={onBack}
+            onClick={onLogout}
             style={{
               background: 'rgba(255, 255, 255, 0.7)',
               backdropFilter: 'blur(10px)',
@@ -146,7 +146,7 @@ export default function ParentHub({ user, onBack }) {
               cursor: 'pointer'
             }}
           >
-            ← 返回
+            登出
           </button>
         </div>
 
