@@ -19,32 +19,30 @@ export default function TaskSquare({ user, onBack }) {
     const allTasks = await mockAPI.getTasks(user.id)
     setTasks(allTasks)
     
-    // Mock 申請記錄
-    setMyRequests([
-      { id: 101, title: '幫爸爸洗車', points: 50, status: 'pending', createdAt: '2026-03-24' },
-      { id: 102, title: '整理書櫃', points: 30, status: 'approved', createdAt: '2026-03-23' }
-    ])
+    // 從 localStorage 讀取申請記錄（兒童申請的任務）
+    const requests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
+    const userRequests = requests.filter(r => r.userId === user.id)
+    setMyRequests(userRequests)
     
-    // Mock 歷史記錄（含所有狀態）
-    setHistory([
-      // 今天
-      { id: 201, title: '整理床鋪', points: 10, status: 'completed', completedAt: '2026-03-24', updatedAt: '2026-03-24' },
-      { id: 202, title: '寫功課', points: 15, status: 'pending', completedAt: null, updatedAt: '2026-03-24' },
-      
-      // 昨天
-      { id: 203, title: '完成作業', points: 20, status: 'completed', completedAt: '2026-03-23', updatedAt: '2026-03-23' },
-      { id: 204, title: '幫忙倒垃圾', points: 10, status: 'rejected', rejectReason: '沒有綁好垃圾袋', completedAt: null, updatedAt: '2026-03-23' },
-      { id: 205, title: '刷牙', points: 5, status: 'completed', completedAt: '2026-03-23', updatedAt: '2026-03-23' },
-      
-      // 前天
-      { id: 206, title: '練習鋼琴', points: 30, status: 'completed', completedAt: '2026-03-22', updatedAt: '2026-03-22' },
-      { id: 207, title: '洗碗', points: 15, status: 'expired', completedAt: null, updatedAt: '2026-03-22' },
-      
-      // 更早
-      { id: 208, title: '整理房間', points: 25, status: 'completed', completedAt: '2026-03-20', updatedAt: '2026-03-20' },
-      { id: 209, title: '遛狗', points: 10, status: 'completed', completedAt: '2026-03-19', updatedAt: '2026-03-19' },
-      { id: 210, title: '讀書', points: 20, status: 'completed', completedAt: '2026-03-15', updatedAt: '2026-03-15' }
-    ])
+    // 從 localStorage 讀取真實提交記錄
+    const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const userSubmissions = stored.filter(s => s.userId === user.id)
+    
+    // 轉換成歷史記錄格式
+    const historyRecords = userSubmissions.map(sub => {
+      const task = allTasks.find(t => t.id === sub.taskId)
+      return {
+        id: sub.id,
+        title: task ? task.title : '未知任務',
+        points: task ? task.points : 0,
+        status: sub.status === 'approved' ? 'completed' : sub.status,
+        completedAt: sub.status === 'approved' ? sub.timestamp.split('T')[0] : null,
+        updatedAt: sub.timestamp.split('T')[0],
+        rejectReason: sub.rejectReason
+      }
+    })
+    
+    setHistory(historyRecords)
     
     setLoading(false)
   }
@@ -52,13 +50,19 @@ export default function TaskSquare({ user, onBack }) {
   const handleRequestTask = (taskData) => {
     // 提交申請
     const newRequest = {
-      id: Date.now(), // 臨時 ID
+      id: Date.now(),
+      userId: user.id,
       title: taskData.title,
       points: parseInt(taskData.points),
       description: taskData.description,
       status: 'pending',
       createdAt: new Date().toISOString().split('T')[0]
     }
+    
+    // 儲存到 localStorage
+    const requests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
+    requests.push(newRequest)
+    localStorage.setItem('taskRequests', JSON.stringify(requests))
     
     // 加入申請列表
     setMyRequests([newRequest, ...myRequests])
