@@ -241,7 +241,7 @@ export default function ChildDashboard({ user, onLogout }) {
 function TaskCard({ title, subtitle, icon, task, onComplete }) {
   return (
     <div style={{
-      background: 'rgba(255, 255, 255, 0.7)',
+      background: 'rgba(255, 255, 255, 0.6)',
       backdropFilter: 'blur(10px)',
       borderRadius: '1rem',
       padding: '1rem',
