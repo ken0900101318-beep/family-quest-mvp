@@ -267,10 +267,23 @@ function MyRequests({ requests }) {
 // 歷史記錄
 function History({ records }) {
   const [timeRange, setTimeRange] = useState('7days') // 7days, 30days, all
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   // 按時間範圍篩選
   const filterByTimeRange = (records) => {
     const now = new Date()
+    
+    // 如果是全部模式且有設定日期篩選
+    if (timeRange === 'all' && (startDate || endDate)) {
+      return records.filter(r => {
+        const recordDate = new Date(r.completedAt || r.updatedAt)
+        const start = startDate ? new Date(startDate) : new Date('2000-01-01')
+        const end = endDate ? new Date(endDate) : new Date('2099-12-31')
+        return recordDate >= start && recordDate <= end
+      })
+    }
+    
     const cutoffDays = timeRange === '7days' ? 7 : timeRange === '30days' ? 30 : 9999
     const cutoffDate = new Date(now.getTime() - cutoffDays * 24 * 60 * 60 * 1000)
     
@@ -311,12 +324,12 @@ function History({ records }) {
       }}>
         <TimeRangeButton
           active={timeRange === '7days'}
-          onClick={() => setTimeRange('7days')}
+          onClick={() => { setTimeRange('7days'); setStartDate(''); setEndDate(''); }}
           label="近 7 天"
         />
         <TimeRangeButton
           active={timeRange === '30days'}
-          onClick={() => setTimeRange('30days')}
+          onClick={() => { setTimeRange('30days'); setStartDate(''); setEndDate(''); }}
           label="近 30 天"
         />
         <TimeRangeButton
@@ -325,6 +338,75 @@ function History({ records }) {
           label="全部"
         />
       </div>
+
+      {/* 日期篩選器（全部模式才顯示） */}
+      {timeRange === 'all' && (
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '1rem',
+          padding: '1rem',
+          marginBottom: '1rem'
+        }}>
+          <div style={{ color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.75rem' }}>
+            📅 日期篩選
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '120px' }}>
+              <label style={{ display: 'block', color: '#9333ea', fontSize: '12px', marginBottom: '0.25rem' }}>
+                開始日期
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  border: '2px solid #d8b4fe',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: '120px' }}>
+              <label style={{ display: 'block', color: '#9333ea', fontSize: '12px', marginBottom: '0.25rem' }}>
+                結束日期
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  border: '2px solid #d8b4fe',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#e5e7eb',
+                  color: '#6b7280',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                清除
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 時間軸顯示 */}
       {dates.length === 0 ? (
