@@ -690,10 +690,17 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
   )
 }
 
-// 任務管理（簡化版，之後補完）
+// 任務管理
 function TaskManagement({ tasks, onCreateNew }) {
+  const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
+
+  const filteredTasks = selectedMember === 'all' 
+    ? tasks 
+    : tasks.filter(t => t.assignedTo === selectedMember || t.assignedTo === 'all')
+
   return (
     <div>
+      {/* 發布新任務按鈕 */}
       <button
         onClick={onCreateNew}
         style={{
@@ -701,18 +708,157 @@ function TaskManagement({ tasks, onCreateNew }) {
           background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
           color: 'white',
           fontWeight: '900',
-          fontSize: '16px',
-          padding: '1rem',
+          fontSize: '18px',
+          padding: '1.25rem',
           borderRadius: '1rem',
           border: 'none',
           cursor: 'pointer',
-          marginBottom: '1rem'
+          marginBottom: '1.5rem',
+          boxShadow: '0 8px 20px rgba(251, 191, 36, 0.4)'
         }}
       >
         ✨ 發布新任務
       </button>
-      <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
-        任務列表（開發中...）
+
+      {/* 成員切換 */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.5rem',
+        background: 'rgba(255, 255, 255, 0.7)',
+        padding: '0.5rem',
+        borderRadius: '0.75rem'
+      }}>
+        {['all', '哥哥', '妹妹'].map(member => (
+          <button
+            key={member}
+            onClick={() => setSelectedMember(member)}
+            style={{
+              flex: 1,
+              background: selectedMember === member
+                ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+                : 'transparent',
+              color: selectedMember === member ? 'white' : '#9333ea',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              padding: '0.75rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {member === 'all' ? '👨‍👩‍👧‍👦 全部' : member === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
+          </button>
+        ))}
+      </div>
+
+      {/* 任務列表 */}
+      {filteredTasks.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce', fontSize: '16px' }}>
+          還沒有任務，點上方按鈕發布新任務
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          {filteredTasks.map(task => (
+            <TaskCard key={task.id} task={task} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 任務卡片（管理視圖）
+function TaskCard({ task }) {
+  const typeColors = {
+    daily: { bg: '#fef3c7', color: '#f59e0b', label: '每日' },
+    challenge: { bg: '#fce7f3', color: '#ec4899', label: '挑戰' },
+    extra: { bg: '#ddd6fe', color: '#8b5cf6', label: '額外' }
+  }
+
+  const config = typeColors[task.type] || typeColors.daily
+
+  return (
+    <div style={{
+      background: 'white',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+      border: '2px solid #e9d5ff'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '48px' }}>{task.icon}</div>
+        <div style={{
+          background: config.bg,
+          color: config.color,
+          padding: '0.25rem 0.75rem',
+          borderRadius: '0.5rem',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          {config.label}
+        </div>
+      </div>
+
+      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.5rem' }}>
+        {task.title}
+      </h3>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+        <div style={{
+          background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+          color: 'white',
+          padding: '0.25rem 0.75rem',
+          borderRadius: '0.5rem',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}>
+          {task.points} 💰
+        </div>
+        <div style={{ fontSize: '14px', color: '#7e22ce', fontWeight: '600' }}>
+          {task.assignedTo === 'all' ? '👨‍👩‍👧‍👦 全家' : task.assignedTo === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
+        </div>
+      </div>
+
+      {task.current && task.target && (
+        <div style={{
+          background: 'rgba(139, 92, 246, 0.1)',
+          padding: '0.5rem',
+          borderRadius: '0.5rem',
+          fontSize: '14px',
+          color: '#7e22ce',
+          marginBottom: '0.75rem'
+        }}>
+          進度：{task.current}/{task.target} 天
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+        <button style={{
+          flex: 1,
+          background: 'rgba(168, 85, 247, 0.1)',
+          color: '#7e22ce',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          padding: '0.5rem',
+          borderRadius: '0.5rem',
+          border: '2px solid #d8b4fe',
+          cursor: 'pointer'
+        }}>
+          ✏️ 編輯
+        </button>
+        <button style={{
+          background: task.status === 'active' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+          color: task.status === 'active' ? '#ef4444' : '#10b981',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          border: task.status === 'active' ? '2px solid #fca5a5' : '2px solid #86efac',
+          cursor: 'pointer'
+        }}>
+          {task.status === 'active' ? '❌ 停用' : '✅ 啟用'}
+        </button>
       </div>
     </div>
   )
@@ -1007,8 +1153,34 @@ function WishCard({ wish, onApprove, onReject }) {
   )
 }
 
-// 創建任務表單（簡化版，之後補完）
+// 創建任務表單
 function TaskForm({ onSubmit, onClose }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    icon: '⭐',
+    points: '',
+    type: 'daily',
+    assignedTo: 'all',
+    target: '',
+    description: ''
+  })
+
+  const icons = ['⭐', '🛏️', '📚', '🍽️', '🧹', '🚿', '🎨', '🎵', '⚽', '🌈']
+  const types = [
+    { value: 'daily', label: '每日例行', icon: '📅' },
+    { value: 'extra', label: '單次任務', icon: '⚡' },
+    { value: 'challenge', label: '長期挑戰', icon: '🏆' }
+  ]
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!formData.title || !formData.points) {
+      alert('請填寫完整資訊')
+      return
+    }
+    onSubmit(formData)
+  }
+
   return (
     <div style={{
       position: 'fixed',
@@ -1016,21 +1188,264 @@ function TaskForm({ onSubmit, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
+      background: 'rgba(0, 0, 0, 0.7)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 100
+      zIndex: 100,
+      padding: '1rem',
+      overflowY: 'auto'
     }}>
       <div style={{
         background: 'white',
         borderRadius: '1.5rem',
-        padding: '1.5rem',
-        maxWidth: '500px',
-        width: '90%'
+        padding: '2rem',
+        maxWidth: '600px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto'
       }}>
-        <h2 style={{ marginBottom: '1rem' }}>創建新任務（開發中）</h2>
-        <button onClick={onClose}>關閉</button>
+        <h2 style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#581c87',
+          marginBottom: '1.5rem',
+          textAlign: 'center'
+        }}>
+          ✨ 發布新任務
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          {/* 任務圖示 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              任務圖示
+            </label>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '0.5rem'
+            }}>
+              {icons.map(icon => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, icon })}
+                  style={{
+                    fontSize: '32px',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: formData.icon === icon ? '3px solid #a78bfa' : '2px solid #e9d5ff',
+                    background: formData.icon === icon ? 'rgba(167, 139, 250, 0.1)' : 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 任務名稱 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              任務名稱
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="例：整理床鋪"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '2px solid #d8b4fe',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+
+          {/* 任務類型 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              任務類型
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              {types.map(type => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: type.value })}
+                  style={{
+                    background: formData.type === type.value
+                      ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+                      : 'white',
+                    color: formData.type === type.value ? 'white' : '#9333ea',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #d8b4fe',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {type.icon} {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 獎勵點數 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              獎勵點數
+            </label>
+            <input
+              type="number"
+              value={formData.points}
+              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+              placeholder="例：10"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '2px solid #d8b4fe',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+
+          {/* 分配對象 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              分配給
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              {[
+                { value: 'all', label: '👨‍👩‍👧‍👦 全部' },
+                { value: '哥哥', label: '👦 哥哥' },
+                { value: '妹妹', label: '👧 妹妹' }
+              ].map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, assignedTo: option.value })}
+                  style={{
+                    background: formData.assignedTo === option.value
+                      ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
+                      : 'white',
+                    color: formData.assignedTo === option.value ? 'white' : '#f59e0b',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #fcd34d',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 長期挑戰目標天數 */}
+          {formData.type === 'challenge' && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#7e22ce',
+                marginBottom: '0.5rem'
+              }}>
+                挑戰天數
+              </label>
+              <input
+                type="number"
+                value={formData.target}
+                onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                placeholder="例：21（天）"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '0.75rem',
+                  border: '2px solid #d8b4fe',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+          )}
+
+          {/* 按鈕 */}
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                flex: 1,
+                background: '#e9d5ff',
+                color: '#7e22ce',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              style={{
+                flex: 1,
+                background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(251, 191, 36, 0.4)'
+              }}
+            >
+              ✨ 發布任務
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
