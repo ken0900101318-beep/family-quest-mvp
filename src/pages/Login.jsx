@@ -71,16 +71,13 @@ export default function Login({ onLogin }) {
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '480px' }}>
         {/* 標題 */}
         <div className="text-center mb-12">
-          <div style={{ fontSize: '80px', marginBottom: '1rem', filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))' }}>
-            🏰
-          </div>
           <h1 style={{ 
-            fontSize: '36px', 
+            fontSize: '42px', 
             fontWeight: 'bold', 
             background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            marginBottom: '0.75rem',
+            marginBottom: '1rem',
             letterSpacing: '1px',
             filter: 'drop-shadow(0 2px 4px rgba(255,255,255,0.5))'
           }}>
