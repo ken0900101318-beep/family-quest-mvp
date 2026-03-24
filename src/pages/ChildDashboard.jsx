@@ -140,18 +140,32 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
           </div>
 
           {/* 右側：Point Bank */}
-          <div style={{
-            background: 'white',
-            borderRadius: '1rem',
-            padding: '0.75rem 1.5rem',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-            border: '2px solid #d8b4fe'
-          }}>
+          <div
+            onClick={() => onNavigate && onNavigate('passbook')}
+            style={{
+              background: 'white',
+              borderRadius: '1rem',
+              padding: '0.75rem 1.5rem',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+              border: '2px solid #d8b4fe',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)'
+              e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.2)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)'
+            }}
+          >
             <div style={{ color: '#9333ea', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Point Bank</div>
             <div style={{ fontSize: '32px', fontWeight: '900', color: '#581c87', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {user.points}
               <span style={{ fontSize: '32px', animation: 'bounce 1s infinite' }}>💰</span>
             </div>
+            <div style={{ fontSize: '10px', color: '#9333ea', marginTop: '4px', textAlign: 'center' }}>點擊查看存摺</div>
           </div>
         </div>
 

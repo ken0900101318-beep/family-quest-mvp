@@ -6,6 +6,7 @@ import ParentDashboard from './pages/ParentDashboard'
 import ParentHub from './pages/ParentHub'
 import TaskSquare from './pages/TaskSquare'
 import Shop from './pages/Shop'
+import Passbook from './pages/Passbook'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -64,6 +65,14 @@ function App() {
           } 
         />
         <Route 
+          path="/child/passbook" 
+          element={
+            currentUser && currentUser.role === 'child' ? 
+              <PassbookWrapper user={currentUser} /> : 
+              <Navigate to="/login" />
+          } 
+        />
+        <Route 
           path="/parent" 
           element={
             currentUser && currentUser.role === 'parent' ? 
@@ -104,6 +113,12 @@ function TaskSquareWrapper({ user }) {
 function ShopWrapper({ user }) {
   const navigate = useNavigate()
   return <Shop user={user} onNavigate={(page) => page === 'home' ? navigate('/child') : navigate(`/child/${page}`)} />
+}
+
+// Passbook Wrapper
+function PassbookWrapper({ user }) {
+  const navigate = useNavigate()
+  return <Passbook user={user} onNavigate={(page) => page === 'home' ? navigate('/child') : navigate(`/child/${page}`)} />
 }
 
 // Parent Dashboard Wrapper
