@@ -83,7 +83,16 @@ export const mockData = {
       photo: null
     },
   ],
-  transactions: []
+  transactions: [],
+  products: [
+    { id: 1, name: '巧克力', icon: '🍫', price: 20, category: '零食', description: '美味的巧克力一片' },
+    { id: 2, name: '冰淇淋', icon: '🍦', price: 30, category: '零食', description: '任選一球冰淇淋' },
+    { id: 3, name: '玩具車', icon: '🚗', price: 100, category: '玩具', description: '迷你遙控車' },
+    { id: 4, name: '晚睡半小時', icon: '🌙', price: 50, category: '特權', description: '今晚可以晚睡30分鐘' },
+    { id: 5, name: '選電影', icon: '🎬', price: 40, category: '特權', description: '週末選一部電影' },
+    { id: 6, name: '遊戲時間', icon: '🎮', price: 60, category: '特權', description: '額外30分鐘遊戲時間' }
+  ],
+  purchases: []
 }
 
 // Mock API
@@ -191,6 +200,82 @@ export const mockAPI = {
           localStorage.setItem('submissions', JSON.stringify(stored))
         }
         resolve(submission)
+      }, 500)
+    })
+  },
+
+  // 商店相關
+  getProducts: () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockData.products)
+      }, 300)
+    })
+  },
+
+  getPurchases: (userId) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const purchases = JSON.parse(localStorage.getItem('purchases') || '[]')
+        const userPurchases = purchases.filter(p => p.userId === userId)
+        resolve(userPurchases)
+      }, 300)
+    })
+  },
+
+  purchaseProduct: (userId, productId) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const product = mockData.products.find(p => p.id === productId)
+        const user = mockData.users.find(u => u.id === userId)
+
+        if (!product || !user) {
+          reject(new Error('商品或用戶不存在'))
+          return
+        }
+
+        if (user.points < product.price) {
+          reject(new Error('點數不足'))
+          return
+        }
+
+        // 扣點數
+        user.points -= product.price
+
+        // 建立購買記錄
+        const purchase = {
+          id: Date.now(),
+          userId,
+          userName: user.name,
+          productId: product.id,
+          productName: product.name,
+          icon: product.icon,
+          price: product.price,
+          status: 'pending', // pending / delivered
+          createdAt: new Date().toISOString()
+        }
+
+        // 儲存到 localStorage
+        const purchases = JSON.parse(localStorage.getItem('purchases') || '[]')
+        purchases.push(purchase)
+        localStorage.setItem('purchases', JSON.stringify(purchases))
+
+        // 通知家長（儲存到待處理清單）
+        const notifications = JSON.parse(localStorage.getItem('parentNotifications') || '[]')
+        notifications.push({
+          id: Date.now(),
+          type: 'purchase',
+          userId,
+          userName: user.name,
+          productName: product.name,
+          icon: product.icon,
+          price: product.price,
+          timestamp: new Date().toISOString(),
+          read: false
+        })
+        localStorage.setItem('parentNotifications', JSON.stringify(notifications))
+
+        resolve(purchase)
       }, 500)
     })
   }

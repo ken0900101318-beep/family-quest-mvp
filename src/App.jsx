@@ -5,6 +5,7 @@ import ChildDashboard from './pages/ChildDashboard'
 import ParentDashboard from './pages/ParentDashboard'
 import ParentHub from './pages/ParentHub'
 import TaskSquare from './pages/TaskSquare'
+import Shop from './pages/Shop'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -55,6 +56,14 @@ function App() {
           } 
         />
         <Route 
+          path="/child/shop" 
+          element={
+            currentUser && currentUser.role === 'child' ? 
+              <ShopWrapper user={currentUser} /> : 
+              <Navigate to="/login" />
+          } 
+        />
+        <Route 
           path="/parent" 
           element={
             currentUser && currentUser.role === 'parent' ? 
@@ -89,6 +98,12 @@ function ChildWrapper({ user, onLogout }) {
 function TaskSquareWrapper({ user }) {
   const navigate = useNavigate()
   return <TaskSquare user={user} onBack={() => navigate('/child')} />
+}
+
+// Shop Wrapper
+function ShopWrapper({ user }) {
+  const navigate = useNavigate()
+  return <Shop user={user} onNavigate={(page) => navigate(`/child/${page}`)} />
 }
 
 // Parent Dashboard Wrapper

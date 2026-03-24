@@ -230,7 +230,7 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
           }}>
             <NavIcon icon="🏠" label="首頁" active />
             <NavIcon icon="🏛️" label="廣場" onClick={() => onNavigate && onNavigate('square')} />
-            <NavIcon icon="🎁" label="商店" />
+            <NavIcon icon="🎁" label="商店" onClick={() => onNavigate && onNavigate('shop')} />
             <button onClick={onLogout} style={{
               display: 'flex',
               flexDirection: 'column',
