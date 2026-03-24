@@ -29,18 +29,22 @@ export default function TaskSquare({ user, onBack }) {
     const userSubmissions = stored.filter(s => s.userId === user.id)
     
     // 轉換成歷史記錄格式
-    const historyRecords = userSubmissions.map(sub => {
-      const task = allTasks.find(t => t.id === sub.taskId)
-      return {
+    const historyRecords = []
+    for (const sub of userSubmissions) {
+      // 從 API 獲取最新任務資料
+      const userTasks = await mockAPI.getTasks(user.id)
+      const task = userTasks.find(t => t.id === sub.taskId)
+      
+      historyRecords.push({
         id: sub.id,
-        title: task ? task.title : '未知任務',
-        points: task ? task.points : 0,
+        title: task ? task.title : `任務 #${sub.taskId}`,
+        points: task ? task.points : 10,
         status: sub.status === 'approved' ? 'completed' : sub.status,
         completedAt: sub.status === 'approved' ? sub.timestamp.split('T')[0] : null,
         updatedAt: sub.timestamp.split('T')[0],
         rejectReason: sub.rejectReason
-      }
-    })
+      })
+    }
     
     setHistory(historyRecords)
     
