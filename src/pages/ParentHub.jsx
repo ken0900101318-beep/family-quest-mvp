@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { mockAPI } from '../lib/supabase'
+import { mockAPI, mockData } from '../lib/supabase'
 
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats
@@ -16,41 +16,28 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const loadData = async () => {
     setLoading(true)
     
-    // Mock 待審核申請
-    setPendingRequests([
-      { 
-        id: 101, 
-        childId: 2,
-        childName: '妹妹',
-        title: '幫爸爸洗車', 
-        points: 50, 
-        description: '我想幫爸爸洗車，讓車子變乾淨',
-        status: 'pending', 
-        createdAt: '2026-03-24',
-        type: 'childRequest'
-      },
-      { 
-        id: 102, 
-        childId: 1,
-        childName: '哥哥',
-        title: '整理書櫃', 
-        points: 30,
-        description: '把書櫃整理乾淨',
-        status: 'pending', 
-        createdAt: '2026-03-24',
-        type: 'childRequest'
-      },
-      { 
-        id: 103, 
-        childId: 2,
-        childName: '妹妹',
-        title: '完成作業', 
-        points: 20,
-        status: 'submitted', 
-        submittedAt: '2026-03-24 14:30',
-        type: 'taskSubmit'
+    // 從 localStorage 讀取提交記錄
+    const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const pendingSubmissions = stored.filter(s => s.status === 'pending')
+    
+    // 轉換格式以匹配 UI
+    const formattedRequests = pendingSubmissions.map(sub => {
+      const task = mockData.tasks.find(t => t.id === sub.taskId)
+      return {
+        id: sub.id,
+        childId: sub.userId,
+        childName: sub.userName,
+        title: task ? task.title : '未知任務',
+        points: task ? task.points : 0,
+        description: sub.description || '',
+        status: 'submitted',
+        submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
+        type: 'taskSubmit',
+        photo: sub.photo
       }
-    ])
+    })
+    
+    setPendingRequests(formattedRequests)
     
     // Mock 所有任務
     setAllTasks([
