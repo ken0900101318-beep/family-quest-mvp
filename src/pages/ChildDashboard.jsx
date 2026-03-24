@@ -19,15 +19,31 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   }
 
   const handleComplete = async (task) => {
+    console.log('選擇任務:', task)
+    if (!task || !task.id) {
+      alert('❌ 任務資料錯誤')
+      return
+    }
     setSelectedTask(task)
     setShowCamera(true)
   }
 
   const handlePhotoSubmit = async (photoData) => {
-    console.log('開始提交任務...', { taskId: selectedTask?.id, userId: user?.id, hasPhoto: !!photoData })
+    console.log('開始提交任務...', { 
+      selectedTask,
+      taskId: selectedTask?.id, 
+      userId: user?.id, 
+      hasPhoto: !!photoData 
+    })
     
     if (!photoData) {
       alert('⚠️ 請先選擇照片')
+      return
+    }
+    
+    if (!selectedTask || !selectedTask.id) {
+      alert('❌ 任務資料錯誤，請重新選擇')
+      setShowCamera(false)
       return
     }
     
