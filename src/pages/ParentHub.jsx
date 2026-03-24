@@ -323,6 +323,39 @@ function TabButton({ active, onClick, icon, label, badge }) {
 
 // 待審核
 function PendingReviews({ requests, onApprove, onReject }) {
+  const [selectedIds, setSelectedIds] = useState([])
+  
+  const handleSelectAll = () => {
+    if (selectedIds.length === requests.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(requests.map(r => r.id))
+    }
+  }
+
+  const handleBatchApprove = () => {
+    if (selectedIds.length === 0) {
+      alert('請先選擇要批次核准的項目')
+      return
+    }
+    
+    if (confirm(`確定要批次核准 ${selectedIds.length} 個項目嗎？`)) {
+      selectedIds.forEach(id => {
+        const request = requests.find(r => r.id === id)
+        if (request) {
+          onApprove(request, request.points)
+        }
+      })
+      setSelectedIds([])
+    }
+  }
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
   if (requests.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem', color: '#7e22ce', fontSize: '18px' }}>
@@ -331,37 +364,157 @@ function PendingReviews({ requests, onApprove, onReject }) {
     )
   }
 
+  // 計算摘要數據
+  const totalItems = requests.length
+  const totalPoints = requests.reduce((sum, r) => sum + r.points, 0)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {requests.map(request => (
-        <ReviewCard 
-          key={request.id} 
-          request={request}
-          onApprove={onApprove}
-          onReject={onReject}
-        />
-      ))}
+    <div>
+      {/* 頂部摘要卡片 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(251, 191, 36, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>待審核數量</div>
+          <div style={{ fontSize: '36px', fontWeight: '900' }}>{totalItems}</div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+          borderRadius: '1rem',
+          padding: '1.5rem',
+          color: 'white',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.4)'
+        }}>
+          <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>總獎勵點數</div>
+          <div style={{ fontSize: '36px', fontWeight: '900' }}>{totalPoints} 💰</div>
+        </div>
+        {selectedIds.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            color: 'white',
+            boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)'
+          }}>
+            <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '0.5rem' }}>已選擇</div>
+            <div style={{ fontSize: '36px', fontWeight: '900' }}>{selectedIds.length}</div>
+          </div>
+        )}
+      </div>
+
+      {/* 批次操作按鈕 */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.5rem'
+      }}>
+        <button
+          onClick={handleSelectAll}
+          style={{
+            flex: 1,
+            background: 'rgba(168, 85, 247, 0.1)',
+            color: '#7e22ce',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.75rem',
+            border: '2px solid #d8b4fe',
+            cursor: 'pointer'
+          }}
+        >
+          {selectedIds.length === requests.length ? '取消全選' : '全選'}
+        </button>
+        <button
+          onClick={handleBatchApprove}
+          disabled={selectedIds.length === 0}
+          style={{
+            flex: 2,
+            background: selectedIds.length > 0
+              ? 'linear-gradient(to right, #10b981, #059669)'
+              : '#d1d5db',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.75rem',
+            border: 'none',
+            cursor: selectedIds.length > 0 ? 'pointer' : 'not-allowed',
+            boxShadow: selectedIds.length > 0 ? '0 4px 15px rgba(16, 185, 129, 0.4)' : 'none'
+          }}
+        >
+          ✅ 批次核准 ({selectedIds.length})
+        </button>
+      </div>
+
+      {/* 審核列表 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {requests.map(request => (
+          <ReviewCard 
+            key={request.id} 
+            request={request}
+            selected={selectedIds.includes(request.id)}
+            onToggleSelect={() => toggleSelect(request.id)}
+            onApprove={onApprove}
+            onReject={onReject}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
 // 審核卡片
-function ReviewCard({ request, onApprove, onReject }) {
+function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) {
   const [adjustedPoints, setAdjustedPoints] = useState(request.points)
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectForm, setShowRejectForm] = useState(false)
 
   return (
     <div style={{
-      background: 'rgba(255, 255, 255, 0.7)',
+      background: selected 
+        ? 'rgba(167, 139, 250, 0.2)'
+        : 'rgba(255, 255, 255, 0.7)',
       backdropFilter: 'blur(10px)',
       borderRadius: '1rem',
+      border: selected ? '2px solid #a78bfa' : '2px solid rgba(255, 255, 255, 0.9)',
       padding: '1.5rem',
       boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-      border: '2px solid rgba(255, 255, 255, 0.9)'
+      position: 'relative'
     }}>
+      {/* 選擇框 */}
+      <div
+        onClick={onToggleSelect}
+        style={{
+          position: 'absolute',
+          top: '1rem',
+          right: '1rem',
+          width: '28px',
+          height: '28px',
+          borderRadius: '50%',
+          border: '3px solid #a78bfa',
+          background: selected ? '#a78bfa' : 'white',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '16px',
+          transition: 'all 0.2s'
+        }}
+      >
+        {selected && '✓'}
+      </div>
+      
       {/* 頂部資訊 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem', paddingRight: '2.5rem' }}>
         <div>
           <div style={{ 
             display: 'inline-block',
