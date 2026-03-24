@@ -21,21 +21,26 @@ export default function ParentHub({ user, onBack, onLogout }) {
     const pendingSubmissions = stored.filter(s => s.status === 'pending')
     
     // 轉換格式以匹配 UI
-    const formattedRequests = pendingSubmissions.map(sub => {
-      const task = mockData.tasks.find(t => t.id === sub.taskId)
-      return {
+    const formattedRequests = []
+    for (const sub of pendingSubmissions) {
+      // 從 API 獲取最新任務資料
+      const userTasks = await mockAPI.getTasks(sub.userId)
+      const task = userTasks.find(t => t.id === sub.taskId)
+      
+      formattedRequests.push({
         id: sub.id,
         childId: sub.userId,
         childName: sub.userName,
-        title: task ? task.title : '未知任務',
-        points: task ? task.points : 0,
+        title: task ? task.title : `任務 #${sub.taskId}`,
+        points: task ? task.points : 10,
         description: sub.description || '',
         status: 'submitted',
         submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
         type: 'taskSubmit',
-        photo: sub.photo
-      }
-    })
+        photo: sub.photo,
+        taskId: sub.taskId
+      })
+    }
     
     setPendingRequests(formattedRequests)
     
