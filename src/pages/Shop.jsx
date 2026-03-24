@@ -7,6 +7,7 @@ export default function Shop({ user, onNavigate }) {
   const [activeTab, setActiveTab] = useState('shop') // shop / purchases / wish
   const [showWishForm, setShowWishForm] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [currentPoints, setCurrentPoints] = useState(user.points)
 
   useEffect(() => {
     loadData()
@@ -27,18 +28,24 @@ export default function Shop({ user, onNavigate }) {
   }
 
   const handlePurchase = async (product) => {
-    if (user.points < product.price) {
-      alert('❌ 點數不足！還需要 ' + (product.price - user.points) + ' 點')
+    if (currentPoints < product.price) {
+      alert('❌ 點數不足！還需要 ' + (product.price - currentPoints) + ' 點')
       return
     }
 
     if (confirm(`確定要兌換「${product.name}」嗎？\n將扣除 ${product.price} 點數`)) {
       try {
         await mockAPI.purchaseProduct(user.id, product.id)
+        
+        // 更新當前點數
+        const newPoints = currentPoints - product.price
+        setCurrentPoints(newPoints)
+        
+        // 更新 user 物件
+        user.points = newPoints
+        
         alert('🎉 兌換成功！家長已收到通知')
         loadData()
-        // 觸發用戶點數更新（需要父組件重新載入用戶資料）
-        window.location.reload()
       } catch (err) {
         alert('❌ 兌換失敗，請稍後再試')
       }
@@ -152,7 +159,7 @@ export default function Shop({ user, onNavigate }) {
               我的點數餘額
             </div>
             <div style={{ fontSize: '48px', fontWeight: '900', color: '#581c87' }}>
-              {user.points} 💰
+              {currentPoints} 💰
             </div>
           </div>
           <div style={{ fontSize: '80px', opacity: 0.2 }}>🎁</div>
@@ -212,7 +219,7 @@ export default function Shop({ user, onNavigate }) {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      userPoints={user.points}
+                      userPoints={currentPoints}
                       onPurchase={handlePurchase}
                     />
                   ))}

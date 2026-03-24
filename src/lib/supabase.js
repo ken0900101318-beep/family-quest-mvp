@@ -241,6 +241,13 @@ export const mockAPI = {
 
         // 扣點數
         user.points -= product.price
+        
+        // 更新 localStorage 的用戶資料
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+        if (currentUser.id === userId) {
+          currentUser.points = user.points
+          localStorage.setItem('currentUser', JSON.stringify(currentUser))
+        }
 
         // 建立購買記錄
         const purchase = {
