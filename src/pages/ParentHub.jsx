@@ -10,6 +10,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -77,22 +78,62 @@ export default function ParentHub({ user, onBack, onLogout }) {
     setLoading(false)
   }
 
-  const handleApprove = (request, adjustedPoints) => {
-    // 從待審核列表中移除
-    setPendingRequests(prev => prev.filter(r => r.id !== request.id))
-    alert(`✅ 已核准「${request.title}」\n獎勵點數：${adjustedPoints || request.points} 點`)
+  const handleApprove = async (request, adjustedPoints) => {
+    try {
+      await mockAPI.approveSubmission(request.id, adjustedPoints)
+      // 從待審核列表中移除
+      setPendingRequests(prev => prev.filter(r => r.id !== request.id))
+      alert(`✅ 已核准「${request.title}」\n獎勵點數：${adjustedPoints || request.points} 點`)
+    } catch (err) {
+      alert('❌ 核准失敗，請稍後再試')
+    }
   }
 
-  const handleReject = (request, reason) => {
-    // 從待審核列表中移除
-    setPendingRequests(prev => prev.filter(r => r.id !== request.id))
-    alert(`❌ 已拒絕「${request.title}」\n原因：${reason}`)
+  const handleReject = async (request, reason) => {
+    try {
+      await mockAPI.rejectSubmission(request.id, reason)
+      // 從待審核列表中移除
+      setPendingRequests(prev => prev.filter(r => r.id !== request.id))
+      alert(`❌ 已拒絕「${request.title}」\n原因：${reason}`)
+    } catch (err) {
+      alert('❌ 拒絕失敗，請稍後再試')
+    }
   }
 
   const handleCreateTask = (taskData) => {
-    alert('✅ 任務已創建！')
+    if (editingTask) {
+      // 更新現有任務
+      const updatedTasks = allTasks.map(t => 
+        t.id === editingTask.id ? { ...t, ...taskData } : t
+      )
+      setAllTasks(updatedTasks)
+      alert('✅ 任務已更新！')
+    } else {
+      // 創建新任務
+      const newTask = {
+        id: Date.now(),
+        ...taskData,
+        status: 'active'
+      }
+      setAllTasks([...allTasks, newTask])
+      alert('✅ 任務已創建！')
+    }
     setShowTaskForm(false)
-    loadData()
+    setEditingTask(null)
+  }
+
+  const handleEditTask = (task) => {
+    setEditingTask(task)
+    setShowTaskForm(true)
+  }
+
+  const handleToggleTask = (task) => {
+    const newStatus = task.status === 'active' ? 'inactive' : 'active'
+    const updatedTasks = allTasks.map(t => 
+      t.id === task.id ? { ...t, status: newStatus } : t
+    )
+    setAllTasks(updatedTasks)
+    alert(`✅ 任務已${newStatus === 'active' ? '啟用' : '停用'}`)
   }
 
   const handleDeliverPurchase = (purchase) => {
@@ -248,7 +289,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
             {activeTab === 'tasks' && (
               <TaskManagement 
                 tasks={allTasks}
-                onCreateNew={() => setShowTaskForm(true)}
+                onCreateNew={() => { setEditingTask(null); setShowTaskForm(true); }}
+                onEditTask={handleEditTask}
+                onToggleTask={handleToggleTask}
               />
             )}
             {activeTab === 'shop' && (
@@ -266,11 +309,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
           </>
         )}
 
-        {/* 創建任務表單 */}
+        {/* 創建/編輯任務表單 */}
         {showTaskForm && (
           <TaskForm
+            task={editingTask}
             onSubmit={handleCreateTask}
-            onClose={() => setShowTaskForm(false)}
+            onClose={() => { setShowTaskForm(false); setEditingTask(null); }}
           />
         )}
       </div>
@@ -333,20 +377,21 @@ function PendingReviews({ requests, onApprove, onReject }) {
     }
   }
 
-  const handleBatchApprove = () => {
+  const handleBatchApprove = async () => {
     if (selectedIds.length === 0) {
       alert('請先選擇要批次核准的項目')
       return
     }
     
     if (confirm(`確定要批次核准 ${selectedIds.length} 個項目嗎？`)) {
-      selectedIds.forEach(id => {
+      for (const id of selectedIds) {
         const request = requests.find(r => r.id === id)
         if (request) {
-          onApprove(request, request.points)
+          await onApprove(request, request.points)
         }
-      })
+      }
       setSelectedIds([])
+      alert(`✅ 已批次核准 ${selectedIds.length} 個項目`)
     }
   }
 
@@ -691,7 +736,7 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
 }
 
 // 任務管理
-function TaskManagement({ tasks, onCreateNew }) {
+function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
   const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
 
   const filteredTasks = selectedMember === 'all' 
@@ -760,7 +805,12 @@ function TaskManagement({ tasks, onCreateNew }) {
       ) : (
         <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {filteredTasks.map(task => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              onEdit={onEditTask}
+              onToggle={onToggleTask}
+            />
           ))}
         </div>
       )}
@@ -769,7 +819,7 @@ function TaskManagement({ tasks, onCreateNew }) {
 }
 
 // 任務卡片（管理視圖）
-function TaskCard({ task }) {
+function TaskCard({ task, onEdit, onToggle }) {
   const typeColors = {
     daily: { bg: '#fef3c7', color: '#f59e0b', label: '每日' },
     challenge: { bg: '#fce7f3', color: '#ec4899', label: '挑戰' },
@@ -784,7 +834,8 @@ function TaskCard({ task }) {
       borderRadius: '1rem',
       padding: '1.5rem',
       boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-      border: '2px solid #e9d5ff'
+      border: '2px solid #e9d5ff',
+      opacity: task.status === 'inactive' ? 0.5 : 1
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
         <div style={{ fontSize: '48px' }}>{task.icon}</div>
@@ -834,29 +885,35 @@ function TaskCard({ task }) {
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-        <button style={{
-          flex: 1,
-          background: 'rgba(168, 85, 247, 0.1)',
-          color: '#7e22ce',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          padding: '0.5rem',
-          borderRadius: '0.5rem',
-          border: '2px solid #d8b4fe',
-          cursor: 'pointer'
-        }}>
+        <button 
+          onClick={() => onEdit(task)}
+          style={{
+            flex: 1,
+            background: 'rgba(168, 85, 247, 0.1)',
+            color: '#7e22ce',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.5rem',
+            borderRadius: '0.5rem',
+            border: '2px solid #d8b4fe',
+            cursor: 'pointer'
+          }}
+        >
           ✏️ 編輯
         </button>
-        <button style={{
-          background: task.status === 'active' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-          color: task.status === 'active' ? '#ef4444' : '#10b981',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          border: task.status === 'active' ? '2px solid #fca5a5' : '2px solid #86efac',
-          cursor: 'pointer'
-        }}>
+        <button 
+          onClick={() => onToggle(task)}
+          style={{
+            background: task.status === 'active' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+            color: task.status === 'active' ? '#ef4444' : '#10b981',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: task.status === 'active' ? '2px solid #fca5a5' : '2px solid #86efac',
+            cursor: 'pointer'
+          }}
+        >
           {task.status === 'active' ? '❌ 停用' : '✅ 啟用'}
         </button>
       </div>
@@ -1644,9 +1701,9 @@ function FinanceLedger({ transactions }) {
   )
 }
 
-// 創建任務表單
-function TaskForm({ onSubmit, onClose }) {
-  const [formData, setFormData] = useState({
+// 創建/編輯任務表單
+function TaskForm({ task, onSubmit, onClose }) {
+  const [formData, setFormData] = useState(task || {
     title: '',
     icon: '⭐',
     points: '',
@@ -1703,7 +1760,7 @@ function TaskForm({ onSubmit, onClose }) {
           marginBottom: '1.5rem',
           textAlign: 'center'
         }}>
-          ✨ 發布新任務
+          {task ? '✏️ 編輯任務' : '✨ 發布新任務'}
         </h2>
 
         <form onSubmit={handleSubmit}>
@@ -1933,7 +1990,7 @@ function TaskForm({ onSubmit, onClose }) {
                 boxShadow: '0 4px 15px rgba(251, 191, 36, 0.4)'
               }}
             >
-              ✨ 發布任務
+              {task ? '✅ 儲存變更' : '✨ 發布任務'}
             </button>
           </div>
         </form>
