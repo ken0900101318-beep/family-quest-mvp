@@ -24,13 +24,32 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   }
 
   const handlePhotoSubmit = async (photoData) => {
+    console.log('開始提交任務...', { taskId: selectedTask?.id, userId: user?.id, hasPhoto: !!photoData })
+    
+    if (!photoData) {
+      alert('⚠️ 請先選擇照片')
+      return
+    }
+    
     try {
-      await mockAPI.submitTask(selectedTask.id, user.id, photoData)
-      alert('✅ 任務已提交！等待家長審核中...')
+      // 先關閉相機界面
+      setShowCamera(false)
+      
+      const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
+      console.log('提交成功:', result)
+      
+      // 延遲顯示成功訊息
+      setTimeout(() => {
+        alert('✅ 任務已提交成功！\n等待家長審核中...')
+      }, 300)
+      
+      setSelectedTask(null)
+      loadTasks() // 重新載入任務列表
+    } catch (err) {
+      console.error('提交失敗:', err)
+      alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
       setShowCamera(false)
       setSelectedTask(null)
-    } catch (err) {
-      alert('提交失敗，請稍後再試')
     }
   }
 
