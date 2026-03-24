@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { mockAPI, mockData } from '../lib/supabase'
 
 export default function ParentHub({ user, onBack, onLogout }) {
-  const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats
+  const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop
   const [pendingRequests, setPendingRequests] = useState([])
   const [allTasks, setAllTasks] = useState([])
   const [stats, setStats] = useState({})
+  const [purchases, setPurchases] = useState([])
+  const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
 
@@ -62,6 +64,16 @@ export default function ParentHub({ user, onBack, onLogout }) {
       ]
     })
     
+    // 讀取兌換記錄
+    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
+    const pendingPurchases = purchaseData.filter(p => p.status === 'pending')
+    setPurchases(pendingPurchases)
+    
+    // 讀取許願清單
+    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
+    const pendingWishes = wishData.filter(w => w.status === 'pending')
+    setWishes(pendingWishes)
+    
     setLoading(false)
   }
 
@@ -80,6 +92,43 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const handleCreateTask = (taskData) => {
     alert('✅ 任務已創建！')
     setShowTaskForm(false)
+    loadData()
+  }
+
+  const handleDeliverPurchase = (purchase) => {
+    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
+    const updated = purchaseData.map(p => 
+      p.id === purchase.id ? { ...p, status: 'delivered', deliveredAt: new Date().toISOString() } : p
+    )
+    localStorage.setItem('purchases', JSON.stringify(updated))
+    setPurchases(prev => prev.filter(p => p.id !== purchase.id))
+    alert(`✅ 已標記「${purchase.productName}」為已發放`)
+    loadData()
+  }
+
+  const handleApproveWish = (wish) => {
+    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
+    const updated = wishData.map(w => 
+      w.id === wish.id ? { ...w, status: 'approved' } : w
+    )
+    localStorage.setItem('wishes', JSON.stringify(updated))
+    setWishes(prev => prev.filter(w => w.id !== wish.id))
+    alert(`✅ 已核准許願「${wish.name}」`)
+    loadData()
+  }
+
+  const handleRejectWish = (wish, reason) => {
+    if (!reason) {
+      alert('請輸入拒絕原因')
+      return
+    }
+    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
+    const updated = wishData.map(w => 
+      w.id === wish.id ? { ...w, status: 'rejected', rejectReason: reason } : w
+    )
+    localStorage.setItem('wishes', JSON.stringify(updated))
+    setWishes(prev => prev.filter(w => w.id !== wish.id))
+    alert(`❌ 已拒絕許願「${wish.name}」\n原因：${reason}`)
     loadData()
   }
 
@@ -168,6 +217,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
             label="任務管理"
           />
           <TabButton
+            active={activeTab === 'shop'}
+            onClick={() => setActiveTab('shop')}
+            icon="🎁"
+            label="商店管理"
+            badge={purchases.length + wishes.length}
+          />
+          <TabButton
             active={activeTab === 'stats'}
             onClick={() => setActiveTab('stats')}
             icon="📊"
@@ -193,6 +249,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
               <TaskManagement 
                 tasks={allTasks}
                 onCreateNew={() => setShowTaskForm(true)}
+              />
+            )}
+            {activeTab === 'shop' && (
+              <ShopManagement
+                purchases={purchases}
+                wishes={wishes}
+                onDeliverPurchase={handleDeliverPurchase}
+                onApproveWish={handleApproveWish}
+                onRejectWish={handleRejectWish}
               />
             )}
             {activeTab === 'stats' && (
@@ -505,6 +570,286 @@ function Statistics({ stats }) {
   return (
     <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
       數據統計（開發中...）
+    </div>
+  )
+}
+
+// 商店管理
+function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish }) {
+  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes
+
+  return (
+    <div>
+      {/* 子分頁 */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.5rem',
+        background: 'rgba(255, 255, 255, 0.5)',
+        padding: '0.5rem',
+        borderRadius: '0.75rem'
+      }}>
+        <button
+          onClick={() => setActiveSubTab('purchases')}
+          style={{
+            flex: 1,
+            background: activeSubTab === 'purchases'
+              ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+              : 'transparent',
+            color: activeSubTab === 'purchases' ? 'white' : '#9333ea',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          📦 待發放 ({purchases.length})
+        </button>
+        <button
+          onClick={() => setActiveSubTab('wishes')}
+          style={{
+            flex: 1,
+            background: activeSubTab === 'wishes'
+              ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+              : 'transparent',
+            color: activeSubTab === 'wishes' ? 'white' : '#9333ea',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          ✨ 許願清單 ({wishes.length})
+        </button>
+      </div>
+
+      {/* 待發放商品 */}
+      {activeSubTab === 'purchases' && (
+        <div>
+          {purchases.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+              目前沒有待發放商品
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {purchases.map(purchase => (
+                <PurchaseCard
+                  key={purchase.id}
+                  purchase={purchase}
+                  onDeliver={onDeliverPurchase}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 許願清單 */}
+      {activeSubTab === 'wishes' && (
+        <div>
+          {wishes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+              目前沒有許願
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {wishes.map(wish => (
+                <WishCard
+                  key={wish.id}
+                  wish={wish}
+                  onApprove={onApproveWish}
+                  onReject={onRejectWish}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 待發放商品卡片
+function PurchaseCard({ purchase, onDeliver }) {
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.8)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      border: '2px solid #e9d5ff',
+      boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '48px' }}>{purchase.icon}</div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.25rem' }}>
+            {purchase.productName}
+          </h3>
+          <div style={{ fontSize: '14px', color: '#7e22ce' }}>
+            👤 {purchase.userName} | 💰 {purchase.price} 點
+          </div>
+          <div style={{ fontSize: '12px', color: '#9333ea', marginTop: '0.25rem' }}>
+            兌換時間：{new Date(purchase.createdAt).toLocaleString('zh-TW')}
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => onDeliver(purchase)}
+        style={{
+          width: '100%',
+          background: 'linear-gradient(to right, #10b981, #059669)',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          padding: '0.75rem',
+          borderRadius: '0.75rem',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+        }}
+      >
+        ✅ 標記為已發放
+      </button>
+    </div>
+  )
+}
+
+// 許願卡片
+function WishCard({ wish, onApprove, onReject }) {
+  const [showRejectForm, setShowRejectForm] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.8)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      border: '2px solid #fce7f3',
+      boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <span style={{ fontSize: '24px' }}>✨</span>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#881337' }}>
+            {wish.name}
+          </h3>
+        </div>
+        <div style={{ fontSize: '14px', color: '#be185d', marginBottom: '0.5rem' }}>
+          👤 {wish.userName} | 💰 {wish.price} 點
+        </div>
+        {wish.description && (
+          <div style={{
+            background: 'rgba(236, 72, 153, 0.1)',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            fontSize: '14px',
+            color: '#9d174d',
+            marginBottom: '0.5rem'
+          }}>
+            {wish.description}
+          </div>
+        )}
+        <div style={{ fontSize: '12px', color: '#db2777' }}>
+          許願時間：{new Date(wish.createdAt).toLocaleString('zh-TW')}
+        </div>
+      </div>
+
+      {!showRejectForm ? (
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => onApprove(wish)}
+            style={{
+              flex: 1,
+              background: 'linear-gradient(to right, #10b981, #059669)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            ✅ 核准
+          </button>
+          <button
+            onClick={() => setShowRejectForm(true)}
+            style={{
+              flex: 1,
+              background: 'linear-gradient(to right, #f87171, #ef4444)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            ❌ 拒絕
+          </button>
+        </div>
+      ) : (
+        <div>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="請說明拒絕原因..."
+            rows={2}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              borderRadius: '0.5rem',
+              border: '2px solid #fda4af',
+              fontSize: '14px',
+              marginBottom: '0.5rem',
+              resize: 'vertical'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setShowRejectForm(false)}
+              style={{
+                flex: 1,
+                background: '#e9d5ff',
+                color: '#7e22ce',
+                fontWeight: 'bold',
+                padding: '0.5rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              取消
+            </button>
+            <button
+              onClick={() => onReject(wish, rejectReason)}
+              disabled={!rejectReason}
+              style={{
+                flex: 1,
+                background: rejectReason ? 'linear-gradient(to right, #f87171, #ef4444)' : '#d1d5db',
+                color: 'white',
+                fontWeight: 'bold',
+                padding: '0.5rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: rejectReason ? 'pointer' : 'not-allowed',
+                fontSize: '14px'
+              }}
+            >
+              確認拒絕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
