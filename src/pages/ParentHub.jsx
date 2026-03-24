@@ -341,6 +341,26 @@ function ReviewCard({ request, onApprove, onReject }) {
         </div>
       )}
 
+      {/* 成果照片 */}
+      {request.photo && (
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            📸 成果照片
+          </div>
+          <img
+            src={request.photo}
+            alt="任務成果"
+            style={{
+              width: '100%',
+              maxHeight: '300px',
+              objectFit: 'cover',
+              borderRadius: '0.75rem',
+              border: '2px solid #d8b4fe'
+            }}
+          />
+        </div>
+      )}
+
       {/* 點數調整 */}
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ display: 'block', color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>

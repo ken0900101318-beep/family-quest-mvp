@@ -4,6 +4,8 @@ import { mockAPI } from '../lib/supabase'
 export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [showCamera, setShowCamera] = useState(false)
 
   useEffect(() => {
     loadTasks()
@@ -16,13 +18,17 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
     setLoading(false)
   }
 
-  const handleComplete = async (taskId) => {
-    const confirmed = window.confirm('確定要提交這個任務嗎？')
-    if (!confirmed) return
+  const handleComplete = async (task) => {
+    setSelectedTask(task)
+    setShowCamera(true)
+  }
 
+  const handlePhotoSubmit = async (photoData) => {
     try {
-      await mockAPI.submitTask(taskId, user.id)
+      await mockAPI.submitTask(selectedTask.id, user.id, photoData)
       alert('✅ 任務已提交！等待家長審核中...')
+      setShowCamera(false)
+      setSelectedTask(null)
     } catch (err) {
       alert('提交失敗，請稍後再試')
     }
@@ -222,6 +228,15 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
         </div>
       </div>
 
+      {/* 拍照界面 */}
+      {showCamera && (
+        <CameraModal
+          task={selectedTask}
+          onSubmit={handlePhotoSubmit}
+          onClose={() => { setShowCamera(false); setSelectedTask(null); }}
+        />
+      )}
+
       {/* CSS 動畫 */}
       <style>{`
         @keyframes spin {
@@ -377,5 +392,201 @@ function NavIcon({ icon, label, active, onClick }) {
       <div style={{ fontSize: '32px' }}>{icon}</div>
       <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{label}</div>
     </button>
+  )
+}
+
+// 相機模態框組件
+function CameraModal({ task, onSubmit, onClose }) {
+  const [photo, setPhoto] = useState(null)
+  const [useCamera, setUseCamera] = useState(true)
+  const fileInputRef = useState(null)[0]
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setPhoto(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSubmit = () => {
+    if (!photo) {
+      alert('請先拍照或選擇照片')
+      return
+    }
+    onSubmit(photo)
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.9)',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* 頂部標題 */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.1)',
+        padding: '1rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
+          📸 拍攝任務成果
+        </h2>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'rgba(255, 255, 255, 0.2)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontSize: '16px',
+            cursor: 'pointer'
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* 任務資訊 */}
+      <div style={{
+        background: 'rgba(168, 85, 247, 0.3)',
+        padding: '1rem',
+        color: 'white',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '40px', marginBottom: '0.5rem' }}>{task.icon}</div>
+        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{task.title}</div>
+      </div>
+
+      {/* 照片預覽區 */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+        overflow: 'hidden'
+      }}>
+        {photo ? (
+          <img
+            src={photo}
+            alt="預覽"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              borderRadius: '1rem',
+              objectFit: 'contain'
+            }}
+          />
+        ) : (
+          <div style={{
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '18px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '80px', marginBottom: '1rem' }}>📷</div>
+            <div>點擊下方按鈕選擇照片</div>
+          </div>
+        )}
+      </div>
+
+      {/* 底部操作 */}
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.5)',
+        padding: '1.5rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        {/* 選擇/重拍按鈕 */}
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+            id="camera-input"
+          />
+          <label
+            htmlFor="camera-input"
+            style={{
+              flex: 1,
+              background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '1rem',
+              borderRadius: '1rem',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              display: 'block'
+            }}
+          >
+            {photo ? '📷 重新拍照' : '📷 開啟相機'}
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+            id="gallery-input"
+          />
+          <label
+            htmlFor="gallery-input"
+            style={{
+              flex: 1,
+              background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '1rem',
+              borderRadius: '1rem',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              display: 'block'
+            }}
+          >
+            🖼️ 選擇照片
+          </label>
+        </div>
+
+        {/* 提交按鈕 */}
+        {photo && (
+          <button
+            onClick={handleSubmit}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(to right, #10b981, #059669)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              padding: '1rem',
+              borderRadius: '1rem',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 10px 30px rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            ✅ 提交任務
+          </button>
+        )}
+      </div>
+    </div>
   )
 }

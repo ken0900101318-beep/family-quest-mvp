@@ -108,7 +108,7 @@ export const mockAPI = {
     })
   },
   
-  submitTask: (taskId, userId) => {
+  submitTask: (taskId, userId, photoData = null) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const task = mockData.tasks.find(t => t.id === taskId)
@@ -122,7 +122,7 @@ export const mockAPI = {
           userAvatar: user.role === 'child' ? (user.name === '哥哥' ? '👦' : '👧') : '👤',
           timestamp: new Date().toISOString(),
           status: 'pending',
-          photo: null
+          photo: photoData
         }
         
         mockData.submissions.push(submission)
