@@ -737,36 +737,117 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
     ? tasks 
     : tasks.filter(t => t.assignedTo === selectedMember || t.assignedTo === 'all')
 
+  // 統計數據
+  const stats = {
+    total: filteredTasks.length,
+    active: filteredTasks.filter(t => t.status === 'active').length,
+    daily: filteredTasks.filter(t => t.type === 'daily').length,
+    challenge: filteredTasks.filter(t => t.type === 'challenge').length
+  }
+
   return (
     <div>
+      {/* 頂部統計卡片 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+          borderRadius: '1rem',
+          padding: '1.25rem',
+          textAlign: 'center',
+          boxShadow: '0 8px 20px rgba(251, 191, 36, 0.3)'
+        }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+            {stats.total}
+          </div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+            總任務數
+          </div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          borderRadius: '1rem',
+          padding: '1.25rem',
+          textAlign: 'center',
+          boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)'
+        }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+            {stats.active}
+          </div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+            啟用中
+          </div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+          borderRadius: '1rem',
+          padding: '1.25rem',
+          textAlign: 'center',
+          boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
+        }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+            {stats.daily}
+          </div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+            每日任務
+          </div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #ec4899, #db2777)',
+          borderRadius: '1rem',
+          padding: '1.25rem',
+          textAlign: 'center',
+          boxShadow: '0 8px 20px rgba(236, 72, 153, 0.3)'
+        }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+            {stats.challenge}
+          </div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+            挑戰任務
+          </div>
+        </div>
+      </div>
+
       {/* 發布新任務按鈕 */}
       <button
         onClick={onCreateNew}
         style={{
           width: '100%',
-          background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
           color: 'white',
           fontWeight: '900',
           fontSize: '18px',
           padding: '1.25rem',
-          borderRadius: '1rem',
+          borderRadius: '1.25rem',
           border: 'none',
           cursor: 'pointer',
           marginBottom: '1.5rem',
-          boxShadow: '0 8px 20px rgba(251, 191, 36, 0.4)'
+          boxShadow: '0 10px 30px rgba(139, 92, 246, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.75rem'
         }}
       >
-        ✨ 發布新任務
+        <span style={{ fontSize: '24px' }}>✨</span>
+        <span>發布新任務</span>
       </button>
 
       {/* 成員切換 */}
       <div style={{
         display: 'flex',
-        gap: '0.5rem',
+        gap: '0.75rem',
         marginBottom: '1.5rem',
-        background: 'rgba(255, 255, 255, 0.7)',
-        padding: '0.5rem',
-        borderRadius: '0.75rem'
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(10px)',
+        padding: '0.75rem',
+        borderRadius: '1rem',
+        border: '2px solid #e9d5ff',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
       }}>
         {['all', '哥哥', '妹妹'].map(member => (
           <button
@@ -776,28 +857,43 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
               flex: 1,
               background: selectedMember === member
                 ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
-                : 'transparent',
-              color: selectedMember === member ? 'white' : '#9333ea',
+                : 'white',
+              color: selectedMember === member ? 'white' : '#7e22ce',
               fontWeight: 'bold',
-              fontSize: '14px',
-              padding: '0.75rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer'
+              fontSize: '15px',
+              padding: '0.875rem',
+              borderRadius: '0.75rem',
+              border: selectedMember === member ? 'none' : '2px solid #e9d5ff',
+              cursor: 'pointer',
+              boxShadow: selectedMember === member ? '0 4px 15px rgba(139, 92, 246, 0.3)' : 'none',
+              transition: 'all 0.2s'
             }}
           >
-            {member === 'all' ? '👨‍👩‍👧‍👦 全部' : member === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
+            {member === 'all' ? '👨‍👩‍👧‍👦 全部成員' : member === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
           </button>
         ))}
       </div>
 
       {/* 任務列表 */}
       {filteredTasks.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce', fontSize: '16px' }}>
-          還沒有任務，點上方按鈕發布新任務
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '1.5rem',
+          padding: '4rem 2rem',
+          textAlign: 'center',
+          border: '2px dashed #d8b4fe'
+        }}>
+          <div style={{ fontSize: '72px', marginBottom: '1rem' }}>📋</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce', marginBottom: '0.5rem' }}>
+            還沒有任務
+          </div>
+          <div style={{ fontSize: '14px', color: '#9333ea' }}>
+            點上方按鈕發布第一個任務吧！
+          </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+        <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
           {filteredTasks.map(task => (
             <TaskCard 
               key={task.id} 
@@ -815,9 +911,27 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
 // 任務卡片（管理視圖）
 function TaskCard({ task, onEdit, onToggle }) {
   const typeColors = {
-    daily: { bg: '#fef3c7', color: '#f59e0b', label: '每日' },
-    challenge: { bg: '#fce7f3', color: '#ec4899', label: '挑戰' },
-    extra: { bg: '#ddd6fe', color: '#8b5cf6', label: '額外' }
+    daily: { 
+      bg: 'linear-gradient(135deg, #fef3c7, #fde047)', 
+      border: '#fbbf24',
+      color: '#f59e0b', 
+      label: '每日例行',
+      emoji: '🌅'
+    },
+    challenge: { 
+      bg: 'linear-gradient(135deg, #fce7f3, #fbcfe8)', 
+      border: '#ec4899',
+      color: '#db2777', 
+      label: '長期挑戰',
+      emoji: '🏆'
+    },
+    extra: { 
+      bg: 'linear-gradient(135deg, #ddd6fe, #c4b5fd)', 
+      border: '#8b5cf6',
+      color: '#7c3aed', 
+      label: '單次任務',
+      emoji: '⭐'
+    }
   }
 
   const config = typeColors[task.type] || typeColors.daily
@@ -825,91 +939,167 @@ function TaskCard({ task, onEdit, onToggle }) {
   return (
     <div style={{
       background: 'white',
-      borderRadius: '1rem',
-      padding: '1.5rem',
-      boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-      border: '2px solid #e9d5ff',
-      opacity: task.status === 'inactive' ? 0.5 : 1
+      borderRadius: '1.25rem',
+      padding: '0',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+      border: `3px solid ${config.border}`,
+      opacity: task.status === 'inactive' ? 0.5 : 1,
+      overflow: 'hidden',
+      transition: 'transform 0.2s, box-shadow 0.2s'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-        <div style={{ fontSize: '48px' }}>{task.icon}</div>
-        <div style={{
-          background: config.bg,
-          color: config.color,
-          padding: '0.25rem 0.75rem',
-          borderRadius: '0.5rem',
-          fontSize: '12px',
-          fontWeight: 'bold'
-        }}>
-          {config.label}
+      {/* 頂部彩色區塊 */}
+      <div style={{
+        background: config.bg,
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ fontSize: '36px' }}>{task.icon}</div>
+          <div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.25rem' }}>
+              {task.title}
+            </h3>
+            <div style={{ 
+              fontSize: '12px', 
+              fontWeight: 'bold',
+              color: config.color,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}>
+              <span>{config.emoji}</span>
+              <span>{config.label}</span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.5rem' }}>
-        {task.title}
-      </h3>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-        <div style={{
-          background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
-          color: 'white',
-          padding: '0.25rem 0.75rem',
-          borderRadius: '0.5rem',
-          fontSize: '14px',
-          fontWeight: 'bold'
-        }}>
-          {task.points} 💰
-        </div>
-        <div style={{ fontSize: '14px', color: '#7e22ce', fontWeight: '600' }}>
-          {task.assignedTo === 'all' ? '👨‍👩‍👧‍👦 全家' : task.assignedTo === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
-        </div>
-      </div>
-
-      {task.current && task.target && (
-        <div style={{
-          background: 'rgba(139, 92, 246, 0.1)',
-          padding: '0.5rem',
-          borderRadius: '0.5rem',
-          fontSize: '14px',
-          color: '#7e22ce',
-          marginBottom: '0.75rem'
-        }}>
-          進度：{task.current}/{task.target} 天
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-        <button 
-          onClick={() => onEdit(task)}
-          style={{
-            flex: 1,
-            background: 'rgba(168, 85, 247, 0.1)',
-            color: '#7e22ce',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            padding: '0.5rem',
+        {task.status === 'inactive' && (
+          <div style={{
+            background: 'rgba(0,0,0,0.3)',
+            color: 'white',
+            padding: '0.25rem 0.75rem',
             borderRadius: '0.5rem',
-            border: '2px solid #d8b4fe',
-            cursor: 'pointer'
-          }}
-        >
-          ✏️ 編輯
-        </button>
-        <button 
-          onClick={() => onToggle(task)}
-          style={{
-            background: task.status === 'active' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-            color: task.status === 'active' ? '#ef4444' : '#10b981',
-            fontWeight: 'bold',
-            fontSize: '14px',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          }}>
+            已停用
+          </div>
+        )}
+      </div>
+
+      {/* 內容區 */}
+      <div style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+            color: 'white',
             padding: '0.5rem 1rem',
-            borderRadius: '0.5rem',
-            border: task.status === 'active' ? '2px solid #fca5a5' : '2px solid #86efac',
-            cursor: 'pointer'
-          }}
-        >
-          {task.status === 'active' ? '❌ 停用' : '✅ 啟用'}
-        </button>
+            borderRadius: '0.75rem',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(251, 191, 36, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>💰</span>
+            <span>{task.points} 點</span>
+          </div>
+          <div style={{ 
+            background: 'rgba(139, 92, 246, 0.15)',
+            color: '#7e22ce', 
+            padding: '0.5rem 1rem',
+            borderRadius: '0.75rem',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            border: '2px solid #e9d5ff'
+          }}>
+            {task.assignedTo === 'all' ? '👨‍👩‍👧‍👦 全家' : task.assignedTo === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
+          </div>
+        </div>
+
+        {task.current !== undefined && task.target && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.1))',
+            padding: '0.875rem',
+            borderRadius: '0.75rem',
+            marginBottom: '1rem',
+            border: '2px solid #e9d5ff'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '13px', color: '#7e22ce', fontWeight: 'bold' }}>
+                挑戰進度
+              </span>
+              <span style={{ fontSize: '14px', color: '#8b5cf6', fontWeight: 'bold' }}>
+                {task.current}/{task.target} 天
+              </span>
+            </div>
+            <div style={{
+              background: 'white',
+              height: '8px',
+              borderRadius: '4px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+                height: '100%',
+                width: `${(task.current / task.target) * 100}%`,
+                transition: 'width 0.3s'
+              }} />
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button 
+            onClick={() => onEdit(task)}
+            style={{
+              flex: 1,
+              background: 'linear-gradient(135deg, #e9d5ff, #d8b4fe)',
+              color: '#7e22ce',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              padding: '0.875rem',
+              borderRadius: '0.75rem',
+              border: '2px solid #d8b4fe',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(168, 85, 247, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span>✏️</span>
+            <span>編輯</span>
+          </button>
+          <button 
+            onClick={() => onToggle(task)}
+            style={{
+              background: task.status === 'active' 
+                ? 'linear-gradient(135deg, #fca5a5, #f87171)' 
+                : 'linear-gradient(135deg, #86efac, #4ade80)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              padding: '0.875rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: task.status === 'active'
+                ? '0 4px 10px rgba(239, 68, 68, 0.3)'
+                : '0 4px 10px rgba(16, 185, 129, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span>{task.status === 'active' ? '❌' : '✅'}</span>
+            <span>{task.status === 'active' ? '停用' : '啟用'}</span>
+          </button>
+        </div>
       </div>
     </div>
   )
