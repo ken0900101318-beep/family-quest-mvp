@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import Login from './pages/Login'
 import ChildDashboard from './pages/ChildDashboard'
 import ParentDashboard from './pages/ParentDashboard'
+import ParentHub from './pages/ParentHub'
 import TaskSquare from './pages/TaskSquare'
 
 function App() {
@@ -57,7 +58,15 @@ function App() {
           path="/parent" 
           element={
             currentUser && currentUser.role === 'parent' ? 
-              <ParentDashboard user={currentUser} onLogout={handleLogout} /> : 
+              <ParentWrapper user={currentUser} onLogout={handleLogout} /> : 
+              <Navigate to="/login" />
+          } 
+        />
+        <Route 
+          path="/parent/hub" 
+          element={
+            currentUser && currentUser.role === 'parent' ? 
+              <ParentHubWrapper user={currentUser} /> : 
               <Navigate to="/login" />
           } 
         />
@@ -80,6 +89,18 @@ function ChildWrapper({ user, onLogout }) {
 function TaskSquareWrapper({ user }) {
   const navigate = useNavigate()
   return <TaskSquare user={user} onBack={() => navigate('/child')} />
+}
+
+// Parent Dashboard Wrapper
+function ParentWrapper({ user, onLogout }) {
+  const navigate = useNavigate()
+  return <ParentDashboard user={user} onLogout={onLogout} onNavigate={(page) => navigate(`/parent/${page}`)} />
+}
+
+// Parent Hub Wrapper
+function ParentHubWrapper({ user }) {
+  const navigate = useNavigate()
+  return <ParentHub user={user} onBack={() => navigate('/parent')} />
 }
 
 export default App
