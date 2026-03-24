@@ -11,13 +11,24 @@ export const supabase = MOCK_MODE
   ? null 
   : createClient(supabaseUrl, supabaseKey)
 
+// 初始化用戶數據（只在第一次使用時）
+const initUsers = () => {
+  const stored = localStorage.getItem('users')
+  if (!stored) {
+    const defaultUsers = [
+      { id: 1, name: '媽媽', role: 'parent', pin: '1234' },
+      { id: 2, name: '哥哥', role: 'child', pin: '1111', level: 8, points: 1250 },
+      { id: 3, name: '妹妹', role: 'child', pin: '2222', level: 5, points: 850 },
+    ]
+    localStorage.setItem('users', JSON.stringify(defaultUsers))
+    return defaultUsers
+  }
+  return JSON.parse(stored)
+}
+
 // Mock 資料
 export const mockData = {
-  users: [
-    { id: 1, name: '媽媽', role: 'parent', pin: '1234' },
-    { id: 2, name: '哥哥', role: 'child', pin: '1111', level: 8, points: 1250 },
-    { id: 3, name: '妹妹', role: 'child', pin: '2222', level: 5, points: 850 },
-  ],
+  users: initUsers(),
   tasks: [
     { 
       id: 1, 
@@ -100,19 +111,75 @@ export const mockAPI = {
   login: (pin) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const user = mockData.users.find(u => u.pin === pin)
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const user = users.find(u => u.pin === pin)
         resolve(user || null)
       }, 500)
+    })
+  },
+  
+  updateUserPoints: (userId, newPoints) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const updatedUsers = users.map(u => 
+          u.id === userId ? { ...u, points: newPoints } : u
+        )
+        localStorage.setItem('users', JSON.stringify(updatedUsers))
+        mockData.users = updatedUsers
+        resolve(updatedUsers.find(u => u.id === userId))
+      }, 100)
     })
   },
   
   getTasks: (userId) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const tasks = mockData.tasks.filter(
-          t => t.assignee.includes(userId)
+        // 從 localStorage 讀取任務（如果有的話）
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
+        
+        const tasks = allTasks.filter(
+          t => t.assignee && t.assignee.includes(userId) && t.status === 'active'
         )
         resolve(tasks)
+      }, 300)
+    })
+  },
+  
+  getAllTasks: () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
+        resolve(allTasks)
+      }, 300)
+    })
+  },
+  
+  saveTask: (taskData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+        const allTasks = storedTasks.length > 0 ? storedTasks : [...mockData.tasks]
+        
+        if (taskData.id) {
+          // 更新現有任務
+          const index = allTasks.findIndex(t => t.id === taskData.id)
+          if (index !== -1) {
+            allTasks[index] = taskData
+          }
+        } else {
+          // 新增任務
+          const newTask = {
+            ...taskData,
+            id: Date.now()
+          }
+          allTasks.push(newTask)
+        }
+        
+        localStorage.setItem('tasks', JSON.stringify(allTasks))
+        resolve(allTasks)
       }, 300)
     })
   },
@@ -164,23 +231,31 @@ export const mockAPI = {
         const submission = stored.find(s => s.id === submissionId)
         
         if (submission) {
+          const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+          const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
+          const task = allTasks.find(t => t.id === submission.taskId)
+          const points = adjustedPoints || (task ? task.points : 10)
+          
           submission.status = 'approved'
+          submission.approvedAt = new Date().toISOString()
+          submission.points = points
+          submission.taskTitle = task ? task.title : '任務'
           localStorage.setItem('submissions', JSON.stringify(stored))
           
-          const task = mockData.tasks.find(t => t.id === submission.taskId)
-          const points = adjustedPoints || task.points
+          // 更新用戶點數
+          const users = JSON.parse(localStorage.getItem('users') || '[]')
+          const updatedUsers = users.map(u => 
+            u.id === submission.userId ? { ...u, points: (u.points || 0) + points } : u
+          )
+          localStorage.setItem('users', JSON.stringify(updatedUsers))
+          mockData.users = updatedUsers
           
-          const user = mockData.users.find(u => u.id === submission.userId)
-          user.points += points
-          
-          mockData.transactions.push({
-            id: mockData.transactions.length + 1,
-            userId: submission.userId,
-            amount: points,
-            type: 'earn',
-            taskId: submission.taskId,
-            timestamp: new Date().toISOString()
-          })
+          // 更新 currentUser 如果是同一個用戶
+          const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+          if (currentUser.id === submission.userId) {
+            currentUser.points = (currentUser.points || 0) + points
+            localStorage.setItem('currentUser', JSON.stringify(currentUser))
+          }
         }
         resolve(submission)
       }, 500)
@@ -240,12 +315,17 @@ export const mockAPI = {
         }
 
         // 扣點數
-        user.points -= product.price
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const updatedUsers = users.map(u => 
+          u.id === userId ? { ...u, points: u.points - product.price } : u
+        )
+        localStorage.setItem('users', JSON.stringify(updatedUsers))
+        mockData.users = updatedUsers
         
-        // 更新 localStorage 的用戶資料
+        // 更新 currentUser
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
         if (currentUser.id === userId) {
-          currentUser.points = user.points
+          currentUser.points -= product.price
           localStorage.setItem('currentUser', JSON.stringify(currentUser))
         }
 

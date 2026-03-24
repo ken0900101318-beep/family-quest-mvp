@@ -75,6 +75,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
     const pendingWishes = wishData.filter(w => w.status === 'pending')
     setWishes(pendingWishes)
     
+    // 讀取所有任務
+    const tasks = await mockAPI.getAllTasks()
+    setAllTasks(tasks)
+    
     setLoading(false)
   }
 
@@ -100,24 +104,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
     }
   }
 
-  const handleCreateTask = (taskData) => {
-    if (editingTask) {
-      // 更新現有任務
-      const updatedTasks = allTasks.map(t => 
-        t.id === editingTask.id ? { ...t, ...taskData } : t
-      )
-      setAllTasks(updatedTasks)
-      alert('✅ 任務已更新！')
-    } else {
-      // 創建新任務
-      const newTask = {
-        id: Date.now(),
-        ...taskData,
-        status: 'active'
-      }
-      setAllTasks([...allTasks, newTask])
-      alert('✅ 任務已創建！')
-    }
+  const handleCreateTask = async (taskData) => {
+    const dataToSave = editingTask 
+      ? { ...editingTask, ...taskData }
+      : { ...taskData, status: 'active', assignee: taskData.assignedTo === 'all' ? [2, 3] : taskData.assignedTo === '哥哥' ? [2] : [3] }
+    
+    const updatedTasks = await mockAPI.saveTask(dataToSave)
+    setAllTasks(updatedTasks)
+    
+    alert(editingTask ? '✅ 任務已更新！' : '✅ 任務已創建！')
     setShowTaskForm(false)
     setEditingTask(null)
   }
@@ -127,11 +122,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
     setShowTaskForm(true)
   }
 
-  const handleToggleTask = (task) => {
+  const handleToggleTask = async (task) => {
     const newStatus = task.status === 'active' ? 'inactive' : 'active'
-    const updatedTasks = allTasks.map(t => 
-      t.id === task.id ? { ...t, status: newStatus } : t
-    )
+    const updatedTask = { ...task, status: newStatus }
+    const updatedTasks = await mockAPI.saveTask(updatedTask)
     setAllTasks(updatedTasks)
     alert(`✅ 任務已${newStatus === 'active' ? '啟用' : '停用'}`)
   }
