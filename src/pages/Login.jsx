@@ -56,7 +56,7 @@ export default function Login({ onLogin }) {
       <div 
         className="w-full max-w-md"
         style={{
-          background: 'rgba(255, 255, 255, 0.92)',
+          background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'blur(25px)',
           borderRadius: '24px',
           padding: '2.5rem',
@@ -86,8 +86,8 @@ export default function Login({ onLogin }) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
             <input
               type="password"
               inputMode="numeric"
@@ -96,7 +96,8 @@ export default function Login({ onLogin }) {
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               placeholder="••••"
               style={{
-                width: '100%',
+                width: '75%',
+                maxWidth: '280px',
                 padding: '1.25rem 1.5rem',
                 textAlign: 'center',
                 fontSize: '28px',
@@ -130,17 +131,22 @@ export default function Login({ onLogin }) {
               borderRadius: '16px',
               fontSize: '14px',
               fontWeight: '500',
-              textAlign: 'center'
+              textAlign: 'center',
+              margin: '0 auto',
+              width: '75%',
+              maxWidth: '280px'
             }}>
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={pin.length !== 4 || loading}
-            style={{
-              width: '100%',
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              type="submit"
+              disabled={pin.length !== 4 || loading}
+              style={{
+                width: '75%',
+                maxWidth: '280px',
               background: pin.length === 4 && !loading
                 ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
                 : 'linear-gradient(135deg, #d8b4fe, #c4b5fd)',
@@ -172,10 +178,11 @@ export default function Login({ onLogin }) {
                 ? '0 6px 20px rgba(139,92,246,0.35)' 
                 : '0 2px 8px rgba(139,92,246,0.15)'
             }}
-          >
-            <span style={{ fontSize: '20px' }}>🗺️</span>
-            <span>{loading ? '傳送中...' : '進入冒險樂園'}</span>
-          </button>
+            >
+              <span style={{ fontSize: '20px' }}>🗺️</span>
+              <span>{loading ? '傳送中...' : '進入冒險樂園'}</span>
+            </button>
+          </div>
         </form>
 
         {/* 測試用快速登入 */}
