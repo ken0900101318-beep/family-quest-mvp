@@ -398,15 +398,13 @@ function NavIcon({ icon, label, active, onClick }) {
 // 相機模態框組件
 function CameraModal({ task, onSubmit, onClose }) {
   const [photo, setPhoto] = useState(null)
-  const [useCamera, setUseCamera] = useState(true)
-  const fileInputRef = useState(null)[0]
 
   const handleFileSelect = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
-      reader.onload = (e) => {
-        setPhoto(e.target.result)
+      reader.onloadend = () => {
+        setPhoto(reader.result)
       }
       reader.readAsDataURL(file)
     }
@@ -567,25 +565,29 @@ function CameraModal({ task, onSubmit, onClose }) {
         </div>
 
         {/* 提交按鈕 */}
-        {photo && (
-          <button
-            onClick={handleSubmit}
-            style={{
-              width: '100%',
-              background: 'linear-gradient(to right, #10b981, #059669)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '18px',
-              padding: '1rem',
-              borderRadius: '1rem',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 10px 30px rgba(16, 185, 129, 0.4)'
-            }}
-          >
-            ✅ 提交任務
-          </button>
-        )}
+        <button
+          onClick={handleSubmit}
+          disabled={!photo}
+          style={{
+            width: '100%',
+            background: photo 
+              ? 'linear-gradient(to right, #10b981, #059669)' 
+              : 'linear-gradient(to right, #9ca3af, #6b7280)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            padding: '1rem',
+            borderRadius: '1rem',
+            border: 'none',
+            cursor: photo ? 'pointer' : 'not-allowed',
+            boxShadow: photo 
+              ? '0 10px 30px rgba(16, 185, 129, 0.4)' 
+              : 'none',
+            opacity: photo ? 1 : 0.6
+          }}
+        >
+          ✅ 提交任務
+        </button>
       </div>
     </div>
   )
