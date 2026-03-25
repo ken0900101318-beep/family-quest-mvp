@@ -304,7 +304,7 @@ export default function TaskSquare({ user, onBack }) {
                 color: 'white',
                 fontWeight: 'bold',
                 fontSize: '16px',
-                padding: '1rem',
+                padding: '0.75rem 1rem',
                 borderRadius: '0.75rem',
                 textAlign: 'center',
                 cursor: 'pointer',
@@ -323,7 +323,7 @@ export default function TaskSquare({ user, onBack }) {
                 color: capturedPhoto ? 'white' : '#9ca3af',
                 fontWeight: 'bold',
                 fontSize: '16px',
-                padding: '1rem',
+                padding: '0.75rem 1rem',
                 borderRadius: '0.75rem',
                 border: 'none',
                 cursor: capturedPhoto ? 'pointer' : 'not-allowed'
