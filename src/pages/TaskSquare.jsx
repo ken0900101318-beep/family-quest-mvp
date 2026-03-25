@@ -260,7 +260,7 @@ function OngoingTasks({ tasks, onRequestNew }) {
       {/* 任務列表 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} type="ongoing" />
+          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={loadData} />
         ))}
       </div>
     </div>
@@ -504,7 +504,32 @@ function formatDate(dateStr) {
 }
 
 // 任務卡片
-function TaskCard({ task, type }) {
+function TaskCard({ task, type, user, onRefresh }) {
+  const handleComplete = async () => {
+    if (!confirm(`確定完成「${task.title}」嗎？`)) return
+    
+    try {
+      const submission = {
+        id: Date.now(),
+        taskId: task.id,
+        userId: user.id,
+        userName: user.name,
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        description: '已完成任務'
+      }
+      
+      const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+      stored.push(submission)
+      localStorage.setItem('submissions', JSON.stringify(stored))
+      
+      alert('✅ 任務已提交！等待家長審核')
+      if (onRefresh) onRefresh()
+    } catch (err) {
+      alert('❌ 提交失敗，請稍後再試')
+    }
+  }
+  
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
@@ -530,6 +555,7 @@ function TaskCard({ task, type }) {
         </span>
       </div>
       <button
+        onClick={handleComplete}
         style={{
           width: '100%',
           background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
