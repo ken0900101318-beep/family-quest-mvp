@@ -769,10 +769,13 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
     : tasks.filter(t => t.assignedTo === selectedMember || t.assignedTo === 'all')
 
   // 統計數據
+  // 注意：daily 要包含所有顯示為黃色卡片的任務（daily + longterm）
   const stats = {
     total: filteredTasks.length,
     active: filteredTasks.filter(t => t.status === 'active').length,
-    daily: filteredTasks.filter(t => t.type === 'daily' && t.status === 'active').length,
+    daily: filteredTasks.filter(t => 
+      (t.type === 'daily' || t.type === 'longterm') && t.status === 'active'
+    ).length,
     challenge: filteredTasks.filter(t => t.type === 'challenge' && t.status === 'active').length
   }
 
