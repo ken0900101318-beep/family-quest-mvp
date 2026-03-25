@@ -40,27 +40,27 @@ function CameraModal({ task, onSubmit, onClose }) {
     }}>
       <div style={{
         background: '#1f2937',
-        borderRadius: '1.5rem',
-        maxWidth: '400px',
+        borderRadius: '1rem',
+        maxWidth: '350px',
         width: '100%',
-        maxHeight: '40vh',
+        maxHeight: '280px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+        boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
       }}>
         {/* 頂部標題 */}
         <div style={{
           background: 'rgba(168, 85, 247, 0.2)',
-          padding: '0.75rem 1rem',
+          padding: '0.5rem 0.75rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           borderBottom: '1px solid rgba(255,255,255,0.1)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '24px' }}>{task.icon}</span>
-            <h2 style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '18px' }}>{task.icon}</span>
+            <h2 style={{ color: 'white', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>
               {task.title}
             </h2>
           </div>
@@ -70,9 +70,9 @@ function CameraModal({ task, onSubmit, onClose }) {
               background: 'rgba(255, 255, 255, 0.1)',
               color: 'white',
               border: 'none',
-              borderRadius: '0.5rem',
-              padding: '0.5rem',
-              fontSize: '18px',
+              borderRadius: '0.4rem',
+              padding: '0.3rem 0.5rem',
+              fontSize: '14px',
               cursor: 'pointer',
               lineHeight: 1
             }}
@@ -87,10 +87,10 @@ function CameraModal({ task, onSubmit, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0.75rem',
+          padding: '0.5rem',
           overflow: 'hidden',
-          minHeight: '100px',
-          maxHeight: '150px'
+          minHeight: '80px',
+          maxHeight: '100px'
         }}>
           {photo ? (
             <img
@@ -106,11 +106,11 @@ function CameraModal({ task, onSubmit, onClose }) {
           ) : (
             <div style={{
               color: 'rgba(255, 255, 255, 0.5)',
-              fontSize: '14px',
+              fontSize: '12px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '60px', marginBottom: '0.5rem' }}>📷</div>
-              <div>點擊下方開啟相機</div>
+              <div style={{ fontSize: '40px', marginBottom: '0.3rem' }}>📷</div>
+              <div>點下方開啟相機</div>
             </div>
           )}
         </div>
@@ -118,10 +118,10 @@ function CameraModal({ task, onSubmit, onClose }) {
         {/* 底部操作 */}
         <div style={{
           background: 'rgba(0, 0, 0, 0.3)',
-          padding: '0.75rem',
+          padding: '0.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem'
+          gap: '0.4rem'
         }}>
           {/* 拍照按鈕（單一） */}
           <input
@@ -139,14 +139,14 @@ function CameraModal({ task, onSubmit, onClose }) {
               background: 'linear-gradient(to right, #3b82f6, #2563eb)',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '13px',
-              padding: '0.6rem',
-              borderRadius: '0.5rem',
+              fontSize: '12px',
+              padding: '0.5rem',
+              borderRadius: '0.4rem',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'center',
               display: 'block',
-              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+              boxShadow: '0 3px 10px rgba(59, 130, 246, 0.4)'
             }}
           >
             {photo ? '📷 重新拍照' : '📷 開啟相機'}
@@ -163,13 +163,13 @@ function CameraModal({ task, onSubmit, onClose }) {
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '13px',
-              padding: '0.6rem',
-              borderRadius: '0.5rem',
+              fontSize: '12px',
+              padding: '0.5rem',
+              borderRadius: '0.4rem',
               border: 'none',
               cursor: photo ? 'pointer' : 'not-allowed',
               boxShadow: photo 
-                ? '0 4px 15px rgba(16, 185, 129, 0.4)' 
+                ? '0 3px 10px rgba(16, 185, 129, 0.4)' 
                 : 'none',
               opacity: photo ? 1 : 0.6
             }}
