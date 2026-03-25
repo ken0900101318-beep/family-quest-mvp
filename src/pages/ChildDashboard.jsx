@@ -4,8 +4,6 @@ import { mockAPI } from '../lib/supabase'
 export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedTask, setSelectedTask] = useState(null)
-  const [showCamera, setShowCamera] = useState(false)
 
   useEffect(() => {
     loadTasks()
@@ -19,53 +17,33 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   }
 
   const handleComplete = async (task) => {
-    console.log('選擇任務:', task)
     if (!task || !task.id) {
       alert('❌ 任務資料錯誤')
       return
     }
-    setSelectedTask(task)
-    setShowCamera(true)
-  }
-
-  const handlePhotoSubmit = async (photoData) => {
-    console.log('開始提交任務...', { 
-      selectedTask,
-      taskId: selectedTask?.id, 
-      userId: user?.id, 
-      hasPhoto: !!photoData 
-    })
     
-    if (!photoData) {
-      alert('⚠️ 請先選擇照片')
-      return
-    }
-    
-    if (!selectedTask || !selectedTask.id) {
-      alert('❌ 任務資料錯誤，請重新選擇')
-      setShowCamera(false)
-      return
-    }
+    if (!confirm(`確定完成「${task.title}」嗎？`)) return
     
     try {
-      // 先關閉相機界面
-      setShowCamera(false)
+      const submission = {
+        id: Date.now(),
+        taskId: task.id,
+        userId: user.id,
+        userName: user.name,
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        description: '已完成任務'
+      }
       
-      const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
-      console.log('提交成功:', result)
+      const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
+      stored.push(submission)
+      localStorage.setItem('submissions', JSON.stringify(stored))
       
-      // 延遲顯示成功訊息
-      setTimeout(() => {
-        alert('✅ 任務已提交成功！\n等待家長審核中...')
-      }, 300)
-      
-      setSelectedTask(null)
-      loadTasks() // 重新載入任務列表
+      alert('✅ 任務已提交！等待家長審核')
+      loadTasks()
     } catch (err) {
       console.error('提交失敗:', err)
-      alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
-      setShowCamera(false)
-      setSelectedTask(null)
+      alert('❌ 提交失敗，請稍後再試')
     }
   }
 
@@ -271,14 +249,7 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
         </div>
       </div>
 
-      {/* 拍照界面 */}
-      {showCamera && (
-        <CameraModal
-          task={selectedTask}
-          onSubmit={handlePhotoSubmit}
-          onClose={() => { setShowCamera(false); setSelectedTask(null); }}
-        />
-      )}
+
 
       {/* CSS 動畫 */}
       <style>{`
@@ -439,199 +410,3 @@ function NavIcon({ icon, label, active, onClick }) {
 }
 
 // 相機模態框組件
-function CameraModal({ task, onSubmit, onClose }) {
-  const [photo, setPhoto] = useState(null)
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhoto(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleSubmit = () => {
-    if (!photo) {
-      alert('請先拍照或選擇照片')
-      return
-    }
-    onSubmit(photo)
-  }
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.9)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* 頂部標題 */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
-          📸 拍攝任務成果
-        </h2>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            padding: '0.5rem 1rem',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* 任務資訊 */}
-      <div style={{
-        background: 'rgba(168, 85, 247, 0.3)',
-        padding: '1rem',
-        color: 'white',
-        textAlign: 'center'
-      }}>
-        <div style={{ fontSize: '40px', marginBottom: '0.5rem' }}>{task.icon}</div>
-        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{task.title}</div>
-      </div>
-
-      {/* 照片預覽區 */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        overflow: 'hidden'
-      }}>
-        {photo ? (
-          <img
-            src={photo}
-            alt="預覽"
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              borderRadius: '1rem',
-              objectFit: 'contain'
-            }}
-          />
-        ) : (
-          <div style={{
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '18px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '80px', marginBottom: '1rem' }}>📷</div>
-            <div>點擊下方按鈕選擇照片</div>
-          </div>
-        )}
-      </div>
-
-      {/* 底部操作 */}
-      <div style={{
-        background: 'rgba(0, 0, 0, 0.5)',
-        padding: '1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        {/* 選擇/重拍按鈕 */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            id="camera-input"
-          />
-          <label
-            htmlFor="camera-input"
-            style={{
-              flex: 1,
-              background: 'linear-gradient(to right, #3b82f6, #2563eb)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              padding: '1rem',
-              borderRadius: '1rem',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'center',
-              display: 'block'
-            }}
-          >
-            {photo ? '📷 重新拍照' : '📷 開啟相機'}
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            id="gallery-input"
-          />
-          <label
-            htmlFor="gallery-input"
-            style={{
-              flex: 1,
-              background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              padding: '1rem',
-              borderRadius: '1rem',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'center',
-              display: 'block'
-            }}
-          >
-            🖼️ 選擇照片
-          </label>
-        </div>
-
-        {/* 提交按鈕 */}
-        <button
-          onClick={handleSubmit}
-          disabled={!photo}
-          style={{
-            width: '100%',
-            background: photo 
-              ? 'linear-gradient(to right, #10b981, #059669)' 
-              : 'linear-gradient(to right, #9ca3af, #6b7280)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '18px',
-            padding: '1rem',
-            borderRadius: '1rem',
-            border: 'none',
-            cursor: photo ? 'pointer' : 'not-allowed',
-            boxShadow: photo 
-              ? '0 10px 30px rgba(16, 185, 129, 0.4)' 
-              : 'none',
-            opacity: photo ? 1 : 0.6
-          }}
-        >
-          ✅ 提交任務
-        </button>
-      </div>
-    </div>
-  )
-}
