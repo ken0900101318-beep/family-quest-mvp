@@ -1,204 +1,18 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
 
-// 拍照組件（從 ChildDashboard 複用）
-function CameraModal({ task, onSubmit, onClose }) {
-  const [photo, setPhoto] = useState(null)
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhoto(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleSubmit = () => {
-    if (!photo) {
-      alert('請先拍照')
-      return
-    }
-    onSubmit(photo)
-  }
-
-  return (
-    <div 
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 999999,
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        pointerEvents: 'auto'
-      }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '1.5rem 1.5rem 0 0',
-        width: '100%',
-        maxWidth: '600px',
-        maxHeight: '50vh',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
-        animation: 'slideUp 0.3s ease-out'
-      }}>
-        {/* 頂部標題 */}
-        <div style={{
-          background: '#f9fafb',
-          padding: '1rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '32px' }}>{task.icon}</span>
-            <h2 style={{ color: '#111827', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
-              {task.title}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: '#f3f4f6',
-              color: '#6b7280',
-              border: 'none',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              fontSize: '18px',
-              cursor: 'pointer',
-              lineHeight: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* 照片預覽區 */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
-          overflow: 'hidden',
-          background: '#f9fafb'
-        }}>
-          {photo ? (
-            <img
-              src={photo}
-              alt="預覽"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '150px',
-                borderRadius: '0.75rem',
-                objectFit: 'contain',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-              }}
-            />
-          ) : (
-            <div style={{
-              color: '#9ca3af',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '0.5rem' }}>📷</div>
-              <div>點下方按鈕開啟相機</div>
-            </div>
-          )}
-        </div>
-
-        {/* 底部操作 */}
-        <div style={{
-          background: 'white',
-          padding: '1rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem',
-          borderTop: '1px solid #e5e7eb',
-          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))'
-        }}>
-          {/* 拍照按鈕（單一） */}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            id="camera-input-square"
-          />
-          <label
-            htmlFor="camera-input-square"
-            style={{
-              width: '100%',
-              background: 'linear-gradient(to right, #3b82f6, #2563eb)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              padding: '1rem',
-              borderRadius: '0.75rem',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'center',
-              display: 'block',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-            }}
-          >
-            {photo ? '📷 重新拍照' : '📷 開啟相機'}
-          </label>
-
-          {/* 提交按鈕 */}
-          <button
-            onClick={handleSubmit}
-            disabled={!photo}
-            style={{
-              width: '100%',
-              background: photo 
-                ? 'linear-gradient(to right, #10b981, #059669)' 
-                : '#e5e7eb',
-              color: photo ? 'white' : '#9ca3af',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              padding: '1rem',
-              borderRadius: '0.75rem',
-              border: 'none',
-              cursor: photo ? 'pointer' : 'not-allowed',
-              boxShadow: photo 
-                ? '0 4px 12px rgba(16, 185, 129, 0.3)' 
-                : 'none'
-            }}
-          >
-            ✅ 提交任務
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function TaskSquare({ user, onBack }) {
-  const [activeTab, setActiveTab] = useState('ongoing') // ongoing, myRequests, history
+  const [activeTab, setActiveTab] = useState('ongoing')
   const [tasks, setTasks] = useState([])
   const [myRequests, setMyRequests] = useState([])
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showRequestForm, setShowRequestForm] = useState(false)
-  const [showCamera, setShowCamera] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
+  
+  // 拍照相關 state
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [currentTask, setCurrentTask] = useState(null)
+  const [capturedPhoto, setCapturedPhoto] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -206,40 +20,25 @@ export default function TaskSquare({ user, onBack }) {
 
   const loadData = async () => {
     setLoading(true)
-    // Mock 數據（之後接真實 API）
-    const allTasks = await mockAPI.getTasks(user.id)
-    setTasks(allTasks)
-    
-    // 從 localStorage 讀取申請記錄（兒童申請的任務）
-    const requests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
-    const userRequests = requests.filter(r => r.userId === user.id)
-    setMyRequests(userRequests)
-    
-    // 從 localStorage 讀取真實提交記錄
-    const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const userSubmissions = stored.filter(s => s.userId === user.id)
-    
-    console.log('TaskSquare: 讀取提交記錄', userSubmissions)
-    
-    // 轉換成歷史記錄格式
-    const historyRecords = []
-    
-    // 先獲取任務列表（避免重複請求）
     const userTasks = await mockAPI.getTasks(user.id)
-    console.log('TaskSquare: 用戶任務列表', userTasks)
+    setTasks(userTasks)
     
-    for (const sub of userSubmissions) {
-      const task = userTasks.find(t => t.id === sub.taskId)
-      
-      console.log('TaskSquare: 處理提交', { 
-        submissionId: sub.id, 
-        taskId: sub.taskId, 
-        foundTask: task?.title 
-      })
-      
+    const taskRequests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
+    const myTaskRequests = taskRequests.filter(r => r.userId === user.id)
+    setMyRequests(myTaskRequests)
+    
+    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const mySubmissions = submissions.filter(s => s.userId === user.id)
+    
+    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+    const allTasks = storedTasks.length > 0 ? storedTasks : await mockAPI.getAllTasks()
+    
+    const historyRecords = []
+    for (const sub of mySubmissions) {
+      const task = allTasks.find(t => t.id === sub.taskId)
       historyRecords.push({
         id: sub.id,
-        title: task ? task.title : `任務 #${sub.taskId || 'unknown'}`,
+        title: task ? task.title : `任務 #${sub.taskId}`,
         points: task ? task.points : 10,
         status: sub.status === 'approved' ? 'completed' : sub.status,
         completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
@@ -248,14 +47,11 @@ export default function TaskSquare({ user, onBack }) {
       })
     }
     
-    console.log('TaskSquare: 最終歷史記錄', historyRecords)
     setHistory(historyRecords)
-    
     setLoading(false)
   }
 
   const handleRequestTask = (taskData) => {
-    // 提交申請
     const newRequest = {
       id: Date.now(),
       userId: user.id,
@@ -266,30 +62,48 @@ export default function TaskSquare({ user, onBack }) {
       createdAt: new Date().toISOString().split('T')[0]
     }
     
-    // 儲存到 localStorage
     const requests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
     requests.push(newRequest)
     localStorage.setItem('taskRequests', JSON.stringify(requests))
     
-    // 加入申請列表
     setMyRequests([newRequest, ...myRequests])
-    
     alert('✅ 任務申請已送出！等待家長審核')
     setShowRequestForm(false)
-    setActiveTab('myRequests') // 切換到「我的申請」分頁
+    setActiveTab('myRequests')
   }
 
-  const handleOpenCamera = (task) => {
-    setSelectedTask(task)
-    setShowCamera(true)
+  // 開啟拍照
+  const openCamera = (task) => {
+    setCurrentTask(task)
+    setCapturedPhoto(null)
+    setCameraOpen(true)
   }
 
-  const handlePhotoSubmit = async (photoData) => {
-    setShowCamera(false)
+  // 選擇照片
+  const handlePhotoCapture = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setCapturedPhoto(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // 提交任務
+  const submitTask = async () => {
+    if (!capturedPhoto) {
+      alert('請先拍照')
+      return
+    }
     
     try {
-      const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
+      await mockAPI.submitTask(currentTask.id, user.id, capturedPhoto)
       alert('✅ 任務已提交！等待家長審核')
+      setCameraOpen(false)
+      setCurrentTask(null)
+      setCapturedPhoto(null)
       loadData()
     } catch (err) {
       alert('❌ 提交失敗，請稍後再試')
@@ -303,7 +117,7 @@ export default function TaskSquare({ user, onBack }) {
       overflow: 'auto',
       paddingBottom: '100px'
     }}>
-      {/* 樂園背景圖片 */}
+      {/* 背景 */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -313,11 +127,9 @@ export default function TaskSquare({ user, onBack }) {
         backgroundImage: 'url(/playground-bg.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
         zIndex: 0
       }} />
       
-      {/* 半透明遮罩 */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -328,366 +140,230 @@ export default function TaskSquare({ user, onBack }) {
         zIndex: 1
       }} />
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem', position: 'relative', zIndex: 10 }}>
-        {/* 頂部標題 + 返回按鈕 */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10, padding: '1rem' }}>
+        {/* 頂部 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: '900',
-            color: '#581c87',
-            textShadow: '0 2px 10px rgba(0,0,0,0.1)'
-          }}>
-            🏛️ 任務大廳
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#581c87' }}>
+            🏛️ 任務廣場
           </h1>
-          <button
-            onClick={onBack}
-            style={{
-              background: 'rgba(255, 255, 255, 0.7)',
-              backdropFilter: 'blur(10px)',
-              border: '2px solid rgba(255, 255, 255, 0.9)',
-              borderRadius: '0.75rem',
-              padding: '0.5rem 1rem',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              color: '#581c87',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={onBack} style={{
+            background: 'white',
+            color: '#7e22ce',
+            border: '2px solid #d8b4fe',
+            borderRadius: '0.75rem',
+            padding: '0.5rem 1rem',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}>
             ← 返回
           </button>
         </div>
 
-        {/* 分頁切換 */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.7)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '1rem',
-          padding: '0.5rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          gap: '0.5rem'
-        }}>
-          <TabButton
-            active={activeTab === 'ongoing'}
-            onClick={() => setActiveTab('ongoing')}
-            icon="📋"
-            label="進行中"
-          />
-          <TabButton
-            active={activeTab === 'myRequests'}
-            onClick={() => setActiveTab('myRequests')}
-            icon="⏰"
-            label="我的申請"
-          />
-          <TabButton
-            active={activeTab === 'history'}
-            onClick={() => setActiveTab('history')}
-            icon="📜"
-            label="歷史記錄"
-          />
+        {/* 分頁 */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <TabButton active={activeTab === 'ongoing'} onClick={() => setActiveTab('ongoing')} label="進行中" />
+          <TabButton active={activeTab === 'myRequests'} onClick={() => setActiveTab('myRequests')} label="我的申請" />
+          <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} label="歷史記錄" />
         </div>
 
-        {/* 內容區域 */}
+        {/* 內容 */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '5rem', color: '#7e22ce', fontSize: '20px' }}>
-            載入中...
-          </div>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>載入中...</div>
         ) : (
           <>
             {activeTab === 'ongoing' && (
-              <OngoingTasks tasks={tasks} onRequestNew={() => setShowRequestForm(true)} user={user} onRefresh={loadData} onOpenCamera={handleOpenCamera} />
+              <div>
+                <button
+                  onClick={() => setShowRequestForm(true)}
+                  style={{
+                    width: '100%',
+                    background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                    color: 'white',
+                    fontWeight: '900',
+                    fontSize: '16px',
+                    padding: '1rem',
+                    borderRadius: '1rem',
+                    border: '2px solid #fcd34d',
+                    boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)',
+                    cursor: 'pointer',
+                    marginBottom: '1rem'
+                  }}
+                >
+                  ✨ 我想申請新任務
+                </button>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                  {tasks.map(task => (
+                    <TaskCard key={task.id} task={task} onComplete={openCamera} />
+                  ))}
+                </div>
+              </div>
             )}
+
             {activeTab === 'myRequests' && (
-              <MyRequests requests={myRequests} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                {myRequests.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>尚無申請記錄</div>
+                ) : (
+                  myRequests.map(request => <RequestCard key={request.id} request={request} />)
+                )}
+              </div>
             )}
-            {activeTab === 'history' && (
-              <History records={history} />
-            )}
+
+            {activeTab === 'history' && <HistoryView history={history} />}
           </>
         )}
-
-        {/* 申請任務表單彈窗 */}
-        {showRequestForm && (
-          <RequestTaskForm
-            onSubmit={handleRequestTask}
-            onClose={() => setShowRequestForm(false)}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-// 分頁按鈕
-function TabButton({ active, onClick, icon, label }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        background: active ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)' : 'transparent',
-        color: active ? 'white' : '#7e22ce',
-        border: 'none',
-        borderRadius: '0.75rem',
-        padding: '0.75rem',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      {icon} {label}
-    </button>
-  )
-}
-
-// 進行中的任務
-function OngoingTasks({ tasks, onRequestNew, user, onRefresh, onOpenCamera }) {
-  return (
-    <div>
-      {/* 申請新任務按鈕 */}
-      <button
-        onClick={onRequestNew}
-        style={{
-          width: '100%',
-          background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
-          color: 'white',
-          fontWeight: '900',
-          fontSize: '16px',
-          padding: '1rem',
-          borderRadius: '1rem',
-          border: '2px solid #fcd34d',
-          boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)',
-          cursor: 'pointer',
-          marginBottom: '1rem'
-        }}
-      >
-        ✨ 我想申請新任務
-      </button>
-
-      {/* 任務列表 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-        {tasks.map(task => (
-          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={onRefresh} onOpenCamera={onOpenCamera} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// 我的申請
-function MyRequests({ requests }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-      {requests.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
-          還沒有申請記錄
-        </div>
-      ) : (
-        requests.map(request => (
-          <RequestCard key={request.id} request={request} />
-        ))
-      )}
-    </div>
-  )
-}
-
-// 歷史記錄
-function History({ records }) {
-  const [timeRange, setTimeRange] = useState('7days') // 7days, 30days, all
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-
-  // 按時間範圍篩選
-  const filterByTimeRange = (records) => {
-    const now = new Date()
-    
-    // 如果是全部模式且有設定日期篩選
-    if (timeRange === 'all' && (startDate || endDate)) {
-      return records.filter(r => {
-        const recordDate = new Date(r.completedAt || r.updatedAt)
-        const start = startDate ? new Date(startDate) : new Date('2000-01-01')
-        const end = endDate ? new Date(endDate) : new Date('2099-12-31')
-        return recordDate >= start && recordDate <= end
-      })
-    }
-    
-    const cutoffDays = timeRange === '7days' ? 7 : timeRange === '30days' ? 30 : 9999
-    const cutoffDate = new Date(now.getTime() - cutoffDays * 24 * 60 * 60 * 1000)
-    
-    return records.filter(r => {
-      const recordDate = new Date(r.completedAt || r.updatedAt)
-      return recordDate >= cutoffDate
-    })
-  }
-
-  // 按日期分組
-  const groupByDate = (records) => {
-    const groups = {}
-    records.forEach(record => {
-      const date = record.completedAt || record.updatedAt
-      if (!groups[date]) {
-        groups[date] = []
-      }
-      groups[date].push(record)
-    })
-    return groups
-  }
-
-  const filteredRecords = filterByTimeRange(records)
-  const groupedRecords = groupByDate(filteredRecords)
-  const dates = Object.keys(groupedRecords).sort().reverse()
-
-  return (
-    <div>
-      {/* 時間範圍切換 */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '1rem',
-        padding: '0.5rem',
-        marginBottom: '1rem',
-        display: 'flex',
-        gap: '0.5rem'
-      }}>
-        <TimeRangeButton
-          active={timeRange === '7days'}
-          onClick={() => { setTimeRange('7days'); setStartDate(''); setEndDate(''); }}
-          label="近 7 天"
-        />
-        <TimeRangeButton
-          active={timeRange === '30days'}
-          onClick={() => { setTimeRange('30days'); setStartDate(''); setEndDate(''); }}
-          label="近 30 天"
-        />
-        <TimeRangeButton
-          active={timeRange === 'all'}
-          onClick={() => setTimeRange('all')}
-          label="全部"
-        />
       </div>
 
-      {/* 日期篩選器（全部模式才顯示） */}
-      {timeRange === 'all' && (
+      {/* 拍照界面 - 絕對簡單版 */}
+      {cameraOpen && (
         <div style={{
-          background: 'rgba(255, 255, 255, 0.7)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '1rem',
-          padding: '1rem',
-          marginBottom: '1rem'
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center'
         }}>
-          <div style={{ color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.75rem' }}>
-            📅 日期篩選
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '120px' }}>
-              <label style={{ display: 'block', color: '#9333ea', fontSize: '12px', marginBottom: '0.25rem' }}>
-                開始日期
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '0.5rem',
-                  border: '2px solid #d8b4fe',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: '120px' }}>
-              <label style={{ display: 'block', color: '#9333ea', fontSize: '12px', marginBottom: '0.25rem' }}>
-                結束日期
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '0.5rem',
-                  border: '2px solid #d8b4fe',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            {(startDate || endDate) && (
+          <div style={{
+            backgroundColor: 'white',
+            width: '100%',
+            maxWidth: '600px',
+            borderRadius: '1.5rem 1.5rem 0 0',
+            padding: '1.5rem',
+            maxHeight: '60vh',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            {/* 標題 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '32px' }}>{currentTask?.icon}</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#111', margin: 0 }}>
+                  {currentTask?.title}
+                </h3>
+              </div>
               <button
-                onClick={() => { setStartDate(''); setEndDate(''); }}
+                onClick={() => setCameraOpen(false)}
                 style={{
-                  padding: '0.5rem 1rem',
-                  background: '#e5e7eb',
-                  color: '#6b7280',
+                  background: '#f3f4f6',
                   border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
                   cursor: 'pointer',
-                  whiteSpace: 'nowrap'
+                  fontSize: '18px'
                 }}
               >
-                清除
+                ✕
               </button>
-            )}
+            </div>
+
+            {/* 照片預覽 */}
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#f9fafb',
+              borderRadius: '0.75rem',
+              minHeight: '150px',
+              overflow: 'hidden'
+            }}>
+              {capturedPhoto ? (
+                <img src={capturedPhoto} alt="預覽" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '0.5rem' }} />
+              ) : (
+                <div style={{ textAlign: 'center', color: '#9ca3af' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '0.5rem' }}>📷</div>
+                  <div style={{ fontSize: '14px' }}>點下方按鈕開啟相機</div>
+                </div>
+              )}
+            </div>
+
+            {/* 按鈕 */}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoCapture}
+              style={{ display: 'none' }}
+              id="camera-input-simple"
+            />
+            <label
+              htmlFor="camera-input-simple"
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: 'none'
+              }}
+            >
+              {capturedPhoto ? '📷 重新拍照' : '📷 開啟相機'}
+            </label>
+
+            <button
+              onClick={submitTask}
+              disabled={!capturedPhoto}
+              style={{
+                width: '100%',
+                background: capturedPhoto ? 'linear-gradient(to right, #10b981, #059669)' : '#e5e7eb',
+                color: capturedPhoto ? 'white' : '#9ca3af',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: capturedPhoto ? 'pointer' : 'not-allowed'
+              }}
+            >
+              ✅ 提交任務
+            </button>
           </div>
         </div>
       )}
 
-      {/* 時間軸顯示 */}
-      {dates.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
-          {timeRange === '7days' ? '近 7 天沒有記錄' : timeRange === '30days' ? '近 30 天沒有記錄' : '還沒有任何記錄'}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {dates.map(date => (
-            <div key={date}>
-              {/* 日期標籤 */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '0.75rem',
-                padding: '0.5rem 1rem',
-                marginBottom: '0.75rem',
-                display: 'inline-block'
-              }}>
-                <span style={{ color: '#7e22ce', fontWeight: 'bold', fontSize: '14px' }}>
-                  📅 {formatDate(date)}
-                </span>
-              </div>
-              {/* 該日期的任務 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {groupedRecords[date].map(record => (
-                  <HistoryCard key={record.id} record={record} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* 申請表單 */}
+      {showRequestForm && (
+        <RequestForm onSubmit={handleRequestTask} onClose={() => setShowRequestForm(false)} />
       )}
+
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }
 
-// 時間範圍按鈕
-function TimeRangeButton({ active, onClick, label }) {
+function TabButton({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
       style={{
         flex: 1,
-        background: active ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)' : 'transparent',
+        background: active ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)' : 'white',
         color: active ? 'white' : '#7e22ce',
-        border: 'none',
-        borderRadius: '0.75rem',
-        padding: '0.5rem',
-        fontSize: '13px',
         fontWeight: 'bold',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease'
+        fontSize: '14px',
+        padding: '0.75rem',
+        borderRadius: '0.75rem',
+        border: active ? 'none' : '2px solid #e9d5ff',
+        cursor: 'pointer'
       }}
     >
       {label}
@@ -695,30 +371,7 @@ function TimeRangeButton({ active, onClick, label }) {
   )
 }
 
-// 日期格式化
-function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  const today = new Date()
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
-  
-  if (dateStr === today.toISOString().split('T')[0]) {
-    return '今天'
-  } else if (dateStr === yesterday.toISOString().split('T')[0]) {
-    return '昨天'
-  } else {
-    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-    return `${date.getMonth() + 1}月${date.getDate()}日`
-  }
-}
-
-// 任務卡片
-function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
-  const handleComplete = () => {
-    if (onOpenCamera) {
-      onOpenCamera(task)
-    }
-  }
-  
+function TaskCard({ task, onComplete }) {
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
@@ -744,7 +397,7 @@ function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
         </span>
       </div>
       <button
-        onClick={handleComplete}
+        onClick={() => onComplete(task)}
         style={{
           width: '100%',
           background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
@@ -759,12 +412,10 @@ function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
       >
         我完成了！✨
       </button>
-
     </div>
   )
 }
 
-// 申請卡片
 function RequestCard({ request }) {
   const statusConfig = {
     pending: { label: '待審核', color: '#f59e0b', bg: 'rgba(251, 191, 36, 0.2)' },
@@ -775,13 +426,17 @@ function RequestCard({ request }) {
 
   return (
     <div style={{
-      background: 'rgba(255, 255, 255, 0.6)',
-      backdropFilter: 'blur(10px)',
+      background: 'rgba(255, 255, 255, 0.8)',
       borderRadius: '1rem',
       padding: '1rem',
-      boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-      border: '2px solid rgba(255, 255, 255, 0.9)'
+      border: '2px solid #e9d5ff'
     }}>
+      <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.5rem' }}>
+        {request.title}
+      </h3>
+      <div style={{ fontSize: '14px', color: '#7e22ce', marginBottom: '0.5rem' }}>
+        {request.points} pts
+      </div>
       <div style={{
         display: 'inline-block',
         background: config.bg,
@@ -789,125 +444,97 @@ function RequestCard({ request }) {
         padding: '0.25rem 0.75rem',
         borderRadius: '0.5rem',
         fontSize: '12px',
-        fontWeight: 'bold',
-        marginBottom: '0.5rem'
+        fontWeight: 'bold'
       }}>
         {config.label}
-      </div>
-      <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900', marginBottom: '0.5rem' }}>
-        {request.title}
-      </h3>
-      <div style={{ color: '#7e22ce', fontSize: '14px', marginBottom: '0.25rem' }}>
-        期望點數：{request.points} 點
-      </div>
-      <div style={{ color: '#9333ea', fontSize: '12px' }}>
-        申請時間：{request.createdAt}
       </div>
     </div>
   )
 }
 
-// 歷史卡片
-function HistoryCard({ record }) {
-  const statusConfig = {
-    completed: { 
-      icon: '✅', 
-      label: '已完成', 
-      color: '#10b981', 
-      bg: 'linear-gradient(135deg, #10b981, #059669)',
-      showPoints: true 
-    },
-    pending: { 
-      icon: '⏳', 
-      label: '待審核', 
-      color: '#f59e0b', 
-      bg: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-      showPoints: false 
-    },
-    rejected: { 
-      icon: '❌', 
-      label: '已拒絕', 
-      color: '#ef4444', 
-      bg: 'linear-gradient(135deg, #f87171, #ef4444)',
-      showPoints: false 
-    },
-    expired: { 
-      icon: '🕒', 
-      label: '已過期', 
-      color: '#6b7280', 
-      bg: 'linear-gradient(135deg, #9ca3af, #6b7280)',
-      showPoints: false 
-    }
-  }
+function HistoryView({ history }) {
+  const [timeRange, setTimeRange] = useState('week')
   
-  const config = statusConfig[record.status] || statusConfig.completed
-  
+  const filtered = history.filter(h => {
+    if (timeRange === 'all') return true
+    const days = timeRange === 'week' ? 7 : 30
+    const date = new Date(h.updatedAt)
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    return date >= cutoff
+  })
+
   return (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.6)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: '1rem',
-      padding: '1rem',
-      boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-      border: '2px solid rgba(255, 255, 255, 0.9)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <span style={{ fontSize: '18px' }}>{config.icon}</span>
-          <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900' }}>
-            {record.title}
-          </h3>
-        </div>
-        <div style={{
-          display: 'inline-block',
-          background: `${config.color}20`,
-          color: config.color,
-          padding: '0.15rem 0.5rem',
-          borderRadius: '0.5rem',
-          fontSize: '11px',
-          fontWeight: 'bold'
-        }}>
-          {config.label}
-        </div>
-        {record.rejectReason && (
-          <div style={{ 
-            color: '#ef4444', 
-            fontSize: '12px', 
-            marginTop: '0.5rem',
-            fontStyle: 'italic'
-          }}>
-            原因：{record.rejectReason}
-          </div>
-        )}
+    <div>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        {['week', 'month', 'all'].map(range => (
+          <button
+            key={range}
+            onClick={() => setTimeRange(range)}
+            style={{
+              background: timeRange === range ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)' : 'white',
+              color: timeRange === range ? 'white' : '#7e22ce',
+              border: timeRange === range ? 'none' : '2px solid #e9d5ff',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            {range === 'week' ? '近7天' : range === 'month' ? '近30天' : '全部'}
+          </button>
+        ))}
       </div>
-      {config.showPoints && (
-        <div style={{
-          background: config.bg,
-          color: 'white',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.75rem',
-          fontWeight: '900',
-          fontSize: '16px',
-          whiteSpace: 'nowrap'
-        }}>
-          +{record.points}
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+          暫無歷史記錄
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {filtered.map(item => (
+            <div key={item.id} style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '1rem',
+              padding: '1rem',
+              border: '2px solid #e9d5ff'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.25rem' }}>
+                    {item.title}
+                  </h4>
+                  <div style={{ fontSize: '13px', color: '#7e22ce' }}>
+                    {item.points} pts · {item.updatedAt}
+                  </div>
+                </div>
+                <div style={{
+                  background: item.status === 'completed' ? '#10b981' : item.status === 'pending' ? '#f59e0b' : '#ef4444',
+                  color: 'white',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '9999px',
+                  fontSize: '11px',
+                  fontWeight: 'bold'
+                }}>
+                  {item.status === 'completed' ? '已完成' : item.status === 'pending' ? '待審核' : '已拒絕'}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   )
 }
 
-// 申請任務表單
-function RequestTaskForm({ onSubmit, onClose }) {
+function RequestForm({ onSubmit, onClose }) {
   const [formData, setFormData] = useState({ title: '', points: '', description: '' })
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!formData.title || !formData.points) {
-      alert('請填寫任務名稱和期望點數')
+      alert('請填寫任務名稱和點數')
       return
     }
     onSubmit(formData)
@@ -920,90 +547,94 @@ function RequestTaskForm({ onSubmit, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
+      background: 'rgba(0, 0, 0, 0.7)',
+      zIndex: 100,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 100,
       padding: '1rem'
     }}>
       <div style={{
         background: 'white',
         borderRadius: '1.5rem',
-        padding: '1.5rem',
+        padding: '2rem',
         maxWidth: '500px',
-        width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        width: '100%'
       }}>
-        <h2 style={{ color: '#581c87', fontSize: '20px', fontWeight: '900', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#581c87', marginBottom: '1.5rem' }}>
           ✨ 申請新任務
         </h2>
+
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#7e22ce', marginBottom: '0.5rem' }}>
               任務名稱
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="例如：幫忙洗車"
+              placeholder="例：幫忙洗碗"
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: '0.75rem',
-                border: '2px solid #d8b4fe',
+                borderRadius: '0.5rem',
+                border: '2px solid #e9d5ff',
                 fontSize: '14px'
               }}
             />
           </div>
+
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              期望點數
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#7e22ce', marginBottom: '0.5rem' }}>
+              希望獲得點數
             </label>
             <input
               type="number"
               value={formData.points}
               onChange={(e) => setFormData({ ...formData, points: e.target.value })}
-              placeholder="例如：50"
+              placeholder="10"
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: '0.75rem',
-                border: '2px solid #d8b4fe',
+                borderRadius: '0.5rem',
+                border: '2px solid #e9d5ff',
                 fontSize: '14px'
               }}
             />
           </div>
+
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', color: '#7e22ce', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#7e22ce', marginBottom: '0.5rem' }}>
               說明（選填）
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="例如：我想幫爸爸洗車，讓車子變乾淨"
+              placeholder="描述一下這個任務..."
               rows={3}
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: '0.75rem',
-                border: '2px solid #d8b4fe',
+                borderRadius: '0.5rem',
+                border: '2px solid #e9d5ff',
                 fontSize: '14px',
-                resize: 'none'
+                resize: 'vertical'
               }}
             />
           </div>
+
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               type="button"
               onClick={onClose}
               style={{
                 flex: 1,
-                background: '#e5e7eb',
+                background: '#f3f4f6',
                 color: '#6b7280',
                 fontWeight: 'bold',
-                padding: '0.75rem',
+                fontSize: '15px',
+                padding: '0.875rem',
                 borderRadius: '0.75rem',
                 border: 'none',
                 cursor: 'pointer'
@@ -1015,10 +646,11 @@ function RequestTaskForm({ onSubmit, onClose }) {
               type="submit"
               style={{
                 flex: 1,
-                background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
                 color: 'white',
                 fontWeight: 'bold',
-                padding: '0.75rem',
+                fontSize: '15px',
+                padding: '0.875rem',
                 borderRadius: '0.75rem',
                 border: 'none',
                 cursor: 'pointer'
@@ -1029,30 +661,6 @@ function RequestTaskForm({ onSubmit, onClose }) {
           </div>
         </form>
       </div>
-
-      {/* 拍照界面（全局） */}
-      {showCamera && selectedTask && (
-        <CameraModal
-          task={selectedTask}
-          onSubmit={handlePhotoSubmit}
-          onClose={() => {
-            setShowCamera(false)
-            setSelectedTask(null)
-          }}
-        />
-      )}
-
-      {/* CSS 動畫 */}
-      <style>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }
