@@ -85,16 +85,20 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   
   const completedTasks = getCompletedToday()
   
-  // 檢查任務是否已完成（今日）
-  const isTaskCompleted = (taskId) => {
+  // 檢查任務狀態（今日）
+  const getTaskStatus = (taskId) => {
     const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
     const today = new Date().toISOString().split('T')[0]
-    return submissions.some(s => 
+    const todaySubmission = submissions.find(s => 
       s.userId === user.id && 
       s.taskId === taskId &&
-      (s.status === 'approved' || s.status === 'pending') &&
       s.timestamp.startsWith(today)
     )
+    
+    if (!todaySubmission) return 'notStarted' // 未完成
+    if (todaySubmission.status === 'approved') return 'completed' // 已完成
+    if (todaySubmission.status === 'pending') return 'pending' // 待審核
+    return 'notStarted'
   }
 
   return (
@@ -292,7 +296,7 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
               <HomeTaskCard
                 key={task.id}
                 task={task}
-                completed={isTaskCompleted(task.id)}
+                status={getTaskStatus(task.id)}
               />
             ))}
           </div>
@@ -362,7 +366,15 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
 
 // 任務卡片組件
 // 首頁任務卡片（簡化版：只顯示狀態，無按鈕）
-function HomeTaskCard({ task, completed }) {
+function HomeTaskCard({ task, status }) {
+  const statusConfig = {
+    notStarted: { label: '未完成', color: '#9ca3af' },
+    pending: { label: '待審核', color: '#f59e0b' },
+    completed: { label: '已完成', color: '#10b981' }
+  }
+  const config = statusConfig[status] || statusConfig.notStarted
+  
+  return (
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
@@ -398,9 +410,7 @@ function HomeTaskCard({ task, completed }) {
 
         {/* 右側：狀態小標籤 */}
         <div style={{
-          background: completed 
-            ? '#10b981' 
-            : '#f59e0b',
+          background: config.color,
           color: 'white',
           fontWeight: '600',
           fontSize: '11px',
@@ -409,7 +419,7 @@ function HomeTaskCard({ task, completed }) {
           whiteSpace: 'nowrap',
           flexShrink: 0
         }}>
-          {completed ? '已完成' : '待審核'}
+          {config.label}
         </div>
       </div>
     </div>
