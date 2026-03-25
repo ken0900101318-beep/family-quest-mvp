@@ -492,7 +492,8 @@ function CameraModal({ task, onSubmit, onClose }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1rem',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        maxHeight: '50vh'
       }}>
         {photo ? (
           <img

@@ -1965,8 +1965,9 @@ function TaskForm({ task, onSubmit, onClose }) {
             </label>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(5, 1fr)',
-              gap: '0.5rem'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
+              gap: '0.5rem',
+              justifyContent: 'center'
             }}>
               {icons.map(icon => (
                 <button
