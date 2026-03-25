@@ -25,18 +25,21 @@ function CameraModal({ task, onSubmit, onClose }) {
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'flex-end',
-      justifyContent: 'center'
-    }}>
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 999999,
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        pointerEvents: 'auto'
+      }}>
       <div style={{
         background: 'white',
         borderRadius: '1.5rem 1.5rem 0 0',
@@ -277,11 +280,8 @@ export default function TaskSquare({ user, onBack }) {
   }
 
   const handleOpenCamera = (task) => {
-    console.log('🎥 handleOpenCamera 被呼叫!', task)
-    alert('🎥 準備開啟相機視窗: ' + task.title)
     setSelectedTask(task)
     setShowCamera(true)
-    console.log('🎥 showCamera 已設為 true')
   }
 
   const handlePhotoSubmit = async (photoData) => {
@@ -714,13 +714,9 @@ function formatDate(dateStr) {
 // 任務卡片
 function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
   const handleComplete = () => {
-    console.log('🔍 handleComplete 被點擊!', { task, onOpenCamera: !!onOpenCamera })
-    if (!onOpenCamera) {
-      alert('❌ onOpenCamera 是 undefined！')
-      return
+    if (onOpenCamera) {
+      onOpenCamera(task)
     }
-    alert('✅ 即將開啟相機: ' + task.title)
-    onOpenCamera(task)
   }
   
   return (
