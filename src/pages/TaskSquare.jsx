@@ -292,7 +292,7 @@ export default function TaskSquare({ user, onBack }) {
     <div style={{
       minHeight: '100vh',
       position: 'relative',
-      overflow: 'hidden',
+      overflow: 'auto',
       paddingBottom: '100px'
     }}>
       {/* 樂園背景圖片 */}
