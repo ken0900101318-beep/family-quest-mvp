@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
+import { AnnouncementCard } from '../components/Announcements'
 
 export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
@@ -80,7 +81,19 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
 
   const tasksByTime = getTasksByTime()
   const totalTasks = tasks.length
-  const completedTasks = 0
+  
+  // 計算今日完成數量（從 localStorage.submissions 讀取）
+  const getCompletedToday = () => {
+    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const today = new Date().toISOString().split('T')[0]
+    return submissions.filter(s => 
+      s.userId === user.id && 
+      s.status === 'approved' &&
+      s.timestamp.startsWith(today)
+    ).length
+  }
+  
+  const completedTasks = getCompletedToday()
 
   return (
     <div style={{
@@ -187,6 +200,9 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
             </div>
           </div>
         </div>
+
+        {/* 公告欄 */}
+        <AnnouncementCard />
 
         {/* 標題 */}
         <h2 style={{
