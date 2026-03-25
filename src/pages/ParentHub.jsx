@@ -54,15 +54,35 @@ export default function ParentHub({ user, onBack, onLogout }) {
       { id: 3, title: '彩虹牙刷挑戰', points: 50, icon: '🌈', type: 'challenge', status: 'active', assignedTo: 'all', current: 14, target: 21 }
     ])
     
-    // Mock 統計數據
+    // 從 localStorage 計算真實統計數據
+    const users = JSON.parse(localStorage.getItem('users') || '[]')
+    const children = users.filter(u => u.role === 'child')
+    
+    const totalPoints = children.reduce((sum, child) => sum + (child.points || 0), 0)
+    
+    const allSubmissions = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const completedTasks = allSubmissions.filter(s => s.status === 'approved').length
+    const pendingReviews = pendingSubmissions.length
+    
+    const childStats = children.map(child => {
+      const childSubmissions = allSubmissions.filter(s => s.userId === child.id)
+      const completed = childSubmissions.filter(s => s.status === 'approved').length
+      const total = childSubmissions.length
+      const rate = total > 0 ? Math.round((completed / total) * 100) : 0
+      
+      return {
+        name: child.name,
+        points: child.points || 0,
+        completed,
+        rate
+      }
+    })
+    
     setStats({
-      totalPoints: 1850,
-      completedTasks: 45,
-      pendingReviews: 3,
-      childStats: [
-        { name: '哥哥', points: 950, completed: 23, rate: 85 },
-        { name: '妹妹', points: 900, completed: 22, rate: 88 }
-      ]
+      totalPoints,
+      completedTasks,
+      pendingReviews,
+      childStats
     })
     
     // 讀取兌換記錄
