@@ -31,50 +31,54 @@ function CameraModal({ task, onSubmit, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
+      background: 'rgba(0, 0, 0, 0.5)',
       zIndex: 9999,
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem'
+      alignItems: 'flex-end',
+      justifyContent: 'center'
     }}>
       <div style={{
-        background: '#1f2937',
-        borderRadius: '1rem',
-        maxWidth: '350px',
+        background: 'white',
+        borderRadius: '1.5rem 1.5rem 0 0',
         width: '100%',
-        maxHeight: '280px',
+        maxWidth: '600px',
+        maxHeight: '50vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+        boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
+        animation: 'slideUp 0.3s ease-out'
       }}>
         {/* 頂部標題 */}
         <div style={{
-          background: 'rgba(168, 85, 247, 0.2)',
-          padding: '0.5rem 0.75rem',
+          background: '#f9fafb',
+          padding: '1rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)'
+          borderBottom: '1px solid #e5e7eb'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={{ fontSize: '18px' }}>{task.icon}</span>
-            <h2 style={{ color: 'white', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '32px' }}>{task.icon}</span>
+            <h2 style={{ color: '#111827', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
               {task.title}
             </h2>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
+              background: '#f3f4f6',
+              color: '#6b7280',
               border: 'none',
-              borderRadius: '0.4rem',
-              padding: '0.3rem 0.5rem',
-              fontSize: '14px',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              fontSize: '18px',
               cursor: 'pointer',
-              lineHeight: 1
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             ✕
@@ -87,10 +91,9 @@ function CameraModal({ task, onSubmit, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0.5rem',
+          padding: '1rem',
           overflow: 'hidden',
-          minHeight: '80px',
-          maxHeight: '100px'
+          background: '#f9fafb'
         }}>
           {photo ? (
             <img
@@ -98,30 +101,33 @@ function CameraModal({ task, onSubmit, onClose }) {
               alt="預覽"
               style={{
                 maxWidth: '100%',
-                maxHeight: '100%',
+                maxHeight: '150px',
                 borderRadius: '0.75rem',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}
             />
           ) : (
             <div style={{
-              color: 'rgba(255, 255, 255, 0.5)',
-              fontSize: '12px',
+              color: '#9ca3af',
+              fontSize: '14px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '40px', marginBottom: '0.3rem' }}>📷</div>
-              <div>點下方開啟相機</div>
+              <div style={{ fontSize: '48px', marginBottom: '0.5rem' }}>📷</div>
+              <div>點下方按鈕開啟相機</div>
             </div>
           )}
         </div>
 
         {/* 底部操作 */}
         <div style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          padding: '0.5rem',
+          background: 'white',
+          padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.4rem'
+          gap: '0.75rem',
+          borderTop: '1px solid #e5e7eb',
+          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))'
         }}>
           {/* 拍照按鈕（單一） */}
           <input
@@ -139,14 +145,14 @@ function CameraModal({ task, onSubmit, onClose }) {
               background: 'linear-gradient(to right, #3b82f6, #2563eb)',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '12px',
-              padding: '0.5rem',
-              borderRadius: '0.4rem',
+              fontSize: '16px',
+              padding: '1rem',
+              borderRadius: '0.75rem',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'center',
               display: 'block',
-              boxShadow: '0 3px 10px rgba(59, 130, 246, 0.4)'
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
             }}
           >
             {photo ? '📷 重新拍照' : '📷 開啟相機'}
@@ -160,18 +166,17 @@ function CameraModal({ task, onSubmit, onClose }) {
               width: '100%',
               background: photo 
                 ? 'linear-gradient(to right, #10b981, #059669)' 
-                : 'linear-gradient(to right, #9ca3af, #6b7280)',
-              color: 'white',
+                : '#e5e7eb',
+              color: photo ? 'white' : '#9ca3af',
               fontWeight: 'bold',
-              fontSize: '12px',
-              padding: '0.5rem',
-              borderRadius: '0.4rem',
+              fontSize: '16px',
+              padding: '1rem',
+              borderRadius: '0.75rem',
               border: 'none',
               cursor: photo ? 'pointer' : 'not-allowed',
               boxShadow: photo 
-                ? '0 3px 10px rgba(16, 185, 129, 0.4)' 
-                : 'none',
-              opacity: photo ? 1 : 0.6
+                ? '0 4px 12px rgba(16, 185, 129, 0.3)' 
+                : 'none'
             }}
           >
             ✅ 提交任務
@@ -1033,6 +1038,18 @@ function RequestTaskForm({ onSubmit, onClose }) {
           }}
         />
       )}
+
+      {/* CSS 動畫 */}
+      <style>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }
