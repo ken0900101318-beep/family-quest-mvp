@@ -41,9 +41,9 @@ function CameraModal({ task, onSubmit, onClose }) {
       <div style={{
         background: '#1f2937',
         borderRadius: '1.5rem',
-        maxWidth: '500px',
+        maxWidth: '400px',
         width: '100%',
-        maxHeight: '80vh',
+        maxHeight: '40vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -87,10 +87,10 @@ function CameraModal({ task, onSubmit, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '1rem',
+          padding: '0.75rem',
           overflow: 'hidden',
-          minHeight: '200px',
-          maxHeight: '300px'
+          minHeight: '100px',
+          maxHeight: '150px'
         }}>
           {photo ? (
             <img
@@ -118,7 +118,7 @@ function CameraModal({ task, onSubmit, onClose }) {
         {/* 底部操作 */}
         <div style={{
           background: 'rgba(0, 0, 0, 0.3)',
-          padding: '1rem',
+          padding: '0.75rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem'
@@ -139,9 +139,9 @@ function CameraModal({ task, onSubmit, onClose }) {
               background: 'linear-gradient(to right, #3b82f6, #2563eb)',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '14px',
-              padding: '0.75rem',
-              borderRadius: '0.75rem',
+              fontSize: '13px',
+              padding: '0.6rem',
+              borderRadius: '0.5rem',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'center',
@@ -163,9 +163,9 @@ function CameraModal({ task, onSubmit, onClose }) {
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '14px',
-              padding: '0.75rem',
-              borderRadius: '0.75rem',
+              fontSize: '13px',
+              padding: '0.6rem',
+              borderRadius: '0.5rem',
               border: 'none',
               cursor: photo ? 'pointer' : 'not-allowed',
               boxShadow: photo 

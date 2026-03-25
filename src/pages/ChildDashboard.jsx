@@ -582,9 +582,9 @@ function CameraModal({ task, onSubmit, onClose }) {
       <div style={{
         background: '#1f2937',
         borderRadius: '1.5rem',
-        maxWidth: '500px',
+        maxWidth: '400px',
         width: '100%',
-        maxHeight: '80vh',
+        maxHeight: '40vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
