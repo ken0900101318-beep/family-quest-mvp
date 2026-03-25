@@ -70,16 +70,6 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
     }
   }
 
-  // 按時段分類任務
-  const getTasksByTime = () => {
-    return {
-      morning: tasks.filter(t => t.id === 1), // 床鋪
-      afternoon: tasks.filter(t => t.id === 2), // 作業
-      evening: tasks.filter(t => t.id === 3) // 牙刷挑戰
-    }
-  }
-
-  const tasksByTime = getTasksByTime()
   const totalTasks = tasks.length
   
   // 計算今日完成數量（從 localStorage.submissions 讀取）
@@ -94,6 +84,18 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   }
   
   const completedTasks = getCompletedToday()
+  
+  // 檢查任務是否已完成（今日）
+  const isTaskCompleted = (taskId) => {
+    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
+    const today = new Date().toISOString().split('T')[0]
+    return submissions.some(s => 
+      s.userId === user.id && 
+      s.taskId === taskId &&
+      (s.status === 'approved' || s.status === 'pending') &&
+      s.timestamp.startsWith(today)
+    )
+  }
 
   return (
     <div style={{
@@ -219,33 +221,14 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '5rem', color: '#7e22ce', fontSize: '20px' }}>載入中...</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '5rem' }}>
-            {/* Morning Card */}
-            {tasksByTime.morning.length > 0 && (
-              <TaskCard
-                title="Morning"
-                task={tasksByTime.morning[0]}
-                onComplete={handleComplete}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem', marginBottom: '5rem' }}>
+            {tasks.map(task => (
+              <HomeTaskCard
+                key={task.id}
+                task={task}
+                completed={isTaskCompleted(task.id)}
               />
-            )}
-
-            {/* Afternoon Card */}
-            {tasksByTime.afternoon.length > 0 && (
-              <TaskCard
-                title="Afternoon"
-                task={tasksByTime.afternoon[0]}
-                onComplete={handleComplete}
-              />
-            )}
-
-            {/* Evening Challenge Card */}
-            {tasksByTime.evening.length > 0 && (
-              <TaskCard
-                title="Challenge"
-                task={tasksByTime.evening[0]}
-                onComplete={handleComplete}
-              />
-            )}
+            ))}
           </div>
         )}
 
@@ -312,6 +295,57 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
 }
 
 // 任務卡片組件
+// 首頁任務卡片（簡化版：只顯示狀態，無按鈕）
+function HomeTaskCard({ task, completed }) {
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.6)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '1rem',
+      padding: '1rem',
+      boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+      border: '2px solid rgba(255, 255, 255, 0.9)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* 主要內容 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+        <div style={{ fontSize: '40px' }}>{task.icon}</div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900', marginBottom: '0.25rem' }}>
+            {task.title}
+          </h3>
+          <div style={{
+            display: 'inline-block',
+            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+            padding: '0.25rem 0.75rem',
+            borderRadius: '0.75rem'
+          }}>
+            <span style={{ color: 'white', fontWeight: '900', fontSize: '13px' }}>
+              {task.points} pts 🎁
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 狀態標籤 */}
+      <div style={{
+        background: completed 
+          ? 'linear-gradient(135deg, #10b981, #059669)' 
+          : 'linear-gradient(135deg, #9ca3af, #6b7280)',
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        padding: '0.75rem',
+        borderRadius: '0.75rem',
+        textAlign: 'center'
+      }}>
+        {completed ? '✅ 已完成' : '⏳ 未完成'}
+      </div>
+    </div>
+  )
+}
+
 function TaskCard({ title, task, onComplete }) {
   return (
     <div style={{
