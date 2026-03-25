@@ -180,6 +180,8 @@ export default function TaskSquare({ user, onBack }) {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showRequestForm, setShowRequestForm] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [selectedTask, setSelectedTask] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -258,6 +260,23 @@ export default function TaskSquare({ user, onBack }) {
     alert('✅ 任務申請已送出！等待家長審核')
     setShowRequestForm(false)
     setActiveTab('myRequests') // 切換到「我的申請」分頁
+  }
+
+  const handleOpenCamera = (task) => {
+    setSelectedTask(task)
+    setShowCamera(true)
+  }
+
+  const handlePhotoSubmit = async (photoData) => {
+    setShowCamera(false)
+    
+    try {
+      const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
+      alert('✅ 任務已提交！等待家長審核')
+      loadData()
+    } catch (err) {
+      alert('❌ 提交失敗，請稍後再試')
+    }
   }
 
   return (
@@ -359,7 +378,7 @@ export default function TaskSquare({ user, onBack }) {
         ) : (
           <>
             {activeTab === 'ongoing' && (
-              <OngoingTasks tasks={tasks} onRequestNew={() => setShowRequestForm(true)} user={user} onRefresh={loadData} />
+              <OngoingTasks tasks={tasks} onRequestNew={() => setShowRequestForm(true)} user={user} onRefresh={loadData} onOpenCamera={handleOpenCamera} />
             )}
             {activeTab === 'myRequests' && (
               <MyRequests requests={myRequests} />
@@ -406,7 +425,7 @@ function TabButton({ active, onClick, icon, label }) {
 }
 
 // 進行中的任務
-function OngoingTasks({ tasks, onRequestNew, user, onRefresh }) {
+function OngoingTasks({ tasks, onRequestNew, user, onRefresh, onOpenCamera }) {
   return (
     <div>
       {/* 申請新任務按鈕 */}
@@ -432,7 +451,7 @@ function OngoingTasks({ tasks, onRequestNew, user, onRefresh }) {
       {/* 任務列表 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={onRefresh} />
+          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={onRefresh} onOpenCamera={onOpenCamera} />
         ))}
       </div>
     </div>
@@ -676,22 +695,10 @@ function formatDate(dateStr) {
 }
 
 // 任務卡片
-function TaskCard({ task, type, user, onRefresh }) {
-  const [showCamera, setShowCamera] = useState(false)
-
+function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
   const handleComplete = () => {
-    setShowCamera(true)
-  }
-
-  const handlePhotoSubmit = async (photoData) => {
-    setShowCamera(false)
-    
-    try {
-      const result = await mockAPI.submitTask(task.id, user.id, photoData)
-      alert('✅ 任務已提交！等待家長審核')
-      if (onRefresh) onRefresh()
-    } catch (err) {
-      alert('❌ 提交失敗，請稍後再試')
+    if (onOpenCamera) {
+      onOpenCamera(task)
     }
   }
   
@@ -736,14 +743,6 @@ function TaskCard({ task, type, user, onRefresh }) {
         我完成了！✨
       </button>
 
-      {/* 拍照界面 */}
-      {showCamera && (
-        <CameraModal
-          task={task}
-          onSubmit={handlePhotoSubmit}
-          onClose={() => setShowCamera(false)}
-        />
-      )}
     </div>
   )
 }
@@ -1013,6 +1012,18 @@ function RequestTaskForm({ onSubmit, onClose }) {
           </div>
         </form>
       </div>
+
+      {/* 拍照界面（全局） */}
+      {showCamera && selectedTask && (
+        <CameraModal
+          task={selectedTask}
+          onSubmit={handlePhotoSubmit}
+          onClose={() => {
+            setShowCamera(false)
+            setSelectedTask(null)
+          }}
+        />
+      )}
     </div>
   )
 }
