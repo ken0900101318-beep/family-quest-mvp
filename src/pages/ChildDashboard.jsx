@@ -375,40 +375,42 @@ function HomeTaskCard({ task, completed }) {
       overflow: 'hidden'
     }}>
       {/* 主要內容 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-        <div style={{ fontSize: '32px' }}>{task.icon}</div>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ color: '#581c87', fontSize: '14px', fontWeight: '900', marginBottom: '0.25rem' }}>
-            {task.title}
-          </h3>
-          <div style={{
-            display: 'inline-block',
-            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-            padding: '0.15rem 0.5rem',
-            borderRadius: '0.5rem'
-          }}>
-            <span style={{ color: 'white', fontWeight: '900', fontSize: '11px' }}>
-              {task.points} pts 🎁
-            </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between' }}>
+        {/* 左側：圖示 + 內容 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+          <div style={{ fontSize: '32px' }}>{task.icon}</div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: '#581c87', fontSize: '14px', fontWeight: '900', marginBottom: '0.25rem' }}>
+              {task.title}
+            </h3>
+            <div style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+              padding: '0.15rem 0.5rem',
+              borderRadius: '0.5rem'
+            }}>
+              <span style={{ color: 'white', fontWeight: '900', fontSize: '11px' }}>
+                {task.points} pts 🎁
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 狀態標籤（橢圓形） */}
-      <div style={{
-        background: completed 
-          ? 'linear-gradient(135deg, #10b981, #059669)' 
-          : 'linear-gradient(135deg, #9ca3af, #6b7280)',
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: '12px',
-        padding: '0.4rem 1rem',
-        borderRadius: '9999px',
-        textAlign: 'center',
-        display: 'inline-block',
-        width: '100%'
-      }}>
-        {completed ? '✅ 已完成' : '⏳ 未完成'}
+        {/* 右側：狀態小標籤 */}
+        <div style={{
+          background: completed 
+            ? '#10b981' 
+            : '#f59e0b',
+          color: 'white',
+          fontWeight: '600',
+          fontSize: '11px',
+          padding: '0.25rem 0.75rem',
+          borderRadius: '9999px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}>
+          {completed ? '已完成' : '待審核'}
+        </div>
       </div>
     </div>
   )
