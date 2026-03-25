@@ -300,7 +300,7 @@ export default function TaskSquare({ user, onBack }) {
                 htmlFor="camera-input-simple"
                 style={{
                   display: 'block',
-                  width: '50%',
+                  width: '80px',
                   background: 'linear-gradient(to right, #3b82f6, #2563eb)',
                   color: 'white',
                   fontWeight: 'bold',
@@ -319,7 +319,7 @@ export default function TaskSquare({ user, onBack }) {
                 onClick={submitTask}
                 disabled={!capturedPhoto}
                 style={{
-                  width: '50%',
+                  width: '80px',
                   background: capturedPhoto ? 'linear-gradient(to right, #10b981, #059669)' : '#e5e7eb',
                   color: capturedPhoto ? 'white' : '#9ca3af',
                   fontWeight: 'bold',
