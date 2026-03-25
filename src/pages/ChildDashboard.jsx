@@ -375,7 +375,6 @@ function HomeTaskCard({ task, status }) {
   const config = statusConfig[status] || statusConfig.notStarted
   
   return (
-  return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.6)',
       backdropFilter: 'blur(10px)',
