@@ -32,7 +32,7 @@ function CameraModal({ task, onSubmit, onClose }) {
       right: 0,
       bottom: 0,
       background: 'rgba(0, 0, 0, 0.9)',
-      zIndex: 1000,
+      zIndex: 9999,
       display: 'flex',
       flexDirection: 'column'
     }}>

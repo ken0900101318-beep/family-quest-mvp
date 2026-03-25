@@ -121,7 +121,7 @@ export default function Passbook({ user, onNavigate }) {
         {/* 總覽卡片 */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
           gap: '1rem',
           marginBottom: '1.5rem'
         }}>

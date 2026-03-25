@@ -184,22 +184,88 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
           </div>
         </div>
 
-        {/* 中央進度環 */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        {/* 火箭進度條 */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem', position: 'relative' }}>
           <div style={{
-            display: 'inline-block',
             background: 'white',
-            borderRadius: '50%',
+            borderRadius: '1.5rem',
             padding: '1.5rem',
             boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
-            border: '4px solid #d8b4fe'
+            border: '3px solid #d8b4fe',
+            maxWidth: '400px',
+            margin: '0 auto'
           }}>
-            <div style={{ fontSize: '48px', fontWeight: '900', color: '#581c87' }}>
-              {completedTasks}/{totalTasks}
+            {/* 進度文字 */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '24px', fontWeight: '900', color: '#581c87' }}>
+                🚀 今日任務進度
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '900', color: '#8b5cf6', marginTop: '0.5rem' }}>
+                {completedTasks}/{totalTasks}
+              </div>
             </div>
-            <div style={{ color: '#9333ea', fontSize: '14px', fontWeight: '600', marginTop: '4px' }}>
-              今日完成
+            
+            {/* 火箭進度條軌道 */}
+            <div style={{
+              position: 'relative',
+              height: '60px',
+              background: 'linear-gradient(to right, #f3e8ff, #e9d5ff)',
+              borderRadius: '30px',
+              overflow: 'visible',
+              border: '3px solid #d8b4fe'
+            }}>
+              {/* 進度填充 */}
+              <div style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%',
+                background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+                borderRadius: '30px',
+                transition: 'width 0.5s ease',
+                boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
+              }} />
+              
+              {/* 火箭 */}
+              <div style={{
+                position: 'absolute',
+                left: totalTasks > 0 ? `calc(${(completedTasks / totalTasks) * 100}% - 30px)` : '-30px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '40px',
+                transition: 'left 0.5s ease',
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                zIndex: 10
+              }}>
+                🚀
+              </div>
+              
+              {/* 終點星星 */}
+              <div style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '30px',
+                animation: completedTasks === totalTasks && totalTasks > 0 ? 'bounce 0.5s infinite' : 'none'
+              }}>
+                ⭐
+              </div>
             </div>
+            
+            {/* 完成提示 */}
+            {completedTasks === totalTasks && totalTasks > 0 && (
+              <div style={{
+                marginTop: '1rem',
+                color: '#10b981',
+                fontWeight: 'bold',
+                fontSize: '18px',
+                animation: 'bounce 1s infinite'
+              }}>
+                🎉 全部完成！太棒了！
+              </div>
+            )}
           </div>
         </div>
 
@@ -302,43 +368,45 @@ function HomeTaskCard({ task, completed }) {
       background: 'rgba(255, 255, 255, 0.6)',
       backdropFilter: 'blur(10px)',
       borderRadius: '1rem',
-      padding: '1rem',
+      padding: '0.75rem',
       boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
       border: '2px solid rgba(255, 255, 255, 0.9)',
       position: 'relative',
       overflow: 'hidden'
     }}>
       {/* 主要內容 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-        <div style={{ fontSize: '40px' }}>{task.icon}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '32px' }}>{task.icon}</div>
         <div style={{ flex: 1 }}>
-          <h3 style={{ color: '#581c87', fontSize: '16px', fontWeight: '900', marginBottom: '0.25rem' }}>
+          <h3 style={{ color: '#581c87', fontSize: '14px', fontWeight: '900', marginBottom: '0.25rem' }}>
             {task.title}
           </h3>
           <div style={{
             display: 'inline-block',
             background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-            padding: '0.25rem 0.75rem',
-            borderRadius: '0.75rem'
+            padding: '0.15rem 0.5rem',
+            borderRadius: '0.5rem'
           }}>
-            <span style={{ color: 'white', fontWeight: '900', fontSize: '13px' }}>
+            <span style={{ color: 'white', fontWeight: '900', fontSize: '11px' }}>
               {task.points} pts 🎁
             </span>
           </div>
         </div>
       </div>
 
-      {/* 狀態標籤 */}
+      {/* 狀態標籤（橢圓形） */}
       <div style={{
         background: completed 
           ? 'linear-gradient(135deg, #10b981, #059669)' 
           : 'linear-gradient(135deg, #9ca3af, #6b7280)',
         color: 'white',
         fontWeight: 'bold',
-        fontSize: '14px',
-        padding: '0.75rem',
-        borderRadius: '0.75rem',
-        textAlign: 'center'
+        fontSize: '12px',
+        padding: '0.4rem 1rem',
+        borderRadius: '9999px',
+        textAlign: 'center',
+        display: 'inline-block',
+        width: '100%'
       }}>
         {completed ? '✅ 已完成' : '⏳ 未完成'}
       </div>
