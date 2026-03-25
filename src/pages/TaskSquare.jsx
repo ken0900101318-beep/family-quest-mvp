@@ -31,143 +31,152 @@ function CameraModal({ task, onSubmit, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.9)',
+      background: 'rgba(0, 0, 0, 0.7)',
       zIndex: 9999,
       display: 'flex',
-      flexDirection: 'column'
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1rem'
     }}>
-      {/* 頂部標題 */}
       <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
-          📸 拍攝任務成果
-        </h2>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            padding: '0.5rem 1rem',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* 任務資訊 */}
-      <div style={{
-        background: 'rgba(168, 85, 247, 0.3)',
-        padding: '0.75rem',
-        color: 'white',
-        textAlign: 'center'
-      }}>
-        <div style={{ fontSize: '32px', marginBottom: '0.25rem' }}>{task.icon}</div>
-        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{task.title}</div>
-      </div>
-
-      {/* 照片預覽區 */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        overflow: 'hidden',
-        maxHeight: '50vh'
-      }}>
-        {photo ? (
-          <img
-            src={photo}
-            alt="預覽"
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              borderRadius: '1rem',
-              objectFit: 'contain'
-            }}
-          />
-        ) : (
-          <div style={{
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '18px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '80px', marginBottom: '1rem' }}>📷</div>
-            <div>點擊下方按鈕開啟相機</div>
-          </div>
-        )}
-      </div>
-
-      {/* 底部操作 */}
-      <div style={{
-        background: 'rgba(0, 0, 0, 0.5)',
-        padding: '1rem',
+        background: '#1f2937',
+        borderRadius: '1.5rem',
+        maxWidth: '500px',
+        width: '100%',
+        maxHeight: '80vh',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.75rem'
+        overflow: 'hidden',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
       }}>
-        {/* 拍照按鈕（單一） */}
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileSelect}
-          style={{ display: 'none' }}
-          id="camera-input-square"
-        />
-        <label
-          htmlFor="camera-input-square"
-          style={{
-            width: '100%',
-            background: 'linear-gradient(to right, #3b82f6, #2563eb)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            border: 'none',
-            cursor: 'pointer',
-            textAlign: 'center',
-            display: 'block',
-            boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)'
-          }}
-        >
-          {photo ? '📷 重新拍照' : '📷 開啟相機'}
-        </label>
+        {/* 頂部標題 */}
+        <div style={{
+          background: 'rgba(168, 85, 247, 0.2)',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '24px' }}>{task.icon}</span>
+            <h2 style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>
+              {task.title}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem',
+              fontSize: '18px',
+              cursor: 'pointer',
+              lineHeight: 1
+            }}
+          >
+            ✕
+          </button>
+        </div>
 
-        {/* 提交按鈕 */}
-        <button
-          onClick={handleSubmit}
-          disabled={!photo}
-          style={{
-            width: '100%',
-            background: photo 
-              ? 'linear-gradient(to right, #10b981, #059669)' 
-              : 'linear-gradient(to right, #9ca3af, #6b7280)',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            border: 'none',
-            cursor: photo ? 'pointer' : 'not-allowed',
-            boxShadow: photo 
-              ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
-              : 'none',
-            opacity: photo ? 1 : 0.6
-          }}
-        >
-          ✅ 提交任務
-        </button>
+        {/* 照片預覽區 */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          overflow: 'hidden',
+          minHeight: '200px',
+          maxHeight: '300px'
+        }}>
+          {photo ? (
+            <img
+              src={photo}
+              alt="預覽"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                borderRadius: '0.75rem',
+                objectFit: 'contain'
+              }}
+            />
+          ) : (
+            <div style={{
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '60px', marginBottom: '0.5rem' }}>📷</div>
+              <div>點擊下方開啟相機</div>
+            </div>
+          )}
+        </div>
+
+        {/* 底部操作 */}
+        <div style={{
+          background: 'rgba(0, 0, 0, 0.3)',
+          padding: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}>
+          {/* 拍照按鈕（單一） */}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+            id="camera-input-square"
+          />
+          <label
+            htmlFor="camera-input-square"
+            style={{
+              width: '100%',
+              background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              display: 'block',
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+            }}
+          >
+            {photo ? '📷 重新拍照' : '📷 開啟相機'}
+          </label>
+
+          {/* 提交按鈕 */}
+          <button
+            onClick={handleSubmit}
+            disabled={!photo}
+            style={{
+              width: '100%',
+              background: photo 
+                ? 'linear-gradient(to right, #10b981, #059669)' 
+                : 'linear-gradient(to right, #9ca3af, #6b7280)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: photo ? 'pointer' : 'not-allowed',
+              boxShadow: photo 
+                ? '0 4px 15px rgba(16, 185, 129, 0.4)' 
+                : 'none',
+              opacity: photo ? 1 : 0.6
+            }}
+          >
+            ✅ 提交任務
+          </button>
+        </div>
       </div>
     </div>
   )
