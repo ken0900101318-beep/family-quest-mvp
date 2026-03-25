@@ -286,51 +286,53 @@ export default function TaskSquare({ user, onBack }) {
               )}
             </div>
 
-            {/* 按鈕 */}
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoCapture}
-              style={{ display: 'none' }}
-              id="camera-input-simple"
-            />
-            <label
-              htmlFor="camera-input-simple"
-              style={{
-                display: 'block',
-                width: '100%',
-                background: 'linear-gradient(to right, #3b82f6, #2563eb)',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
-                textAlign: 'center',
-                cursor: 'pointer',
-                border: 'none'
-              }}
-            >
-              {capturedPhoto ? '📷 重新拍照' : '📷 開啟相機'}
-            </label>
+            {/* 按鈕容器 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoCapture}
+                style={{ display: 'none' }}
+                id="camera-input-simple"
+              />
+              <label
+                htmlFor="camera-input-simple"
+                style={{
+                  display: 'block',
+                  width: '50%',
+                  background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.75rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  border: 'none'
+                }}
+              >
+                {capturedPhoto ? '📷 重新拍照' : '📷 開啟相機'}
+              </label>
 
-            <button
-              onClick={submitTask}
-              disabled={!capturedPhoto}
-              style={{
-                width: '100%',
-                background: capturedPhoto ? 'linear-gradient(to right, #10b981, #059669)' : '#e5e7eb',
-                color: capturedPhoto ? 'white' : '#9ca3af',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
-                border: 'none',
-                cursor: capturedPhoto ? 'pointer' : 'not-allowed'
-              }}
-            >
-              ✅ 提交任務
-            </button>
+              <button
+                onClick={submitTask}
+                disabled={!capturedPhoto}
+                style={{
+                  width: '50%',
+                  background: capturedPhoto ? 'linear-gradient(to right, #10b981, #059669)' : '#e5e7eb',
+                  color: capturedPhoto ? 'white' : '#9ca3af',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.75rem',
+                  border: 'none',
+                  cursor: capturedPhoto ? 'pointer' : 'not-allowed'
+                }}
+              >
+                ✅ 提交任務
+              </button>
+            </div>
           </div>
         </div>
       )}
