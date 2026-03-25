@@ -1053,37 +1053,7 @@ function TaskCard({ task, onEdit, onToggle }) {
           </div>
         </div>
 
-        {task.current !== undefined && task.target && (
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.1))',
-            padding: '0.875rem',
-            borderRadius: '0.75rem',
-            marginBottom: '1rem',
-            border: '2px solid #e9d5ff'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '13px', color: '#7e22ce', fontWeight: 'bold' }}>
-                挑戰進度
-              </span>
-              <span style={{ fontSize: '14px', color: '#8b5cf6', fontWeight: 'bold' }}>
-                {task.current}/{task.target} 天
-              </span>
-            </div>
-            <div style={{
-              background: 'white',
-              height: '8px',
-              borderRadius: '4px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
-                height: '100%',
-                width: `${(task.current / task.target) * 100}%`,
-                transition: 'width 0.3s'
-              }} />
-            </div>
-          </div>
-        )}
+
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button 

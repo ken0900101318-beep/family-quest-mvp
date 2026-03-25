@@ -345,43 +345,17 @@ function TaskCard({ title, task, onComplete }) {
               {task.title}
             </h3>
             
-            {/* 進度條 */}
-            {task.progress !== undefined && (
-              <div style={{
-                background: 'rgba(168, 85, 247, 0.2)',
-                borderRadius: '0.5rem',
-                height: '8px',
-                marginBottom: '0.5rem',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
-                  height: '100%',
-                  borderRadius: '0.5rem',
-                  width: `${task.progress}%`,
-                  transition: 'width 0.5s ease'
-                }} />
-              </div>
-            )}
-
-            {/* 進度文字 + 獎勵標籤 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {task.current && (
-                <div style={{ color: '#7e22ce', fontSize: '12px', fontWeight: '600' }}>
-                  {task.current}/{task.target}天
-                </div>
-              )}
-              
-              <div style={{
-                display: 'inline-block',
-                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '0.75rem'
-              }}>
-                <span style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>
-                  {task.points} pts 🎁
-                </span>
-              </div>
+            {/* 獎勵標籤 */}
+            <div style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '0.75rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>
+                {task.points} pts 🎁
+              </span>
             </div>
           </div>
         </div>
