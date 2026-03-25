@@ -277,8 +277,11 @@ export default function TaskSquare({ user, onBack }) {
   }
 
   const handleOpenCamera = (task) => {
+    console.log('🎥 handleOpenCamera 被呼叫!', task)
+    alert('🎥 準備開啟相機視窗: ' + task.title)
     setSelectedTask(task)
     setShowCamera(true)
+    console.log('🎥 showCamera 已設為 true')
   }
 
   const handlePhotoSubmit = async (photoData) => {
@@ -711,9 +714,13 @@ function formatDate(dateStr) {
 // 任務卡片
 function TaskCard({ task, type, user, onRefresh, onOpenCamera }) {
   const handleComplete = () => {
-    if (onOpenCamera) {
-      onOpenCamera(task)
+    console.log('🔍 handleComplete 被點擊!', { task, onOpenCamera: !!onOpenCamera })
+    if (!onOpenCamera) {
+      alert('❌ onOpenCamera 是 undefined！')
+      return
     }
+    alert('✅ 即將開啟相機: ' + task.title)
+    onOpenCamera(task)
   }
   
   return (
