@@ -187,7 +187,7 @@ export default function TaskSquare({ user, onBack }) {
         ) : (
           <>
             {activeTab === 'ongoing' && (
-              <OngoingTasks tasks={tasks} onRequestNew={() => setShowRequestForm(true)} />
+              <OngoingTasks tasks={tasks} onRequestNew={() => setShowRequestForm(true)} user={user} onRefresh={loadData} />
             )}
             {activeTab === 'myRequests' && (
               <MyRequests requests={myRequests} />
@@ -234,7 +234,7 @@ function TabButton({ active, onClick, icon, label }) {
 }
 
 // 進行中的任務
-function OngoingTasks({ tasks, onRequestNew }) {
+function OngoingTasks({ tasks, onRequestNew, user, onRefresh }) {
   return (
     <div>
       {/* 申請新任務按鈕 */}
@@ -260,7 +260,7 @@ function OngoingTasks({ tasks, onRequestNew }) {
       {/* 任務列表 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={loadData} />
+          <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={onRefresh} />
         ))}
       </div>
     </div>

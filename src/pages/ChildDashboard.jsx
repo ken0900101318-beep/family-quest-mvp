@@ -503,12 +503,12 @@ function CameraModal({ task, onSubmit, onClose }) {
       {/* 任務資訊 */}
       <div style={{
         background: 'rgba(168, 85, 247, 0.3)',
-        padding: '1rem',
+        padding: '0.75rem',
         color: 'white',
         textAlign: 'center'
       }}>
-        <div style={{ fontSize: '40px', marginBottom: '0.5rem' }}>{task.icon}</div>
-        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{task.title}</div>
+        <div style={{ fontSize: '32px', marginBottom: '0.25rem' }}>{task.icon}</div>
+        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{task.title}</div>
       </div>
 
       {/* 照片預覽區 */}
@@ -546,10 +546,10 @@ function CameraModal({ task, onSubmit, onClose }) {
       {/* 底部操作 */}
       <div style={{
         background: 'rgba(0, 0, 0, 0.5)',
-        padding: '1.5rem',
+        padding: '1rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem'
+        gap: '0.75rem'
       }}>
         {/* 拍照按鈕（單一） */}
         <input
@@ -567,15 +567,14 @@ function CameraModal({ task, onSubmit, onClose }) {
             background: 'linear-gradient(to right, #3b82f6, #2563eb)',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: '18px',
-            padding: '1.25rem',
-            borderRadius: '1rem',
+            fontSize: '16px',
+            padding: '1rem',
+            borderRadius: '0.75rem',
             border: 'none',
             cursor: 'pointer',
             textAlign: 'center',
             display: 'block',
-            boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-            marginBottom: '1rem'
+            boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)'
           }}
         >
           {photo ? '📷 重新拍照' : '📷 開啟相機'}
@@ -592,13 +591,13 @@ function CameraModal({ task, onSubmit, onClose }) {
               : 'linear-gradient(to right, #9ca3af, #6b7280)',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: '18px',
+            fontSize: '16px',
             padding: '1rem',
-            borderRadius: '1rem',
+            borderRadius: '0.75rem',
             border: 'none',
             cursor: photo ? 'pointer' : 'not-allowed',
             boxShadow: photo 
-              ? '0 10px 30px rgba(16, 185, 129, 0.4)' 
+              ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
               : 'none',
             opacity: photo ? 1 : 0.6
           }}

@@ -772,8 +772,8 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
   const stats = {
     total: filteredTasks.length,
     active: filteredTasks.filter(t => t.status === 'active').length,
-    daily: filteredTasks.filter(t => t.type === 'daily').length,
-    challenge: filteredTasks.filter(t => t.type === 'challenge').length
+    daily: filteredTasks.filter(t => t.type === 'daily' && t.status === 'active').length,
+    challenge: filteredTasks.filter(t => t.type === 'challenge' && t.status === 'active').length
   }
 
   return (

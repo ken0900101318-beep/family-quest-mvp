@@ -187,15 +187,22 @@ export const mockAPI = {
   submitTask: (taskId, userId, photoData = null) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const task = mockData.tasks.find(t => t.id === taskId)
-        const user = mockData.users.find(u => u.id === userId)
+        // 從 localStorage 讀取最新任務列表
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
+        const task = allTasks.find(t => t.id === taskId)
+        
+        const users = JSON.parse(localStorage.getItem('users') || '[]')
+        const usersData = users.length > 0 ? users : mockData.users
+        const user = usersData.find(u => u.id === userId)
         
         const submission = {
           id: Date.now(),
           taskId,
+          taskTitle: task ? task.title : '未知任務',
           userId,
-          userName: user.name,
-          userAvatar: user.role === 'child' ? (user.name === '哥哥' ? '👦' : '👧') : '👤',
+          userName: user ? user.name : '未知用戶',
+          userAvatar: user && user.role === 'child' ? (user.name === '哥哥' ? '👦' : '👧') : '👤',
           timestamp: new Date().toISOString(),
           status: 'pending',
           photo: photoData
