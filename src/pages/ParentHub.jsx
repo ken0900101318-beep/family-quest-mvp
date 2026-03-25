@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI, mockData } from '../lib/supabase'
+import { AnnouncementManager } from '../components/Announcements'
 
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop
@@ -284,6 +285,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
             icon="📊"
             label="數據統計"
           />
+          <TabButton
+            active={activeTab === 'announcements'}
+            onClick={() => setActiveTab('announcements')}
+            icon="📢"
+            label="公告管理"
+          />
         </div>
 
         {/* 內容 */}
@@ -319,6 +326,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
             )}
             {activeTab === 'stats' && (
               <Statistics stats={stats} />
+            )}
+
+            {activeTab === 'announcements' && (
+              <AnnouncementManager />
             )}
           </>
         )}

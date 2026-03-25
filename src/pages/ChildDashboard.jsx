@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
+import { AnnouncementCard } from '../components/Announcements'
 
 export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
@@ -165,6 +166,9 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
             </div>
           </div>
         </div>
+
+        {/* 公告欄 */}
+        <AnnouncementCard />
 
         {/* 標題 */}
         <h2 style={{
