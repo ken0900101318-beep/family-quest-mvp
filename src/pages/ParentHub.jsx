@@ -1191,23 +1191,23 @@ function Statistics({ stats }) {
               style={{
                 background: 'rgba(168, 85, 247, 0.05)',
                 borderRadius: '1rem',
-                padding: '1.5rem',
+                padding: '1rem',
                 border: '2px solid #e9d5ff'
               }}
             >
               <div style={{
-                fontSize: '48px',
+                fontSize: '36px',
                 textAlign: 'center',
-                marginBottom: '1rem'
+                marginBottom: '0.5rem'
               }}>
                 {child.name === '哥哥' ? '👦' : '👧'}
               </div>
               <h4 style={{
-                fontSize: '20px',
+                fontSize: '16px',
                 fontWeight: 'bold',
                 color: '#581c87',
                 textAlign: 'center',
-                marginBottom: '1rem'
+                marginBottom: '0.875rem'
               }}>
                 {child.name}
               </h4>
@@ -1217,16 +1217,16 @@ function Statistics({ stats }) {
                 gap: '0.5rem'
               }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>點數</div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.points}</div>
+                  <div style={{ fontSize: '11px', color: '#9333ea', marginBottom: '0.25rem' }}>點數</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce' }}>{child.points}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>完成</div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.completed}</div>
+                  <div style={{ fontSize: '11px', color: '#9333ea', marginBottom: '0.25rem' }}>完成</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce' }}>{child.completed}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#9333ea', marginBottom: '0.25rem' }}>達成率</div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#7e22ce' }}>{child.rate}%</div>
+                  <div style={{ fontSize: '11px', color: '#9333ea', marginBottom: '0.25rem' }}>達成率</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce' }}>{child.rate}%</div>
                 </div>
               </div>
             </div>
