@@ -258,7 +258,7 @@ function OngoingTasks({ tasks, onRequestNew }) {
       </button>
 
       {/* 任務列表 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
         {tasks.map(task => (
           <TaskCard key={task.id} task={task} type="ongoing" user={user} onRefresh={loadData} />
         ))}
@@ -270,7 +270,7 @@ function OngoingTasks({ tasks, onRequestNew }) {
 // 我的申請
 function MyRequests({ requests }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
       {requests.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
           還沒有申請記錄

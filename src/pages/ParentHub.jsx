@@ -924,7 +924,7 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
           {filteredTasks.map(task => (
             <TaskCard 
               key={task.id} 
