@@ -20,31 +20,23 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const loadData = async () => {
     setLoading(true)
     
-    // 從 localStorage 讀取提交記錄
-    const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const pendingSubmissions = stored.filter(s => s.status === 'pending')
+    // 從 Supabase 讀取待審核任務
+    const pendingSubmissions = await mockAPI.getPendingSubmissions()
     
     // 轉換格式以匹配 UI
-    const formattedRequests = []
-    for (const sub of pendingSubmissions) {
-      // 從 API 獲取最新任務資料
-      const userTasks = await mockAPI.getTasks(sub.userId)
-      const task = userTasks.find(t => t.id === sub.taskId)
-      
-      formattedRequests.push({
-        id: sub.id,
-        childId: sub.userId,
-        childName: sub.userName,
-        title: task ? task.title : `任務 #${sub.taskId}`,
-        points: task ? task.points : 10,
-        description: sub.description || '',
-        status: 'submitted',
-        submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
-        type: 'taskSubmit',
-        photo: sub.photo,
-        taskId: sub.taskId
-      })
-    }
+    const formattedRequests = pendingSubmissions.map(sub => ({
+      id: sub.id,
+      childId: sub.userId,
+      childName: sub.userName,
+      title: sub.taskTitle,
+      points: sub.points,
+      description: '',
+      status: 'submitted',
+      submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
+      type: 'taskSubmit',
+      photo: sub.photo,
+      taskId: sub.taskId
+    }))
     
     setPendingRequests(formattedRequests)
     
@@ -56,45 +48,17 @@ export default function ParentHub({ user, onBack, onLogout }) {
     ])
     
     // 從 localStorage 計算真實統計數據
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    const children = users.filter(u => u.role === 'child')
-    
-    const totalPoints = children.reduce((sum, child) => sum + (child.points || 0), 0)
-    
-    const allSubmissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const completedTasks = allSubmissions.filter(s => s.status === 'approved').length
-    const pendingReviews = pendingSubmissions.length
-    
-    const childStats = children.map(child => {
-      const childSubmissions = allSubmissions.filter(s => s.userId === child.id)
-      const completed = childSubmissions.filter(s => s.status === 'approved').length
-      const total = childSubmissions.length
-      const rate = total > 0 ? Math.round((completed / total) * 100) : 0
-      
-      return {
-        name: child.name,
-        points: child.points || 0,
-        completed,
-        rate
-      }
-    })
-    
+    // 統計數據（暫時簡化，之後可以從 Supabase 計算）
     setStats({
-      totalPoints,
-      completedTasks,
-      pendingReviews,
-      childStats
+      totalPoints: 0,
+      completedTasks: 0,
+      pendingReviews: formattedRequests.length,
+      childStats: []
     })
     
-    // 讀取兌換記錄
-    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
-    const pendingPurchases = purchaseData.filter(p => p.status === 'pending')
-    setPurchases(pendingPurchases)
-    
-    // 讀取許願清單
-    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
-    const pendingWishes = wishData.filter(w => w.status === 'pending')
-    setWishes(pendingWishes)
+    // TODO: 實作購買記錄和許願清單從 Supabase 讀取
+    setPurchases([])
+    setWishes([])
     
     // 讀取所有任務
     const tasks = await mockAPI.getAllTasks()
