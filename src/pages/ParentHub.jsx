@@ -310,6 +310,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 onDeliverPurchase={handleDeliverPurchase}
                 onApproveWish={handleApproveWish}
                 onRejectWish={handleRejectWish}
+                showToast={showToast}
               />
             )}
             {activeTab === 'stats' && (
@@ -1346,13 +1347,12 @@ function Statistics({ stats }) {
 }
 
 // 商店管理
-function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish }) {
+function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish, showToast }) {
   const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes / ledger / products
   const [products, setProducts] = useState([])
   const [showProductForm, setShowProductForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [loading, setLoading] = useState(false)
-  const { showToast, ToastContainer } = useToast()
   
   useEffect(() => {
     if (activeSubTab === 'products') {
@@ -1638,9 +1638,6 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
       {activeSubTab === 'ledger' && (
         <FinanceLedger transactions={getAllTransactions()} />
       )}
-
-      {/* Toast 通知 */}
-      <ToastContainer />
     </div>
   )
 }
