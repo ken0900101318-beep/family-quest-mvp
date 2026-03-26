@@ -1376,9 +1376,11 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
   const handleSaveProduct = async (productData) => {
     try {
       if (editingProduct) {
-        // 更新商品（TODO: 實作 updateProduct API）
+        // 更新商品
+        await mockAPI.updateProduct(editingProduct.id, productData)
         showToast('商品已更新', 'success')
       } else {
+        // 新增商品
         await mockAPI.addProduct(
           productData.name,
           productData.price,
@@ -1392,16 +1394,18 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
       loadProducts()
     } catch (error) {
       showToast('操作失敗', 'error')
+      console.error('Save product error:', error)
     }
   }
   
   const handleToggleProductStatus = async (productId, currentStatus) => {
     try {
-      // TODO: 實作 toggleProductStatus API
-      showToast(`商品已${currentStatus === 'active' ? '停用' : '啟用'}`, 'success')
+      const newStatus = await mockAPI.toggleProductStatus(productId)
+      showToast(`商品已${newStatus === 'inactive' ? '停用' : '啟用'}`, 'success')
       loadProducts()
     } catch (error) {
       showToast('操作失敗', 'error')
+      console.error('Toggle product status error:', error)
     }
   }
 

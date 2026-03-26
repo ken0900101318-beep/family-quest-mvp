@@ -452,6 +452,63 @@ export const mockAPI = {
     }
   },
   
+  // 更新商品
+  updateProduct: async (productId, updates) => {
+    const { data, error } = await supabase
+      .from('products')
+      .update({
+        name: updates.name,
+        icon: updates.icon,
+        price: updates.price,
+        stock: updates.stock
+      })
+      .eq('id', productId)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Update product error:', error)
+      throw error
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      icon: data.icon,
+      price: data.price,
+      stock: data.stock,
+      status: data.status
+    }
+  },
+  
+  // 切換商品狀態（啟用/停用）
+  toggleProductStatus: async (productId) => {
+    // 先查詢目前狀態
+    const { data: product } = await supabase
+      .from('products')
+      .select('status')
+      .eq('id', productId)
+      .single()
+    
+    if (!product) {
+      throw new Error('Product not found')
+    }
+    
+    const newStatus = product.status === 'active' ? 'inactive' : 'active'
+    
+    const { error } = await supabase
+      .from('products')
+      .update({ status: newStatus })
+      .eq('id', productId)
+    
+    if (error) {
+      console.error('Toggle product status error:', error)
+      throw error
+    }
+    
+    return newStatus
+  },
+  
   // 取得購買記錄
   getPurchases: async (userId) => {
     const { data, error } = await supabase
