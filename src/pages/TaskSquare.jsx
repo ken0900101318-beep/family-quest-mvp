@@ -20,56 +20,50 @@ export default function TaskSquare({ user, onBack }) {
 
   const loadData = async () => {
     setLoading(true)
+    
+    // 取得任務
     const userTasks = await mockAPI.getTasks(user.id)
     setTasks(userTasks)
     
-    const taskRequests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
-    const myTaskRequests = taskRequests.filter(r => r.userId === user.id)
-    setMyRequests(myTaskRequests)
+    // 取得任務申請
+    const taskRequests = await mockAPI.getTaskRequests(user.id)
+    setMyRequests(taskRequests)
     
-    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const mySubmissions = submissions.filter(s => s.userId === user.id)
-    
-    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-    const allTasks = storedTasks.length > 0 ? storedTasks : await mockAPI.getAllTasks()
-    
-    const historyRecords = []
-    for (const sub of mySubmissions) {
-      const task = allTasks.find(t => t.id === sub.taskId)
-      historyRecords.push({
-        id: sub.id,
-        title: task ? task.title : `任務 #${sub.taskId}`,
-        points: task ? task.points : 10,
-        status: sub.status === 'approved' ? 'completed' : sub.status,
-        completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
-        updatedAt: sub.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0],
-        rejectReason: sub.rejectReason
-      })
-    }
+    // 取得提交歷史
+    const submissions = await mockAPI.getUserSubmissions(user.id)
+    const historyRecords = submissions.map(sub => ({
+      id: sub.id,
+      title: sub.taskTitle,
+      points: sub.points,
+      status: sub.status === 'approved' ? 'completed' : sub.status,
+      completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
+      updatedAt: sub.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0],
+      rejectReason: sub.rejectReason
+    }))
     
     setHistory(historyRecords)
     setLoading(false)
   }
 
-  const handleRequestTask = (taskData) => {
-    const newRequest = {
-      id: Date.now(),
-      userId: user.id,
-      title: taskData.title,
-      points: parseInt(taskData.points),
-      description: taskData.description,
-      status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0]
+  const handleRequestTask = async (taskData) => {
+    try {
+      await mockAPI.addTaskRequest(
+        user.id,
+        taskData.title,
+        parseInt(taskData.points),
+        taskData.description
+      )
+      
+      alert('✅ 任務申請已送出！等待家長審核')
+      setShowRequestForm(false)
+      setActiveTab('myRequests')
+      
+      // 重新載入數據
+      loadData()
+    } catch (error) {
+      alert('❌ 申請失敗，請稍後再試')
+      console.error(error)
     }
-    
-    const requests = JSON.parse(localStorage.getItem('taskRequests') || '[]')
-    requests.push(newRequest)
-    localStorage.setItem('taskRequests', JSON.stringify(requests))
-    
-    setMyRequests([newRequest, ...myRequests])
-    alert('✅ 任務申請已送出！等待家長審核')
-    setShowRequestForm(false)
-    setActiveTab('myRequests')
   }
 
   // 開啟拍照

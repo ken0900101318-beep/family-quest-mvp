@@ -604,6 +604,35 @@ export const mockAPI = {
     }
     
     return data
+  },
+  
+  // 取得用戶的提交歷史（所有狀態）
+  getUserSubmissions: async (userId) => {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select(`
+        *,
+        task:tasks(title, points)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get user submissions error:', error)
+      return []
+    }
+    
+    return data.map(sub => ({
+      id: sub.id,
+      taskId: sub.task_id,
+      taskTitle: sub.task?.title || '未知任務',
+      userId: sub.user_id,
+      timestamp: sub.created_at,
+      status: sub.status,
+      photo: sub.photo,
+      points: sub.points || sub.task?.points,
+      rejectReason: sub.reject_reason
+    }))
   }
 }
 
