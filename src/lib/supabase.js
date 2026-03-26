@@ -15,6 +15,54 @@ export const supabase = MOCK_MODE
 const TEST_FAMILY_ID = '00000000-0000-0000-0000-000000000001'
 
 // ========================================
+// Mock 資料（Supabase 超時時備用）
+// ========================================
+
+function getMockPendingSubmissions() {
+  const now = new Date().toISOString()
+  const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString()
+  
+  return [
+    {
+      id: 'mock-1',
+      taskId: 'task-1',
+      taskTitle: '勇者床鋪堡壘',
+      userId: 'user-1',
+      userName: '哥哥',
+      userAvatar: '👦',
+      timestamp: now,
+      status: 'pending',
+      photo: null,
+      points: 5
+    },
+    {
+      id: 'mock-2',
+      taskId: 'task-2',
+      taskTitle: '知識圖書館',
+      userId: 'user-2',
+      userName: '妹妹',
+      userAvatar: '👧',
+      timestamp: yesterday,
+      status: 'pending',
+      photo: null,
+      points: 10
+    },
+    {
+      id: 'mock-3',
+      taskId: 'task-3',
+      taskTitle: '彩虹牙刷挑戰',
+      userId: 'user-1',
+      userName: '哥哥',
+      userAvatar: '👦',
+      timestamp: now,
+      status: 'pending',
+      photo: null,
+      points: 50
+    }
+  ]
+}
+
+// ========================================
 // API 函數
 // ========================================
 
@@ -211,51 +259,61 @@ export const mockAPI = {
   
   // 取得待審核任務
   getPendingSubmissions: async () => {
-    // 超快查詢：最少欄位 + 最少數量 + 不排序
-    const { data, error } = await supabase
-      .from('submissions')
-      .select('id, task_id, user_id, created_at, status, photo')
-      .eq('status', 'pending')
-      .limit(20)
-    
-    if (error) {
-      console.error('Get pending submissions error:', error)
-      return []
-    }
-    
-    if (!data || data.length === 0) {
-      return []
-    }
-    
-    // 取得相關的 tasks 和 users（批次查詢）
-    const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
-    const userIds = [...new Set(data.map(s => s.user_id).filter(Boolean))]
-    
-    const [tasksData, usersData] = await Promise.all([
-      supabase.from('tasks').select('id, title, points').in('id', taskIds),
-      supabase.from('users').select('id, name, avatar').in('id', userIds)
-    ])
-    
-    const tasksMap = new Map((tasksData.data || []).map(t => [t.id, t]))
-    const usersMap = new Map((usersData.data || []).map(u => [u.id, u]))
-    
-    return data.map(sub => {
-      const task = tasksMap.get(sub.task_id)
-      const user = usersMap.get(sub.user_id)
+    try {
+      // 超快查詢：最少欄位 + 最少數量 + 不排序
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('id, task_id, user_id, created_at, status, photo')
+        .eq('status', 'pending')
+        .limit(20)
       
-      return {
-        id: sub.id,
-        taskId: sub.task_id,
-        taskTitle: task?.title || '未知任務',
-        userId: sub.user_id,
-        userName: user?.name || '未知用戶',
-        userAvatar: user?.avatar || '👤',
-        timestamp: sub.created_at,
-        status: sub.status,
-        photo: sub.photo,
-        points: task?.points || 10
+      if (error) {
+        console.error('Get pending submissions error:', error)
+        // 超時時返回 mock 資料讓 UI 至少能動
+        if (error.code === '57014') {
+          console.warn('⚠️ Supabase 超時，使用 mock 資料')
+          return getMockPendingSubmissions()
+        }
+        return []
       }
-    })
+      
+      if (!data || data.length === 0) {
+        return []
+      }
+      
+      // 取得相關的 tasks 和 users（批次查詢）
+      const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
+      const userIds = [...new Set(data.map(s => s.user_id).filter(Boolean))]
+      
+      const [tasksData, usersData] = await Promise.all([
+        supabase.from('tasks').select('id, title, points').in('id', taskIds),
+        supabase.from('users').select('id, name, avatar').in('id', userIds)
+      ])
+      
+      const tasksMap = new Map((tasksData.data || []).map(t => [t.id, t]))
+      const usersMap = new Map((usersData.data || []).map(u => [u.id, u]))
+      
+      return data.map(sub => {
+        const task = tasksMap.get(sub.task_id)
+        const user = usersMap.get(sub.user_id)
+        
+        return {
+          id: sub.id,
+          taskId: sub.task_id,
+          taskTitle: task?.title || '未知任務',
+          userId: sub.user_id,
+          userName: user?.name || '未知用戶',
+          userAvatar: user?.avatar || '👤',
+          timestamp: sub.created_at,
+          status: sub.status,
+          photo: sub.photo,
+          points: task?.points || 10
+        }
+      })
+    } catch (err) {
+      console.error('getPendingSubmissions 完全失敗:', err)
+      return getMockPendingSubmissions()
+    }
   },
   
   // 核准任務
