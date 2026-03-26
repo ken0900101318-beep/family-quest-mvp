@@ -211,33 +211,52 @@ export const mockAPI = {
   
   // 取得待審核任務
   getPendingSubmissions: async () => {
+    // 只查詢 submissions（更快！避免 JOIN 超時）
     const { data, error } = await supabase
       .from('submissions')
-      .select(`
-        *,
-        task:tasks(title, points),
-        user:users!submissions_user_id_fkey(name, avatar)
-      `)
+      .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
+      .limit(50)
     
     if (error) {
       console.error('Get pending submissions error:', error)
       return []
     }
     
-    return data.map(sub => ({
-      id: sub.id,
-      taskId: sub.task_id,
-      taskTitle: sub.task?.title || '未知任務',
-      userId: sub.user_id,
-      userName: sub.user?.name || '未知用戶',
-      userAvatar: sub.user?.avatar || '👤',
-      timestamp: sub.created_at,
-      status: sub.status,
-      photo: sub.photo,
-      points: sub.task?.points
-    }))
+    if (!data || data.length === 0) {
+      return []
+    }
+    
+    // 取得相關的 tasks 和 users（批次查詢）
+    const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
+    const userIds = [...new Set(data.map(s => s.user_id).filter(Boolean))]
+    
+    const [tasksData, usersData] = await Promise.all([
+      supabase.from('tasks').select('id, title, points').in('id', taskIds),
+      supabase.from('users').select('id, name, avatar').in('id', userIds)
+    ])
+    
+    const tasksMap = new Map((tasksData.data || []).map(t => [t.id, t]))
+    const usersMap = new Map((usersData.data || []).map(u => [u.id, u]))
+    
+    return data.map(sub => {
+      const task = tasksMap.get(sub.task_id)
+      const user = usersMap.get(sub.user_id)
+      
+      return {
+        id: sub.id,
+        taskId: sub.task_id,
+        taskTitle: task?.title || '未知任務',
+        userId: sub.user_id,
+        userName: user?.name || '未知用戶',
+        userAvatar: user?.avatar || '👤',
+        timestamp: sub.created_at,
+        status: sub.status,
+        photo: sub.photo,
+        points: task?.points || 10
+      }
+    })
   },
   
   // 核准任務
