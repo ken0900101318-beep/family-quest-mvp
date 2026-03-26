@@ -22,60 +22,67 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const loadData = async () => {
     setLoading(true)
     
+    try {
+    
     // 從 Supabase 讀取待審核任務
     // 並行載入（更快！）
-      const [pendingSubmissions, allWishes] = await Promise.all([
-        mockAPI.getPendingSubmissions(),
-        mockAPI.getWishes()
-      ])
+        const [pendingSubmissions, allWishes] = await Promise.all([
+          mockAPI.getPendingSubmissions(),
+          mockAPI.getWishes()
+        ])
     
     // 轉換格式以匹配 UI
-    const formattedRequests = pendingSubmissions.map(sub => ({
-      id: sub.id,
-      childId: sub.userId,
-      childName: sub.userName,
-      title: sub.taskTitle,
-      points: sub.points,
-      description: '',
-      status: 'submitted',
-      submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
-      type: 'taskSubmit',
-      photo: sub.photo,
-      taskId: sub.taskId
-    }))
+      const formattedRequests = pendingSubmissions.map(sub => ({
+        id: sub.id,
+        childId: sub.userId,
+        childName: sub.userName,
+        title: sub.taskTitle,
+        points: sub.points,
+        description: '',
+        status: 'submitted',
+        submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
+        type: 'taskSubmit',
+        photo: sub.photo,
+        taskId: sub.taskId
+      }))
     
-    setPendingRequests(formattedRequests)
+      setPendingRequests(formattedRequests)
     
     // Mock 所有任務
-    setAllTasks([
-      { id: 1, title: '勇者床鋪堡壘', points: 5, icon: '🛏️', type: 'daily', status: 'active', assignedTo: 'all' },
-      { id: 2, title: '知識圖書館', points: 10, icon: '📚', type: 'daily', status: 'active', assignedTo: 'all' },
-      { id: 3, title: '彩虹牙刷挑戰', points: 50, icon: '🌈', type: 'challenge', status: 'active', assignedTo: 'all', current: 14, target: 21 }
-    ])
+      setAllTasks([
+        { id: 1, title: '勇者床鋪堡壘', points: 5, icon: '🛏️', type: 'daily', status: 'active', assignedTo: 'all' },
+        { id: 2, title: '知識圖書館', points: 10, icon: '📚', type: 'daily', status: 'active', assignedTo: 'all' },
+        { id: 3, title: '彩虹牙刷挑戰', points: 50, icon: '🌈', type: 'challenge', status: 'active', assignedTo: 'all', current: 14, target: 21 }
+      ])
     
     // 從 localStorage 計算真實統計數據
     // 統計數據（暫時簡化，之後可以從 Supabase 計算）
-    setStats({
-      totalPoints: 0,
-      completedTasks: 0,
-      pendingReviews: formattedRequests.length,
-      childStats: []
-    })
+      setStats({
+        totalPoints: 0,
+        completedTasks: 0,
+        pendingReviews: formattedRequests.length,
+        childStats: []
+      })
     
     // 讀取待發放的購買記錄（所有兒童）
     // TODO: 需要改為查詢家庭內所有pending purchases
-    setPurchases([])
+      setPurchases([])
     
     // 讀取待審核的許願清單
     // allWishes 已在上方並行載入
-    const pendingWishes = allWishes.filter(w => w.status === 'pending')
-    setWishes(pendingWishes)
+      const pendingWishes = allWishes.filter(w => w.status === 'pending')
+      setWishes(pendingWishes)
     
     // 讀取所有任務
-    const tasks = await mockAPI.getAllTasks()
-    setAllTasks(tasks)
+      const tasks = await mockAPI.getAllTasks()
+      setAllTasks(tasks)
     
-    setLoading(false)
+    } catch (error) {
+      console.error('載入失敗:', error)
+      setPendingRequests([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleApprove = async (request, adjustedPoints) => {
