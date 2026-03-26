@@ -52,28 +52,22 @@ export default function Shop({ user, onNavigate }) {
     }
   }
 
-  const handleWish = (wishData) => {
-    // 提交許願
-    const newWish = {
-      id: Date.now(),
-      userId: user.id,
-      userName: user.name,
-      name: wishData.name,
-      price: parseInt(wishData.price),
-      description: wishData.description,
-      status: 'pending',
-      createdAt: new Date().toISOString()
+  const handleWish = async (wishData) => {
+    try {
+      await mockAPI.addWish(
+        user.id,
+        wishData.name,
+        wishData.description
+      )
+
+      alert('✨ 許願成功！等待家長審核')
+      setShowWishForm(false)
+      setActiveTab('wish')
+      loadData()
+    } catch (error) {
+      alert('❌ 許願失敗，請稍後再試')
+      console.error(error)
     }
-
-    // 儲存到 localStorage（許願清單）
-    const wishes = JSON.parse(localStorage.getItem('wishes') || '[]')
-    wishes.push(newWish)
-    localStorage.setItem('wishes', JSON.stringify(wishes))
-
-    alert('✨ 許願成功！等待家長審核')
-    setShowWishForm(false)
-    setActiveTab('wish')
-    loadData()
   }
 
   return (
@@ -468,11 +462,10 @@ function WishTab({ userId, onOpenWishForm }) {
 
   useEffect(() => {
     loadWishes()
-  }, [filter])
+  }, [filter, userId])
 
-  const loadWishes = () => {
-    const allWishes = JSON.parse(localStorage.getItem('wishes') || '[]')
-    const userWishes = allWishes.filter(w => w.userId === userId)
+  const loadWishes = async () => {
+    const userWishes = await mockAPI.getWishes(userId)
     
     if (filter === 'pending') {
       setWishes(userWishes.filter(w => w.status === 'pending'))
@@ -481,13 +474,10 @@ function WishTab({ userId, onOpenWishForm }) {
     }
   }
 
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
     if (confirm('確定要清除所有許願記錄嗎？')) {
-      const allWishes = JSON.parse(localStorage.getItem('wishes') || '[]')
-      const otherWishes = allWishes.filter(w => w.userId !== userId)
-      localStorage.setItem('wishes', JSON.stringify(otherWishes))
-      setWishes([])
-      alert('✅ 已清除所有許願記錄')
+      // TODO: 實作 Supabase 刪除許願功能
+      alert('此功能開發中')
     }
   }
 

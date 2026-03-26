@@ -56,9 +56,14 @@ export default function ParentHub({ user, onBack, onLogout }) {
       childStats: []
     })
     
-    // TODO: 實作購買記錄和許願清單從 Supabase 讀取
+    // 讀取待發放的購買記錄（所有兒童）
+    // TODO: 需要改為查詢家庭內所有pending purchases
     setPurchases([])
-    setWishes([])
+    
+    // 讀取待審核的許願清單
+    const allWishes = await mockAPI.getWishes()
+    const pendingWishes = allWishes.filter(w => w.status === 'pending')
+    setWishes(pendingWishes)
     
     // 讀取所有任務
     const tasks = await mockAPI.getAllTasks()
@@ -115,41 +120,44 @@ export default function ParentHub({ user, onBack, onLogout }) {
     alert(`✅ 任務已${newStatus === 'active' ? '啟用' : '停用'}`)
   }
 
-  const handleDeliverPurchase = (purchase) => {
-    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
-    const updated = purchaseData.map(p => 
-      p.id === purchase.id ? { ...p, status: 'delivered', deliveredAt: new Date().toISOString() } : p
-    )
-    localStorage.setItem('purchases', JSON.stringify(updated))
-    setPurchases(prev => prev.filter(p => p.id !== purchase.id))
-    alert(`✅ 已標記「${purchase.productName}」為已發放`)
-    loadData()
+  const handleDeliverPurchase = async (purchase) => {
+    try {
+      await mockAPI.deliverPurchase(purchase.id, user.id)
+      setPurchases(prev => prev.filter(p => p.id !== purchase.id))
+      alert(`✅ 已標記「${purchase.productName}」為已發放`)
+      loadData()
+    } catch (error) {
+      alert('❌ 操作失敗')
+      console.error(error)
+    }
   }
 
-  const handleApproveWish = (wish) => {
-    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
-    const updated = wishData.map(w => 
-      w.id === wish.id ? { ...w, status: 'approved' } : w
-    )
-    localStorage.setItem('wishes', JSON.stringify(updated))
-    setWishes(prev => prev.filter(w => w.id !== wish.id))
-    alert(`✅ 已核准許願「${wish.name}」`)
-    loadData()
+  const handleApproveWish = async (wish) => {
+    try {
+      await mockAPI.approveWish(wish.id)
+      setWishes(prev => prev.filter(w => w.id !== wish.id))
+      alert(`✅ 已核准許願「${wish.product_name}」`)
+      loadData()
+    } catch (error) {
+      alert('❌ 操作失敗')
+      console.error(error)
+    }
   }
 
-  const handleRejectWish = (wish, reason) => {
+  const handleRejectWish = async (wish, reason) => {
     if (!reason) {
       alert('請輸入拒絕原因')
       return
     }
-    const wishData = JSON.parse(localStorage.getItem('wishes') || '[]')
-    const updated = wishData.map(w => 
-      w.id === wish.id ? { ...w, status: 'rejected', rejectReason: reason } : w
-    )
-    localStorage.setItem('wishes', JSON.stringify(updated))
-    setWishes(prev => prev.filter(w => w.id !== wish.id))
-    alert(`❌ 已拒絕許願「${wish.name}」\n原因：${reason}`)
-    loadData()
+    try {
+      await mockAPI.rejectWish(wish.id, reason)
+      setWishes(prev => prev.filter(w => w.id !== wish.id))
+      alert(`❌ 已拒絕許願「${wish.product_name}」`)
+      loadData()
+    } catch (error) {
+      alert('❌ 操作失敗')
+      console.error(error)
+    }
   }
 
   return (
@@ -293,7 +301,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
             )}
 
             {activeTab === 'announcements' && (
-              <AnnouncementManager />
+              <AnnouncementManager userId={user.id} />
             )}
           </>
         )}

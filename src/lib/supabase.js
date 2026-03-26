@@ -445,12 +445,17 @@ export const mockAPI = {
   },
   
   // 取得願望清單
-  getWishes: async (userId) => {
-    const { data, error } = await supabase
+  getWishes: async (userId = null) => {
+    let query = supabase
       .from('wishes')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false })
+    
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    
+    const { data, error } = await query
     
     if (error) {
       console.error('Get wishes error:', error)
@@ -458,6 +463,73 @@ export const mockAPI = {
     }
     
     return data
+  },
+  
+  // 核准願望
+  approveWish: async (wishId) => {
+    const { error } = await supabase
+      .from('wishes')
+      .update({ status: 'approved' })
+      .eq('id', wishId)
+    
+    if (error) {
+      console.error('Approve wish error:', error)
+      throw error
+    }
+    
+    return true
+  },
+  
+  // 拒絕願望
+  rejectWish: async (wishId, reason) => {
+    const { error } = await supabase
+      .from('wishes')
+      .update({ 
+        status: 'rejected',
+        reject_reason: reason 
+      })
+      .eq('id', wishId)
+    
+    if (error) {
+      console.error('Reject wish error:', error)
+      throw error
+    }
+    
+    return true
+  },
+  
+  // 標記購買為已發放
+  deliverPurchase: async (purchaseId, deliveredBy) => {
+    const { error } = await supabase
+      .from('purchases')
+      .update({
+        status: 'delivered',
+        delivered_at: new Date().toISOString(),
+        delivered_by: deliveredBy
+      })
+      .eq('id', purchaseId)
+    
+    if (error) {
+      console.error('Deliver purchase error:', error)
+      throw error
+    }
+    
+    return true
+  },
+  
+  // 取消購買
+  cancelPurchase: async (purchaseId) => {
+    const { error } = await supabase
+      .from('purchases')
+      .update({ status: 'cancelled' })
+      .eq('id', purchaseId)
+    
+    if (error) {
+      console.error('Cancel purchase error:', error)
+      throw error
+    }
+    
+    return true
   },
   
   // 新增願望

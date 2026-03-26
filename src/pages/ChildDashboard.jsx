@@ -71,34 +71,50 @@ export default function ChildDashboard({ user, onLogout, onNavigate }) {
   }
 
   const totalTasks = tasks.length
+  const [completedTasks, setCompletedTasks] = useState(0)
+  const [taskStatuses, setTaskStatuses] = useState({})
   
-  // 計算今日完成數量（從 localStorage.submissions 讀取）
-  const getCompletedToday = () => {
-    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const today = new Date().toISOString().split('T')[0]
-    return submissions.filter(s => 
-      s.userId === user.id && 
-      s.status === 'approved' &&
-      s.timestamp.startsWith(today)
-    ).length
-  }
-  
-  const completedTasks = getCompletedToday()
-  
-  // 檢查任務狀態（今日）
-  const getTaskStatus = (taskId) => {
-    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const today = new Date().toISOString().split('T')[0]
-    const todaySubmission = submissions.find(s => 
-      s.userId === user.id && 
-      s.taskId === taskId &&
-      s.timestamp.startsWith(today)
-    )
+  // 載入今日完成數量和任務狀態
+  useEffect(() => {
+    const loadTodayStats = async () => {
+      const submissions = await mockAPI.getUserSubmissions(user.id)
+      const today = new Date().toISOString().split('T')[0]
+      
+      // 計算今日完成數
+      const todayCompleted = submissions.filter(s => 
+        s.status === 'approved' &&
+        s.timestamp.startsWith(today)
+      ).length
+      setCompletedTasks(todayCompleted)
+      
+      // 建立任務狀態映射
+      const statuses = {}
+      for (const task of tasks) {
+        const todaySubmission = submissions.find(s => 
+          s.taskId === task.id &&
+          s.timestamp.startsWith(today)
+        )
+        
+        if (!todaySubmission) {
+          statuses[task.id] = 'notStarted'
+        } else if (todaySubmission.status === 'approved') {
+          statuses[task.id] = 'completed'
+        } else if (todaySubmission.status === 'pending') {
+          statuses[task.id] = 'pending'
+        } else {
+          statuses[task.id] = 'notStarted'
+        }
+      }
+      setTaskStatuses(statuses)
+    }
     
-    if (!todaySubmission) return 'notStarted' // 未完成
-    if (todaySubmission.status === 'approved') return 'completed' // 已完成
-    if (todaySubmission.status === 'pending') return 'pending' // 待審核
-    return 'notStarted'
+    if (tasks.length > 0) {
+      loadTodayStats()
+    }
+  }, [tasks, user.id])
+  
+  const getTaskStatus = (taskId) => {
+    return taskStatuses[taskId] || 'notStarted'
   }
 
   return (

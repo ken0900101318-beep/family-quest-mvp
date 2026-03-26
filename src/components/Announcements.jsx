@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { mockAPI } from '../lib/supabase'
 
 // 兒童端公告欄（只讀）
 export function AnnouncementCard() {
@@ -8,10 +9,10 @@ export function AnnouncementCard() {
     loadAnnouncements()
   }, [])
 
-  const loadAnnouncements = () => {
-    const stored = JSON.parse(localStorage.getItem('announcements') || '[]')
+  const loadAnnouncements = async () => {
+    const data = await mockAPI.getAnnouncements()
     // 只顯示最新 3 則
-    setAnnouncements(stored.slice(0, 3))
+    setAnnouncements(data.slice(0, 3))
   }
 
   if (announcements.length === 0) {
@@ -81,7 +82,7 @@ export function AnnouncementCard() {
 }
 
 // 家長端公告管理
-export function AnnouncementManager() {
+export function AnnouncementManager({ userId }) {
   const [announcements, setAnnouncements] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ title: '', content: '' })
@@ -90,39 +91,44 @@ export function AnnouncementManager() {
     loadAnnouncements()
   }, [])
 
-  const loadAnnouncements = () => {
-    const stored = JSON.parse(localStorage.getItem('announcements') || '[]')
-    setAnnouncements(stored)
+  const loadAnnouncements = async () => {
+    const data = await mockAPI.getAnnouncements()
+    setAnnouncements(data)
   }
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formData.title || !formData.content) {
       alert('請填寫標題和內容')
       return
     }
 
-    const newAnnouncement = {
-      id: Date.now(),
-      title: formData.title,
-      content: formData.content,
-      createdAt: new Date().toISOString()
+    try {
+      await mockAPI.addAnnouncement(
+        formData.title,
+        formData.content,
+        userId
+      )
+      setFormData({ title: '', content: '' })
+      setShowForm(false)
+      alert('✅ 公告已發布！')
+      loadAnnouncements()
+    } catch (error) {
+      alert('❌ 發布失敗')
+      console.error(error)
     }
-
-    const updated = [newAnnouncement, ...announcements]
-    localStorage.setItem('announcements', JSON.stringify(updated))
-    setAnnouncements(updated)
-    setFormData({ title: '', content: '' })
-    setShowForm(false)
-    alert('✅ 公告已發布！')
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!confirm('確定要刪除這則公告嗎？')) return
 
-    const updated = announcements.filter(a => a.id !== id)
-    localStorage.setItem('announcements', JSON.stringify(updated))
-    setAnnouncements(updated)
-    alert('✅ 公告已刪除')
+    try {
+      await mockAPI.deleteAnnouncement(id)
+      alert('✅ 公告已刪除')
+      loadAnnouncements()
+    } catch (error) {
+      alert('❌ 刪除失敗')
+      console.error(error)
+    }
   }
 
   return (

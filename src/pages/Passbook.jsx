@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { mockAPI } from '../lib/supabase'
 
 export default function Passbook({ user, onNavigate }) {
   const [transactions, setTransactions] = useState([])
@@ -8,39 +9,18 @@ export default function Passbook({ user, onNavigate }) {
     loadTransactions()
   }, [])
 
-  const loadTransactions = () => {
-    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const purchases = JSON.parse(localStorage.getItem('purchases') || '[]')
+  const loadTransactions = async () => {
+    // 從 Supabase 讀取交易記錄
+    const txns = await mockAPI.getTransactions(user.id)
     
-    const allTransactions = []
+    const allTransactions = txns.map(t => ({
+      id: t.id,
+      type: t.type,
+      amount: t.amount,
+      description: t.description,
+      timestamp: t.created_at
+    }))
     
-    // 獲得點數（已核准的任務）
-    submissions
-      .filter(s => s.status === 'approved' && s.userId === user.id)
-      .forEach(s => {
-        allTransactions.push({
-          id: `earn-${s.id}`,
-          type: 'earn',
-          amount: s.points || 10,
-          description: s.taskTitle || '完成任務',
-          timestamp: s.approvedAt || s.timestamp
-        })
-      })
-    
-    // 消費點數
-    purchases
-      .filter(p => p.userId === user.id)
-      .forEach(p => {
-        allTransactions.push({
-          id: `spend-${p.id}`,
-          type: 'spend',
-          amount: p.price,
-          description: p.productName,
-          timestamp: p.createdAt
-        })
-      })
-    
-    allTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     setTransactions(allTransactions)
   }
 
