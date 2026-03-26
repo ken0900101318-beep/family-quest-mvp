@@ -216,7 +216,7 @@ export const mockAPI = {
       .select(`
         *,
         task:tasks(title, points),
-        user:users(name, avatar)
+        user:users!submissions_user_id_fkey(name, avatar)
       `)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
