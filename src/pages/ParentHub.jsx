@@ -1355,15 +1355,26 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
   const [products, setProducts] = useState([])
   const [showProductForm, setShowProductForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [loading, setLoading] = useState(false)
   const { showToast, ToastContainer } = useToast()
   
   useEffect(() => {
-    loadProducts()
-  }, [])
+    if (activeSubTab === 'products') {
+      loadProducts()
+    }
+  }, [activeSubTab])
   
   const loadProducts = async () => {
-    const data = await mockAPI.getProducts(true) // true = 包含停用商品
-    setProducts(data)
+    setLoading(true)
+    try {
+      const data = await mockAPI.getProducts(true) // true = 包含停用商品
+      console.log('📦 載入商品:', data)
+      setProducts(data)
+    } catch (error) {
+      console.error('載入商品失敗:', error)
+    } finally {
+      setLoading(false)
+    }
   }
   
   const handleSaveProduct = async (productData) => {
@@ -1589,7 +1600,11 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
           </button>
 
           {/* 商品列表 */}
-          {products.length === 0 ? (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+              載入中...
+            </div>
+          ) : products.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
               還沒有商品，點擊上方按鈕新增
             </div>
