@@ -604,7 +604,7 @@ function WishTab({ userId, onOpenWishForm }) {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
                     <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#881337', flex: 1 }}>
-                      {wish.name}
+                      {wish.product_name || wish.name || '未命名許願'}
                     </h4>
                     <div style={{
                       background: config.bg,
@@ -618,7 +618,7 @@ function WishTab({ userId, onOpenWishForm }) {
                     </div>
                   </div>
                   <div style={{ fontSize: '14px', color: '#be185d', marginBottom: '0.5rem' }}>
-                    💰 {wish.price} 點
+                    
                   </div>
                   {wish.description && (
                     <div style={{
@@ -645,7 +645,7 @@ function WishTab({ userId, onOpenWishForm }) {
                     </div>
                   )}
                   <div style={{ fontSize: '12px', color: '#db2777' }}>
-                    許願時間：{new Date(wish.createdAt).toLocaleString('zh-TW')}
+                    許願時間：{new Date(wish.created_at).toLocaleString('zh-TW')}
                   </div>
                 </div>
               )
