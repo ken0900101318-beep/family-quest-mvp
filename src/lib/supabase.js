@@ -211,13 +211,12 @@ export const mockAPI = {
   
   // 取得待審核任務
   getPendingSubmissions: async () => {
-    // 只查詢 submissions（更快！避免 JOIN 超時）
+    // 超快查詢：最少欄位 + 最少數量 + 不排序
     const { data, error } = await supabase
       .from('submissions')
-      .select('*')
+      .select('id, task_id, user_id, created_at, status, photo')
       .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(20)
     
     if (error) {
       console.error('Get pending submissions error:', error)
