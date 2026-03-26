@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { mockAPI, mockData } from '../lib/supabase'
 import { AnnouncementManager } from '../components/Announcements'
 import { useToast } from '../components/Toast'
+import { ProductCard, ProductFormModal } from './ParentHub_ProductComponents'
 
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop
@@ -1350,7 +1351,52 @@ function Statistics({ stats }) {
 
 // 商店管理
 function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish }) {
-  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes / ledger
+  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes / ledger / products
+  const [products, setProducts] = useState([])
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState(null)
+  const { showToast, ToastContainer } = useToast()
+  
+  useEffect(() => {
+    loadProducts()
+  }, [])
+  
+  const loadProducts = async () => {
+    const data = await mockAPI.getProducts(true) // true = 包含停用商品
+    setProducts(data)
+  }
+  
+  const handleSaveProduct = async (productData) => {
+    try {
+      if (editingProduct) {
+        // 更新商品（TODO: 實作 updateProduct API）
+        showToast('商品已更新', 'success')
+      } else {
+        await mockAPI.addProduct(
+          productData.name,
+          productData.price,
+          productData.icon,
+          productData.stock
+        )
+        showToast('商品已新增', 'success')
+      }
+      setShowProductForm(false)
+      setEditingProduct(null)
+      loadProducts()
+    } catch (error) {
+      showToast('操作失敗', 'error')
+    }
+  }
+  
+  const handleToggleProductStatus = async (productId, currentStatus) => {
+    try {
+      // TODO: 實作 toggleProductStatus API
+      showToast(`商品已${currentStatus === 'active' ? '停用' : '啟用'}`, 'success')
+      loadProducts()
+    } catch (error) {
+      showToast('操作失敗', 'error')
+    }
+  }
 
   // 從 localStorage 獲取所有交易記錄
   const getAllTransactions = () => {
@@ -1436,6 +1482,24 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
           ✨ 許願清單 ({wishes.length})
         </button>
         <button
+          onClick={() => setActiveSubTab('products')}
+          style={{
+            flex: 1,
+            background: activeSubTab === 'products'
+              ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+              : 'transparent',
+            color: activeSubTab === 'products' ? 'white' : '#9333ea',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          🎁 商品管理
+        </button>
+        <button
           onClick={() => setActiveSubTab('ledger')}
           style={{
             flex: 1,
@@ -1498,10 +1562,74 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
         </div>
       )}
 
+      {/* 商品管理 */}
+      {activeSubTab === 'products' && (
+        <div>
+          {/* 新增商品按鈕 */}
+          <button
+            onClick={() => {
+              setEditingProduct(null)
+              setShowProductForm(true)
+            }}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              padding: '1.25rem',
+              borderRadius: '1rem',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 10px 30px rgba(139, 92, 246, 0.4)',
+              marginBottom: '1.5rem'
+            }}
+          >
+            ➕ 新增商品
+          </button>
+
+          {/* 商品列表 */}
+          {products.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+              還沒有商品，點擊上方按鈕新增
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {products.map(product => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onEdit={(p) => {
+                    setEditingProduct(p)
+                    setShowProductForm(true)
+                  }}
+                  onToggleStatus={handleToggleProductStatus}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 商品表單 Modal */}
+          {showProductForm && (
+            <ProductFormModal
+              product={editingProduct}
+              onSubmit={handleSaveProduct}
+              onClose={() => {
+                setShowProductForm(false)
+                setEditingProduct(null)
+              }}
+            />
+          )}
+        </div>
+      )}
+
       {/* 金庫帳本 */}
       {activeSubTab === 'ledger' && (
         <FinanceLedger transactions={getAllTransactions()} />
       )}
+
+      {/* Toast 通知 */}
+      <ToastContainer />
     </div>
   )
 }

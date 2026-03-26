@@ -392,13 +392,18 @@ export const mockAPI = {
   },
   
   // 取得商品列表
-  getProducts: async () => {
-    const { data, error } = await supabase
+  getProducts: async (includeInactive = false) => {
+    let query = supabase
       .from('products')
       .select('*')
       .eq('family_id', TEST_FAMILY_ID)
-      .eq('status', 'active')
       .order('created_at', { ascending: true })
+    
+    if (!includeInactive) {
+      query = query.eq('status', 'active')
+    }
+    
+    const { data, error } = await query
     
     if (error) {
       console.error('Get products error:', error)
@@ -410,9 +415,41 @@ export const mockAPI = {
       name: p.name,
       icon: p.icon,
       price: p.price,
+      stock: p.stock,
+      status: p.status,
       category: p.category,
       description: p.description
     }))
+  },
+  
+  // 新增商品
+  addProduct: async (name, price, icon = '🎁', stock = 999) => {
+    const { data, error } = await supabase
+      .from('products')
+      .insert({
+        family_id: TEST_FAMILY_ID,
+        name: name,
+        icon: icon,
+        price: price,
+        stock: stock,
+        status: 'active'
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Add product error:', error)
+      throw error
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      icon: data.icon,
+      price: data.price,
+      stock: data.stock,
+      status: data.status
+    }
   },
   
   // 取得購買記錄
