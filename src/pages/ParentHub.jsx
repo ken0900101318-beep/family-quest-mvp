@@ -23,7 +23,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
     setLoading(true)
     
     // 從 Supabase 讀取待審核任務
-    const pendingSubmissions = await mockAPI.getPendingSubmissions()
+    // 並行載入（更快！）
+      const [pendingSubmissions, allWishes] = await Promise.all([
+        mockAPI.getPendingSubmissions(),
+        mockAPI.getWishes()
+      ])
     
     // 轉換格式以匹配 UI
     const formattedRequests = pendingSubmissions.map(sub => ({
@@ -63,7 +67,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
     setPurchases([])
     
     // 讀取待審核的許願清單
-    const allWishes = await mockAPI.getWishes()
+    // allWishes 已在上方並行載入
     const pendingWishes = allWishes.filter(w => w.status === 'pending')
     setWishes(pendingWishes)
     

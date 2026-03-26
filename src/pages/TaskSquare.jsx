@@ -25,28 +25,33 @@ export default function TaskSquare({ user, onBack }) {
   const loadData = async () => {
     setLoading(true)
     
-    // 取得任務
-    const userTasks = await mockAPI.getTasks(user.id)
-    setTasks(userTasks)
-    
-    // 取得任務申請
-    const taskRequests = await mockAPI.getTaskRequests(user.id)
-    setMyRequests(taskRequests)
-    
-    // 取得提交歷史
-    const submissions = await mockAPI.getUserSubmissions(user.id)
-    const historyRecords = submissions.map(sub => ({
-      id: sub.id,
-      title: sub.taskTitle,
-      points: sub.points,
-      status: sub.status === 'approved' ? 'completed' : sub.status,
-      completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
-      updatedAt: sub.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0],
-      rejectReason: sub.rejectReason
-    }))
-    
-    setHistory(historyRecords)
-    setLoading(false)
+    try {
+      // 並行載入所有數據（更快！）
+      const [userTasks, taskRequests, submissions] = await Promise.all([
+        mockAPI.getTasks(user.id),
+        mockAPI.getTaskRequests(user.id),
+        mockAPI.getUserSubmissions(user.id)
+      ])
+      
+      setTasks(userTasks)
+      setMyRequests(taskRequests)
+      
+      const historyRecords = submissions.map(sub => ({
+        id: sub.id,
+        title: sub.taskTitle,
+        points: sub.points,
+        status: sub.status === 'approved' ? 'completed' : sub.status,
+        completedAt: sub.status === 'approved' ? sub.timestamp?.split('T')[0] : null,
+        updatedAt: sub.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0],
+        rejectReason: sub.rejectReason
+      }))
+      
+      setHistory(historyRecords)
+    } catch (error) {
+      console.error('載入失敗:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleRequestTask = async (taskData) => {
