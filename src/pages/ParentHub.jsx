@@ -54,12 +54,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       setPendingRequests(formattedRequests)
     
-    // Mock 所有任務
-      setAllTasks([
-        { id: 1, title: '勇者床鋪堡壘', points: 5, icon: '🛏️', type: 'daily', status: 'active', assignedTo: 'all' },
-        { id: 2, title: '知識圖書館', points: 10, icon: '📚', type: 'daily', status: 'active', assignedTo: 'all' },
-        { id: 3, title: '彩虹牙刷挑戰', points: 50, icon: '🌈', type: 'challenge', status: 'active', assignedTo: 'all', current: 14, target: 21 }
-      ])
+      // 從 Supabase 載入所有任務
+      const allTasksData = await mockAPI.getAllTasks()
+      setAllTasks(allTasksData)
     
     // 從 localStorage 計算真實統計數據
     // 統計數據（暫時簡化，之後可以從 Supabase 計算）
