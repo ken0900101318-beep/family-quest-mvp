@@ -559,7 +559,7 @@ export const mockAPI = {
       .from('task_requests')
       .select(`
         *,
-        user:users(name, avatar)
+        user:users!task_requests_user_id_fkey(name, avatar)
       `)
       .order('created_at', { ascending: false })
     
