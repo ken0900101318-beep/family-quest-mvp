@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 配置
-const supabaseUrl = 'https://lsqeyjygljeegdgqofiw.supabase.co'
-const supabaseKey = 'sb_publishable_U1QRWOfxn2AJ45wLW9k80A_AyWdbZQj'
+// Supabase 配置（新專案 - 2026-03-27）
+const supabaseUrl = 'https://mnaqdossobzodcyafruy.supabase.co'
+const supabaseKey = 'sb_publishable__izsGe4hjkAOfQ10TNSfzw_Xb3QGJOZ'
 
 // Mock mode - 設為 false 啟用真實資料庫
 export const MOCK_MODE = false
