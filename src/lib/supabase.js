@@ -1,376 +1,618 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 測試環境配置（之後替換成真實的）
-const supabaseUrl = 'https://your-project.supabase.co'
-const supabaseKey = 'your-anon-key'
+// Supabase 配置
+const supabaseUrl = 'https://lsqeyjygljeegdgqofiw.supabase.co'
+const supabaseKey = 'sb_publishable_U1QRWOfxn2AJ45wLW9k80A_AyWdbZQj'
 
-// Mock mode - 本地開發用
-export const MOCK_MODE = true
+// Mock mode - 設為 false 啟用真實資料庫
+export const MOCK_MODE = false
 
 export const supabase = MOCK_MODE 
   ? null 
   : createClient(supabaseUrl, supabaseKey)
 
-// 初始化用戶數據（只在第一次使用時）
-const initUsers = () => {
-  const stored = localStorage.getItem('users')
-  if (!stored) {
-    const defaultUsers = [
-      { id: 1, name: '媽媽', role: 'parent', pin: '1234' },
-      { id: 2, name: '哥哥', role: 'child', pin: '1111', level: 8, points: 1250 },
-      { id: 3, name: '妹妹', role: 'child', pin: '2222', level: 5, points: 850 },
-    ]
-    localStorage.setItem('users', JSON.stringify(defaultUsers))
-    return defaultUsers
-  }
-  return JSON.parse(stored)
-}
+// 測試家庭 ID（固定使用這個）
+const TEST_FAMILY_ID = '00000000-0000-0000-0000-000000000001'
 
-// Mock 資料
-export const mockData = {
-  users: initUsers(),
-  tasks: [
-    { 
-      id: 1, 
-      title: '勇者床鋪堡壘', 
-      icon: '🛏️',
-      points: 5, 
-      type: 'daily',
-      assignee: [2, 3],
-      status: 'active'
-    },
-    { 
-      id: 2, 
-      title: '知識圖書館', 
-      icon: '📚',
-      points: 10, 
-      type: 'daily',
-      assignee: [2, 3],
-      status: 'active',
-      progress: 60
-    },
-    { 
-      id: 3, 
-      title: '彩虹牙刷挑戰', 
-      icon: '🌈',
-      points: 50, 
-      type: 'longterm',
-      assignee: [3],
-      status: 'active',
-      progress: 66,
-      current: 14,
-      target: 21
-    },
-  ],
-  submissions: [
-    {
-      id: 1,
-      taskId: 1,
-      userId: 3,
-      userName: '妹妹',
-      userAvatar: '👧',
-      timestamp: new Date().toISOString(),
-      status: 'pending',
-      photo: null
-    },
-    {
-      id: 2,
-      taskId: 2,
-      userId: 2,
-      userName: '哥哥',
-      userAvatar: '👦',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      status: 'pending',
-      photo: null
-    },
-    {
-      id: 3,
-      taskId: 3,
-      userId: 3,
-      userName: '妹妹',
-      userAvatar: '👧',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      status: 'pending',
-      photo: null
-    },
-  ],
-  transactions: [],
-  products: [
-    { id: 1, name: '巧克力', icon: '🍫', price: 20, category: '零食', description: '美味的巧克力一片' },
-    { id: 2, name: '冰淇淋', icon: '🍦', price: 30, category: '零食', description: '任選一球冰淇淋' },
-    { id: 3, name: '玩具車', icon: '🚗', price: 100, category: '玩具', description: '迷你遙控車' },
-    { id: 4, name: '晚睡半小時', icon: '🌙', price: 50, category: '特權', description: '今晚可以晚睡30分鐘' },
-    { id: 5, name: '選電影', icon: '🎬', price: 40, category: '特權', description: '週末選一部電影' },
-    { id: 6, name: '遊戲時間', icon: '🎮', price: 60, category: '特權', description: '額外30分鐘遊戲時間' }
-  ],
-  purchases: []
-}
+// ========================================
+// API 函數
+// ========================================
 
-// Mock API
 export const mockAPI = {
-  login: (pin) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const user = users.find(u => u.pin === pin)
-        resolve(user || null)
-      }, 500)
-    })
+  // 登入
+  login: async (pin) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('pin', pin)
+      .eq('family_id', TEST_FAMILY_ID)
+      .single()
+    
+    if (error) {
+      console.error('Login error:', error)
+      return null
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role,
+      pin: data.pin,
+      avatar: data.avatar,
+      points: data.points,
+      level: data.level,
+      familyId: data.family_id
+    }
   },
   
-  updateUserPoints: (userId, newPoints) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const updatedUsers = users.map(u => 
-          u.id === userId ? { ...u, points: newPoints } : u
-        )
-        localStorage.setItem('users', JSON.stringify(updatedUsers))
-        mockData.users = updatedUsers
-        resolve(updatedUsers.find(u => u.id === userId))
-      }, 100)
-    })
+  // 更新用戶點數
+  updateUserPoints: async (userId, newPoints) => {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ points: newPoints })
+      .eq('id', userId)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Update points error:', error)
+      return null
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      points: data.points
+    }
   },
   
-  getTasks: (userId) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 從 localStorage 讀取任務（如果有的話）
-        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
-        
-        const tasks = allTasks.filter(
-          t => t.assignee && t.assignee.includes(userId) && t.status === 'active'
-        )
-        resolve(tasks)
-      }, 300)
-    })
+  // 取得用戶任務
+  getTasks: async (userId) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('family_id', TEST_FAMILY_ID)
+      .eq('status', 'active')
+      .contains('target_user_ids', [userId])
+    
+    if (error) {
+      console.error('Get tasks error:', error)
+      return []
+    }
+    
+    return data.map(task => ({
+      id: task.id,
+      title: task.title,
+      icon: task.icon,
+      points: task.points,
+      type: task.type,
+      assignee: task.target_user_ids,
+      status: task.status,
+      progress: task.progress || 0,
+      description: task.description
+    }))
   },
   
-  getAllTasks: () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
-        resolve(allTasks)
-      }, 300)
-    })
+  // 取得所有任務
+  getAllTasks: async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('family_id', TEST_FAMILY_ID)
+    
+    if (error) {
+      console.error('Get all tasks error:', error)
+      return []
+    }
+    
+    return data.map(task => ({
+      id: task.id,
+      title: task.title,
+      icon: task.icon,
+      points: task.points,
+      type: task.type,
+      assignee: task.target_user_ids,
+      status: task.status,
+      description: task.description
+    }))
   },
   
-  saveTask: (taskData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-        const allTasks = storedTasks.length > 0 ? storedTasks : [...mockData.tasks]
-        
-        if (taskData.id) {
-          // 更新現有任務
-          const index = allTasks.findIndex(t => t.id === taskData.id)
-          if (index !== -1) {
-            allTasks[index] = taskData
-          }
-        } else {
-          // 新增任務
-          const newTask = {
-            ...taskData,
-            id: Date.now()
-          }
-          allTasks.push(newTask)
-        }
-        
-        localStorage.setItem('tasks', JSON.stringify(allTasks))
-        resolve(allTasks)
-      }, 300)
-    })
-  },
-  
-  submitTask: (taskId, userId, photoData = null) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 從 localStorage 讀取最新任務列表
-        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-        const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
-        const task = allTasks.find(t => t.id === taskId)
-        
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const usersData = users.length > 0 ? users : mockData.users
-        const user = usersData.find(u => u.id === userId)
-        
-        const submission = {
-          id: Date.now(),
-          taskId,
-          taskTitle: task ? task.title : '未知任務',
-          userId,
-          userName: user ? user.name : '未知用戶',
-          userAvatar: user && user.role === 'child' ? (user.name === '哥哥' ? '👦' : '👧') : '👤',
-          timestamp: new Date().toISOString(),
-          status: 'pending',
-          photo: photoData
-        }
-        
-        // 儲存到 localStorage
-        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-        stored.push(submission)
-        localStorage.setItem('submissions', JSON.stringify(stored))
-        
-        mockData.submissions.push(submission)
-        resolve(submission)
-      }, 500)
-    })
-  },
-  
-  getPendingSubmissions: () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 從 localStorage 讀取
-        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-        const pending = stored.filter(s => s.status === 'pending')
-        resolve(pending)
-      }, 300)
-    })
-  },
-  
-  approveSubmission: (submissionId, adjustedPoints) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 從 localStorage 更新狀態
-        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-        const submission = stored.find(s => s.id === submissionId)
-        
-        if (submission) {
-          const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-          const allTasks = storedTasks.length > 0 ? storedTasks : mockData.tasks
-          const task = allTasks.find(t => t.id === submission.taskId)
-          const points = adjustedPoints || (task ? task.points : 10)
-          
-          submission.status = 'approved'
-          submission.approvedAt = new Date().toISOString()
-          submission.points = points
-          submission.taskTitle = task ? task.title : '任務'
-          localStorage.setItem('submissions', JSON.stringify(stored))
-          
-          // 更新用戶點數
-          const users = JSON.parse(localStorage.getItem('users') || '[]')
-          const updatedUsers = users.map(u => 
-            u.id === submission.userId ? { ...u, points: (u.points || 0) + points } : u
-          )
-          localStorage.setItem('users', JSON.stringify(updatedUsers))
-          mockData.users = updatedUsers
-          
-          // 更新 currentUser 如果是同一個用戶
-          const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-          if (currentUser.id === submission.userId) {
-            currentUser.points = (currentUser.points || 0) + points
-            localStorage.setItem('currentUser', JSON.stringify(currentUser))
-          }
-        }
-        resolve(submission)
-      }, 500)
-    })
-  },
-  
-  rejectSubmission: (submissionId, reason) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 從 localStorage 更新狀態
-        const stored = JSON.parse(localStorage.getItem('submissions') || '[]')
-        const submission = stored.find(s => s.id === submissionId)
-        
-        if (submission) {
-          submission.status = 'rejected'
-          submission.rejectReason = reason
-          localStorage.setItem('submissions', JSON.stringify(stored))
-        }
-        resolve(submission)
-      }, 500)
-    })
-  },
-
-  // 商店相關
-  getProducts: () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockData.products)
-      }, 300)
-    })
-  },
-
-  getPurchases: (userId) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const purchases = JSON.parse(localStorage.getItem('purchases') || '[]')
-        const userPurchases = purchases.filter(p => p.userId === userId)
-        resolve(userPurchases)
-      }, 300)
-    })
-  },
-
-  purchaseProduct: (userId, productId) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const product = mockData.products.find(p => p.id === productId)
-        const user = mockData.users.find(u => u.id === userId)
-
-        if (!product || !user) {
-          reject(new Error('商品或用戶不存在'))
-          return
-        }
-
-        if (user.points < product.price) {
-          reject(new Error('點數不足'))
-          return
-        }
-
-        // 扣點數
-        const users = JSON.parse(localStorage.getItem('users') || '[]')
-        const updatedUsers = users.map(u => 
-          u.id === userId ? { ...u, points: u.points - product.price } : u
-        )
-        localStorage.setItem('users', JSON.stringify(updatedUsers))
-        mockData.users = updatedUsers
-        
-        // 更新 currentUser
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-        if (currentUser.id === userId) {
-          currentUser.points -= product.price
-          localStorage.setItem('currentUser', JSON.stringify(currentUser))
-        }
-
-        // 建立購買記錄
-        const purchase = {
-          id: Date.now(),
-          userId,
-          userName: user.name,
-          productId: product.id,
-          productName: product.name,
-          icon: product.icon,
-          price: product.price,
-          status: 'pending', // pending / delivered
-          createdAt: new Date().toISOString()
-        }
-
-        // 儲存到 localStorage
-        const purchases = JSON.parse(localStorage.getItem('purchases') || '[]')
-        purchases.push(purchase)
-        localStorage.setItem('purchases', JSON.stringify(purchases))
-
-        // 通知家長（儲存到待處理清單）
-        const notifications = JSON.parse(localStorage.getItem('parentNotifications') || '[]')
-        notifications.push({
-          id: Date.now(),
-          type: 'purchase',
-          userId,
-          userName: user.name,
-          productName: product.name,
-          icon: product.icon,
-          price: product.price,
-          timestamp: new Date().toISOString(),
-          read: false
+  // 儲存任務（新增或更新）
+  saveTask: async (taskData) => {
+    if (taskData.id) {
+      // 更新現有任務
+      const { error } = await supabase
+        .from('tasks')
+        .update({
+          title: taskData.title,
+          icon: taskData.icon,
+          points: taskData.points,
+          type: taskData.type,
+          target_user_ids: taskData.assignee,
+          status: taskData.status,
+          description: taskData.description
         })
-        localStorage.setItem('parentNotifications', JSON.stringify(notifications))
-
-        resolve(purchase)
-      }, 500)
-    })
+        .eq('id', taskData.id)
+      
+      if (error) {
+        console.error('Update task error:', error)
+        return []
+      }
+    } else {
+      // 新增任務
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          family_id: TEST_FAMILY_ID,
+          title: taskData.title,
+          icon: taskData.icon,
+          points: taskData.points,
+          type: taskData.type,
+          target_user_ids: taskData.assignee,
+          description: taskData.description,
+          status: 'active'
+        })
+      
+      if (error) {
+        console.error('Insert task error:', error)
+        return []
+      }
+    }
+    
+    // 返回更新後的所有任務
+    return await this.getAllTasks()
+  },
+  
+  // 提交任務
+  submitTask: async (taskId, userId, photoData = null) => {
+    // 查詢任務資訊
+    const { data: task } = await supabase
+      .from('tasks')
+      .select('title, points')
+      .eq('id', taskId)
+      .single()
+    
+    // 查詢用戶資訊
+    const { data: user } = await supabase
+      .from('users')
+      .select('name, avatar')
+      .eq('id', userId)
+      .single()
+    
+    // 新增提交記錄
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert({
+        task_id: taskId,
+        user_id: userId,
+        photo: photoData,
+        status: 'pending'
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Submit task error:', error)
+      throw error
+    }
+    
+    return {
+      id: data.id,
+      taskId: taskId,
+      taskTitle: task?.title || '未知任務',
+      userId: userId,
+      userName: user?.name || '未知用戶',
+      userAvatar: user?.avatar || '👤',
+      timestamp: data.created_at,
+      status: data.status,
+      photo: data.photo
+    }
+  },
+  
+  // 取得待審核任務
+  getPendingSubmissions: async () => {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select(`
+        *,
+        task:tasks(title, points),
+        user:users(name, avatar)
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get pending submissions error:', error)
+      return []
+    }
+    
+    return data.map(sub => ({
+      id: sub.id,
+      taskId: sub.task_id,
+      taskTitle: sub.task?.title || '未知任務',
+      userId: sub.user_id,
+      userName: sub.user?.name || '未知用戶',
+      userAvatar: sub.user?.avatar || '👤',
+      timestamp: sub.created_at,
+      status: sub.status,
+      photo: sub.photo,
+      points: sub.task?.points
+    }))
+  },
+  
+  // 核准任務
+  approveSubmission: async (submissionId, adjustedPoints) => {
+    // 查詢提交記錄
+    const { data: submission } = await supabase
+      .from('submissions')
+      .select(`
+        *,
+        task:tasks(title, points),
+        user:users(name, points)
+      `)
+      .eq('id', submissionId)
+      .single()
+    
+    if (!submission) {
+      console.error('Submission not found')
+      return null
+    }
+    
+    const points = adjustedPoints || submission.task.points
+    
+    // 更新提交狀態
+    await supabase
+      .from('submissions')
+      .update({
+        status: 'approved',
+        points: points,
+        approved_at: new Date().toISOString()
+      })
+      .eq('id', submissionId)
+    
+    // 更新用戶點數
+    const newPoints = (submission.user.points || 0) + points
+    await supabase
+      .from('users')
+      .update({ points: newPoints })
+      .eq('id', submission.user_id)
+    
+    // 新增交易記錄
+    await supabase
+      .from('transactions')
+      .insert({
+        user_id: submission.user_id,
+        type: 'earn',
+        amount: points,
+        source: 'task_completion',
+        source_id: submissionId,
+        description: `完成任務：${submission.task.title}`
+      })
+    
+    return {
+      id: submissionId,
+      status: 'approved',
+      points: points,
+      taskTitle: submission.task.title
+    }
+  },
+  
+  // 退回任務
+  rejectSubmission: async (submissionId, reason) => {
+    const { error } = await supabase
+      .from('submissions')
+      .update({
+        status: 'rejected',
+        reject_reason: reason
+      })
+      .eq('id', submissionId)
+    
+    if (error) {
+      console.error('Reject submission error:', error)
+      return null
+    }
+    
+    return { id: submissionId, status: 'rejected' }
+  },
+  
+  // 取得商品列表
+  getProducts: async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('family_id', TEST_FAMILY_ID)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true })
+    
+    if (error) {
+      console.error('Get products error:', error)
+      return []
+    }
+    
+    return data.map(p => ({
+      id: p.id,
+      name: p.name,
+      icon: p.icon,
+      price: p.price,
+      category: p.category,
+      description: p.description
+    }))
+  },
+  
+  // 取得購買記錄
+  getPurchases: async (userId) => {
+    const { data, error } = await supabase
+      .from('purchases')
+      .select(`
+        *,
+        product:products(name, icon, price)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get purchases error:', error)
+      return []
+    }
+    
+    return data.map(p => ({
+      id: p.id,
+      userId: p.user_id,
+      productId: p.product_id,
+      productName: p.product?.name || '未知商品',
+      icon: p.product?.icon || '🎁',
+      price: p.price,
+      status: p.status,
+      createdAt: p.created_at
+    }))
+  },
+  
+  // 購買商品
+  purchaseProduct: async (userId, productId) => {
+    // 查詢商品
+    const { data: product } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single()
+    
+    if (!product) {
+      throw new Error('商品不存在')
+    }
+    
+    // 查詢用戶
+    const { data: user } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    
+    if (!user) {
+      throw new Error('用戶不存在')
+    }
+    
+    if (user.points < product.price) {
+      throw new Error('點數不足')
+    }
+    
+    // 扣除點數
+    const newPoints = user.points - product.price
+    await supabase
+      .from('users')
+      .update({ points: newPoints })
+      .eq('id', userId)
+    
+    // 建立購買記錄
+    const { data: purchase, error } = await supabase
+      .from('purchases')
+      .insert({
+        user_id: userId,
+        product_id: productId,
+        price: product.price,
+        status: 'pending'
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Purchase error:', error)
+      throw error
+    }
+    
+    // 新增交易記錄
+    await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        type: 'spend',
+        amount: product.price,
+        source: 'purchase',
+        source_id: purchase.id,
+        description: `兌換商品：${product.name}`
+      })
+    
+    return {
+      id: purchase.id,
+      userId: userId,
+      userName: user.name,
+      productId: productId,
+      productName: product.name,
+      icon: product.icon,
+      price: product.price,
+      status: purchase.status,
+      createdAt: purchase.created_at
+    }
+  },
+  
+  // 取得願望清單
+  getWishes: async (userId) => {
+    const { data, error } = await supabase
+      .from('wishes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get wishes error:', error)
+      return []
+    }
+    
+    return data
+  },
+  
+  // 新增願望
+  addWish: async (userId, productName, description) => {
+    const { data, error } = await supabase
+      .from('wishes')
+      .insert({
+        user_id: userId,
+        product_name: productName,
+        description: description,
+        status: 'pending'
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Add wish error:', error)
+      throw error
+    }
+    
+    return data
+  },
+  
+  // 取得任務申請
+  getTaskRequests: async (userId = null) => {
+    let query = supabase
+      .from('task_requests')
+      .select(`
+        *,
+        user:users(name, avatar)
+      `)
+      .order('created_at', { ascending: false })
+    
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    
+    const { data, error } = await query
+    
+    if (error) {
+      console.error('Get task requests error:', error)
+      return []
+    }
+    
+    return data.map(req => ({
+      id: req.id,
+      userId: req.user_id,
+      userName: req.user?.name || '未知用戶',
+      title: req.title,
+      description: req.description,
+      points: req.points,
+      status: req.status,
+      createdAt: req.created_at
+    }))
+  },
+  
+  // 新增任務申請
+  addTaskRequest: async (userId, title, points, description) => {
+    const { data, error } = await supabase
+      .from('task_requests')
+      .insert({
+        user_id: userId,
+        title: title,
+        points: points,
+        description: description,
+        status: 'pending'
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Add task request error:', error)
+      throw error
+    }
+    
+    return data
+  },
+  
+  // 取得公告
+  getAnnouncements: async () => {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('*')
+      .eq('family_id', TEST_FAMILY_ID)
+      .order('created_at', { ascending: false })
+      .limit(10)
+    
+    if (error) {
+      console.error('Get announcements error:', error)
+      return []
+    }
+    
+    return data
+  },
+  
+  // 新增公告
+  addAnnouncement: async (title, content, createdBy) => {
+    const { data, error } = await supabase
+      .from('announcements')
+      .insert({
+        family_id: TEST_FAMILY_ID,
+        title: title,
+        content: content,
+        created_by: createdBy
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Add announcement error:', error)
+      throw error
+    }
+    
+    return data
+  },
+  
+  // 刪除公告
+  deleteAnnouncement: async (announcementId) => {
+    const { error } = await supabase
+      .from('announcements')
+      .delete()
+      .eq('id', announcementId)
+    
+    if (error) {
+      console.error('Delete announcement error:', error)
+      throw error
+    }
+    
+    return true
+  },
+  
+  // 取得交易記錄
+  getTransactions: async (userId) => {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    
+    if (error) {
+      console.error('Get transactions error:', error)
+      return []
+    }
+    
+    return data
   }
+}
+
+// Mock 資料（保留給離線模式）
+export const mockData = {
+  users: [],
+  tasks: [],
+  submissions: [],
+  transactions: [],
+  products: [],
+  purchases: []
 }
