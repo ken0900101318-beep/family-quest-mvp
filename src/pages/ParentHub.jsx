@@ -46,6 +46,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
         taskId: sub.taskId
       }))
     
+      console.log('🔍 待審核 Debug:', {
+        原始數量: pendingSubmissions.length,
+        第一筆原始: pendingSubmissions[0],
+        第一筆轉換: formattedRequests[0]
+      })
+      
       setPendingRequests(formattedRequests)
     
     // Mock 所有任務
