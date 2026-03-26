@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
+import { useToast } from './Toast'
 
 // 兒童端公告欄（只讀）
 export function AnnouncementCard() {
@@ -77,6 +78,9 @@ export function AnnouncementCard() {
           </div>
         ))}
       </div>
+
+      {/* Toast 通知 */}
+      <ToastContainer />
     </div>
   )
 }
@@ -86,6 +90,7 @@ export function AnnouncementManager({ userId }) {
   const [announcements, setAnnouncements] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ title: '', content: '' })
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadAnnouncements()
@@ -98,7 +103,7 @@ export function AnnouncementManager({ userId }) {
 
   const handleAdd = async () => {
     if (!formData.title || !formData.content) {
-      alert('請填寫標題和內容')
+      showToast('請填寫標題和內容', 'warning')
       return
     }
 
@@ -110,10 +115,10 @@ export function AnnouncementManager({ userId }) {
       )
       setFormData({ title: '', content: '' })
       setShowForm(false)
-      alert('✅ 公告已發布！')
+      showToast('公告已發布！', 'success')
       loadAnnouncements()
     } catch (error) {
-      alert('❌ 發布失敗')
+      showToast('發布失敗', 'error')
       console.error(error)
     }
   }
@@ -123,10 +128,10 @@ export function AnnouncementManager({ userId }) {
 
     try {
       await mockAPI.deleteAnnouncement(id)
-      alert('✅ 公告已刪除')
+      showToast('公告已刪除', 'success')
       loadAnnouncements()
     } catch (error) {
-      alert('❌ 刪除失敗')
+      showToast('刪除失敗', 'error')
       console.error(error)
     }
   }

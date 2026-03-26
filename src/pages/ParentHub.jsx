@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { mockAPI, mockData } from '../lib/supabase'
 import { AnnouncementManager } from '../components/Announcements'
+import { useToast } from '../components/Toast'
 
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop
@@ -12,6 +13,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadData()
@@ -77,9 +79,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       await mockAPI.approveSubmission(request.id, adjustedPoints)
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
-      alert(`✅ 已核准「${request.title}」\n獎勵點數：${adjustedPoints || request.points} 點`)
+      showToast(`已核准「${request.title}」 (${adjustedPoints || request.points} 點)`, 'success')
     } catch (err) {
-      alert('❌ 核准失敗，請稍後再試')
+      showToast('核准失敗，請稍後再試', 'error')
     }
   }
 
@@ -88,9 +90,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       await mockAPI.rejectSubmission(request.id, reason)
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
-      alert(`❌ 已拒絕「${request.title}」\n原因：${reason}`)
+      showToast(`已拒絕「${request.title}」`, 'error')
     } catch (err) {
-      alert('❌ 拒絕失敗，請稍後再試')
+      showToast('拒絕失敗，請稍後再試', 'error')
     }
   }
 
@@ -102,7 +104,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
     const updatedTasks = await mockAPI.saveTask(dataToSave)
     setAllTasks(updatedTasks)
     
-    alert(editingTask ? '✅ 任務已更新！' : '✅ 任務已創建！')
+    showToast(editingTask ? '任務已更新！' : '任務已創建！', 'success')
     setShowTaskForm(false)
     setEditingTask(null)
   }
@@ -117,17 +119,17 @@ export default function ParentHub({ user, onBack, onLogout }) {
     const updatedTask = { ...task, status: newStatus }
     const updatedTasks = await mockAPI.saveTask(updatedTask)
     setAllTasks(updatedTasks)
-    alert(`✅ 任務已${newStatus === 'active' ? '啟用' : '停用'}`)
+    showToast(`任務已${newStatus === 'active' ? '啟用' : '停用'}`, 'success')
   }
 
   const handleDeliverPurchase = async (purchase) => {
     try {
       await mockAPI.deliverPurchase(purchase.id, user.id)
       setPurchases(prev => prev.filter(p => p.id !== purchase.id))
-      alert(`✅ 已標記「${purchase.productName}」為已發放`)
+      showToast(`已標記「${purchase.productName}」為已發放`, 'success')
       loadData()
     } catch (error) {
-      alert('❌ 操作失敗')
+      showToast('操作失敗', 'error')
       console.error(error)
     }
   }
@@ -136,26 +138,26 @@ export default function ParentHub({ user, onBack, onLogout }) {
     try {
       await mockAPI.approveWish(wish.id)
       setWishes(prev => prev.filter(w => w.id !== wish.id))
-      alert(`✅ 已核准許願「${wish.product_name}」`)
+      showToast(`已核准許願「${wish.product_name}」`, 'success')
       loadData()
     } catch (error) {
-      alert('❌ 操作失敗')
+      showToast('操作失敗', 'error')
       console.error(error)
     }
   }
 
   const handleRejectWish = async (wish, reason) => {
     if (!reason) {
-      alert('請輸入拒絕原因')
+      showToast('請輸入拒絕原因', 'warning')
       return
     }
     try {
       await mockAPI.rejectWish(wish.id, reason)
       setWishes(prev => prev.filter(w => w.id !== wish.id))
-      alert(`❌ 已拒絕許願「${wish.product_name}」`)
+      showToast(`已拒絕許願「${wish.product_name}」`, 'error')
       loadData()
     } catch (error) {
-      alert('❌ 操作失敗')
+      showToast('操作失敗', 'error')
       console.error(error)
     }
   }
@@ -314,6 +316,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
             onClose={() => { setShowTaskForm(false); setEditingTask(null); }}
           />
         )}
+
+        {/* Toast 通知 */}
+        <ToastContainer />
       </div>
     </div>
   )
@@ -376,7 +381,7 @@ function PendingReviews({ requests, onApprove, onReject }) {
 
   const handleBatchApprove = async () => {
     if (selectedIds.length === 0) {
-      alert('請先選擇要批次核准的項目')
+      showToast('請先選擇要批次核准的項目', 'warning')
       return
     }
     
@@ -388,7 +393,7 @@ function PendingReviews({ requests, onApprove, onReject }) {
         }
       }
       setSelectedIds([])
-      alert(`✅ 已批次核准 ${selectedIds.length} 個項目`)
+      showToast(`已批次核准 ${selectedIds.length} 個項目`, 'success')
     }
   }
 

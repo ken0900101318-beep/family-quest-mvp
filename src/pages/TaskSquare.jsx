@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
+import { useToast } from '../components/Toast'
 
 export default function TaskSquare({ user, onBack }) {
   const [activeTab, setActiveTab] = useState('ongoing')
@@ -13,6 +14,9 @@ export default function TaskSquare({ user, onBack }) {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [currentTask, setCurrentTask] = useState(null)
   const [capturedPhoto, setCapturedPhoto] = useState(null)
+  
+  // Toast
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadData()
@@ -54,14 +58,14 @@ export default function TaskSquare({ user, onBack }) {
         taskData.description
       )
       
-      alert('✅ 任務申請已送出！等待家長審核')
+      showToast('任務申請已送出！等待家長審核', 'success')
       setShowRequestForm(false)
       setActiveTab('myRequests')
       
       // 重新載入數據
       loadData()
     } catch (error) {
-      alert('❌ 申請失敗，請稍後再試')
+      showToast('申請失敗，請稍後再試', 'error')
       console.error(error)
     }
   }
@@ -88,19 +92,19 @@ export default function TaskSquare({ user, onBack }) {
   // 提交任務
   const submitTask = async () => {
     if (!capturedPhoto) {
-      alert('請先拍照')
+      showToast('請先拍照', 'warning')
       return
     }
     
     try {
       await mockAPI.submitTask(currentTask.id, user.id, capturedPhoto)
-      alert('✅ 任務已提交！等待家長審核')
+      showToast('任務已提交！等待家長審核', 'success')
       setCameraOpen(false)
       setCurrentTask(null)
       setCapturedPhoto(null)
       loadData()
     } catch (err) {
-      alert('❌ 提交失敗，請稍後再試')
+      showToast('提交失敗，請稍後再試', 'error')
     }
   }
 
@@ -337,6 +341,9 @@ export default function TaskSquare({ user, onBack }) {
       {showRequestForm && (
         <RequestForm onSubmit={handleRequestTask} onClose={() => setShowRequestForm(false)} />
       )}
+
+      {/* Toast 通知 */}
+      <ToastContainer />
 
       <style>{`
         @keyframes slideUp {

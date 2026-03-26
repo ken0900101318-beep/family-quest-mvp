@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
+import { useToast } from '../components/Toast'
 
 export default function Shop({ user, onNavigate }) {
   const [products, setProducts] = useState([])
@@ -8,6 +9,7 @@ export default function Shop({ user, onNavigate }) {
   const [showWishForm, setShowWishForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [currentPoints, setCurrentPoints] = useState(user.points)
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadData()
@@ -29,7 +31,7 @@ export default function Shop({ user, onNavigate }) {
 
   const handlePurchase = async (product) => {
     if (currentPoints < product.price) {
-      alert('❌ 點數不足！還需要 ' + (product.price - currentPoints) + ' 點')
+      showToast(`點數不足！還需要 ${product.price - currentPoints} 點`, 'warning')
       return
     }
 
@@ -44,10 +46,10 @@ export default function Shop({ user, onNavigate }) {
         // 更新 user 物件
         user.points = newPoints
         
-        alert('🎉 兌換成功！家長已收到通知')
+        showToast('兌換成功！家長已收到通知', 'success')
         loadData()
       } catch (err) {
-        alert('❌ 兌換失敗，請稍後再試')
+        showToast('兌換失敗，請稍後再試', 'error')
       }
     }
   }
@@ -60,12 +62,12 @@ export default function Shop({ user, onNavigate }) {
         wishData.description
       )
 
-      alert('✨ 許願成功！等待家長審核')
+      showToast('許願成功！等待家長審核', 'success')
       setShowWishForm(false)
       setActiveTab('wish')
       loadData()
     } catch (error) {
-      alert('❌ 許願失敗，請稍後再試')
+      showToast('許願失敗，請稍後再試', 'error')
       console.error(error)
     }
   }
@@ -280,6 +282,9 @@ export default function Shop({ user, onNavigate }) {
           onClose={() => setShowWishForm(false)}
         />
       )}
+
+      {/* Toast 通知 */}
+      <ToastContainer />
     </div>
   )
 }
@@ -477,7 +482,7 @@ function WishTab({ userId, onOpenWishForm }) {
   const handleClearHistory = async () => {
     if (confirm('確定要清除所有許願記錄嗎？')) {
       // TODO: 實作 Supabase 刪除許願功能
-      alert('此功能開發中')
+      showToast('此功能開發中', 'info')
     }
   }
 
