@@ -1729,15 +1729,15 @@ function WishCard({ wish, onApprove, onReject }) {
     }}>
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '24px' }}>✨</span>
+          <span style={{ fontSize: '24px' }}>🎁</span>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#881337' }}>
-            {wish.name}
+            {wish.item_name}
           </h3>
         </div>
         <div style={{ fontSize: '14px', color: '#be185d', marginBottom: '0.5rem' }}>
-          👤 {wish.userName} | 💰 {wish.price} 點
+          👤 {wish.user_name || '未知用戶'}
         </div>
-        {wish.description && (
+        {wish.reason && (
           <div style={{
             background: 'rgba(236, 72, 153, 0.1)',
             padding: '0.75rem',
@@ -1746,11 +1746,11 @@ function WishCard({ wish, onApprove, onReject }) {
             color: '#9d174d',
             marginBottom: '0.5rem'
           }}>
-            {wish.description}
+            許願原因：{wish.reason}
           </div>
         )}
         <div style={{ fontSize: '12px', color: '#db2777' }}>
-          許願時間：{new Date(wish.createdAt).toLocaleString('zh-TW')}
+          許願時間：{wish.created_at ? new Date(wish.created_at).toLocaleString('zh-TW') : '未知時間'}
         </div>
       </div>
 
