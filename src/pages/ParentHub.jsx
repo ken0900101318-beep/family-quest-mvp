@@ -2046,6 +2046,7 @@ function TaskForm({ task, onSubmit, onClose }) {
     target: '',
     description: ''
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const icons = ['⭐', '🛏️', '📚', '🍽️', '🧹', '🚿', '🎨', '🎵', '⚽', '🌈']
   const types = [
@@ -2054,13 +2055,22 @@ function TaskForm({ task, onSubmit, onClose }) {
     { value: 'challenge', label: '長期挑戰', icon: '🏆' }
   ]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (submitting) return // 防止重複提交
+    
     if (!formData.title || !formData.points) {
       alert('請填寫完整資訊')
       return
     }
-    onSubmit(formData)
+    
+    setSubmitting(true)
+    try {
+      await onSubmit(formData)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -2312,20 +2322,24 @@ function TaskForm({ task, onSubmit, onClose }) {
             </button>
             <button
               type="submit"
+              disabled={submitting}
               style={{
                 flex: 1,
-                background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                background: submitting 
+                  ? '#d1d5db' 
+                  : 'linear-gradient(to right, #fbbf24, #f59e0b)',
                 color: 'white',
                 fontWeight: 'bold',
                 fontSize: '16px',
                 padding: '1rem',
                 borderRadius: '0.75rem',
                 border: 'none',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(251, 191, 36, 0.4)'
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 15px rgba(251, 191, 36, 0.4)',
+                opacity: submitting ? 0.6 : 1
               }}
             >
-              {task ? '✅ 儲存變更' : '✨ 發布任務'}
+              {submitting ? '⏳ 處理中...' : (task ? '✅ 儲存變更' : '✨ 發布任務')}
             </button>
           </div>
         </form>
