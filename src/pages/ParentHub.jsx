@@ -111,6 +111,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
   }
 
   const handleCreateTask = async (taskData) => {
+    // 立即顯示處理中提示
+    showToast('⏳ 處理中，請稍候...', 'info')
+    
     // 用戶 UUID
     const brotherUUID = '00000000-0000-0000-0000-000000000012'
     const sisterUUID = '00000000-0000-0000-0000-000000000013'
@@ -127,12 +130,17 @@ export default function ParentHub({ user, onBack, onLogout }) {
               : [sisterUUID]
         }
     
-    const updatedTasks = await mockAPI.saveTask(dataToSave)
-    setAllTasks(updatedTasks)
-    
-    showToast(editingTask ? '任務已更新！' : '任務已創建！', 'success')
-    setShowTaskForm(false)
-    setEditingTask(null)
+    try {
+      const updatedTasks = await mockAPI.saveTask(dataToSave)
+      setAllTasks(updatedTasks)
+      
+      showToast(editingTask ? '✅ 任務已更新！' : '✅ 任務已創建！', 'success')
+      setShowTaskForm(false)
+      setEditingTask(null)
+    } catch (error) {
+      showToast('❌ 操作失敗，請重試', 'error')
+      console.error('Create task error:', error)
+    }
   }
 
   const handleEditTask = (task) => {

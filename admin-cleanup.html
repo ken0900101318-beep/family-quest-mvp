@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>資料庫清理工具</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #667eea;
+      margin: 0 0 30px 0;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 10px 10px 0;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #log {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .info { color: #3b82f6; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="card">
+    <h1>🛠️ 資料庫清理工具</h1>
+    <p><strong>目前狀態：</strong><span id="status">載入中...</span></p>
+    <button onclick="cleanDatabase()" id="cleanBtn">🗑️ 清空並重建資料</button>
+    <button onclick="checkStatus()">🔍 檢查狀態</button>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://mnaqdossobzodcyafruy.supabase.co',
+      'sb_publishable__izsGe4hjkAOfQ10TNSfzw_Xb3QGJOZ'
+    )
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log')
+      const span = document.createElement('div')
+      span.className = type
+      span.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      logDiv.appendChild(span)
+      logDiv.scrollTop = logDiv.scrollHeight
+    }
+
+    async function checkStatus() {
+      log('檢查資料庫狀態...', 'info')
+      
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select('id, title, points')
+        .eq('family_id', '00000000-0000-0000-0000-000000000001')
+      
+      if (error) {
+        log(`錯誤: ${error.message}`, 'error')
+        document.getElementById('status').textContent = '查詢失敗'
+        return
+      }
+      
+      log(`找到 ${tasks.length} 個任務`, tasks.length === 3 ? 'success' : 'error')
+      tasks.forEach(t => {
+        log(`  - ${t.title} (${t.points}點)`, 'info')
+      })
+      
+      document.getElementById('status').textContent = `${tasks.length} 個任務`
+    }
+
+    async function cleanDatabase() {
+      const btn = document.getElementById('cleanBtn')
+      btn.disabled = true
+      btn.textContent = '⏳ 處理中...'
+      
+      log('='.repeat(50), 'info')
+      log('開始清理資料庫...', 'info')
+      
+      try {
+        // 1. 刪除所有 submissions
+        log('1️⃣ 刪除所有提交記錄...', 'info')
+        const { error: e1 } = await supabase
+          .from('submissions')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+        
+        if (e1) throw e1
+        log('✅ submissions 已清空', 'success')
+        
+        // 2. 刪除所有 tasks
+        log('2️⃣ 刪除所有任務...', 'info')
+        const { error: e2 } = await supabase
+          .from('tasks')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+        
+        if (e2) throw e2
+        log('✅ tasks 已清空', 'success')
+        
+        // 3. 插入 3 個測試任務
+        log('3️⃣ 插入測試任務...', 'info')
+        const tasks = [
+          {
+            id: '00000000-0000-0000-0000-000000000021',
+            family_id: '00000000-0000-0000-0000-000000000001',
+            title: '勇者床鋪堡壘',
+            icon: '🛏️',
+            points: 5,
+            type: 'daily',
+            target_user_ids: ['00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000013'],
+            status: 'active',
+            description: '整理床鋪，成為整潔小勇者'
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000022',
+            family_id: '00000000-0000-0000-0000-000000000001',
+            title: '知識圖書館',
+            icon: '📚',
+            points: 10,
+            type: 'daily',
+            target_user_ids: ['00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000013'],
+            status: 'active',
+            description: '每天閱讀30分鐘'
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000023',
+            family_id: '00000000-0000-0000-0000-000000000001',
+            title: '彩虹牙刷挑戰',
+            icon: '🌈',
+            points: 50,
+            type: 'challenge',
+            target_user_ids: ['00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000013'],
+            status: 'active',
+            description: '連續21天刷牙兩次'
+          }
+        ]
+        
+        const { error: e3 } = await supabase
+          .from('tasks')
+          .insert(tasks)
+        
+        if (e3) throw e3
+        log('✅ 3 個任務已插入', 'success')
+        
+        // 4. 插入測試提交記錄
+        log('4️⃣ 插入測試提交記錄...', 'info')
+        const submissions = [
+          {
+            task_id: '00000000-0000-0000-0000-000000000021',
+            user_id: '00000000-0000-0000-0000-000000000012',
+            status: 'pending',
+            points: 5
+          },
+          {
+            task_id: '00000000-0000-0000-0000-000000000022',
+            user_id: '00000000-0000-0000-0000-000000000013',
+            status: 'pending',
+            points: 10
+          },
+          {
+            task_id: '00000000-0000-0000-0000-000000000023',
+            user_id: '00000000-0000-0000-0000-000000000012',
+            status: 'pending',
+            points: 50
+          }
+        ]
+        
+        const { error: e4 } = await supabase
+          .from('submissions')
+          .insert(submissions)
+        
+        if (e4) throw e4
+        log('✅ 3 筆提交記錄已插入', 'success')
+        
+        log('='.repeat(50), 'success')
+        log('🎉 清理完成！現在只有 3 個乾淨的任務！', 'success')
+        log('請重新載入網站測試', 'info')
+        
+        // 重新檢查狀態
+        setTimeout(checkStatus, 1000)
+        
+      } catch (error) {
+        log(`❌ 錯誤: ${error.message}`, 'error')
+      } finally {
+        btn.disabled = false
+        btn.textContent = '🗑️ 清空並重建資料'
+      }
+    }
+
+    // 初始檢查
+    checkStatus()
+  </script>
+</body>
+</html>
