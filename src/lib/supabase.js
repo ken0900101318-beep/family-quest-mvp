@@ -184,7 +184,7 @@ export const mockAPI = {
       
       if (error) {
         console.error('Update task error:', error)
-        return []
+        throw new Error('更新任務失敗')
       }
     } else {
       // 新增任務
@@ -203,7 +203,7 @@ export const mockAPI = {
       
       if (error) {
         console.error('Insert task error:', error)
-        return []
+        throw new Error('新增任務失敗')
       }
     }
     
