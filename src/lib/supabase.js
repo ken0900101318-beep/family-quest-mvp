@@ -208,7 +208,7 @@ export const mockAPI = {
     }
     
     // 返回更新後的所有任務
-    return await this.getAllTasks()
+    return await mockAPI.getAllTasks()
   },
   
   // 提交任務
