@@ -111,9 +111,21 @@ export default function ParentHub({ user, onBack, onLogout }) {
   }
 
   const handleCreateTask = async (taskData) => {
+    // 用戶 UUID
+    const brotherUUID = '00000000-0000-0000-0000-000000000012'
+    const sisterUUID = '00000000-0000-0000-0000-000000000013'
+    
     const dataToSave = editingTask 
       ? { ...editingTask, ...taskData }
-      : { ...taskData, status: 'active', assignee: taskData.assignedTo === 'all' ? [2, 3] : taskData.assignedTo === '哥哥' ? [2] : [3] }
+      : { 
+          ...taskData, 
+          status: 'active', 
+          assignee: taskData.assignedTo === 'all' 
+            ? [brotherUUID, sisterUUID] 
+            : taskData.assignedTo === '哥哥' 
+              ? [brotherUUID] 
+              : [sisterUUID]
+        }
     
     const updatedTasks = await mockAPI.saveTask(dataToSave)
     setAllTasks(updatedTasks)
