@@ -188,21 +188,26 @@ export const mockAPI = {
       }
     } else {
       // 新增任務
+      const insertData = {
+        family_id: TEST_FAMILY_ID,
+        title: taskData.title,
+        icon: taskData.icon,
+        points: taskData.points,
+        type: taskData.type,
+        target_user_ids: taskData.assignee,
+        description: taskData.description,
+        status: 'active'
+      }
+      
+      console.log('插入任務資料:', insertData)
+      
       const { error } = await supabase
         .from('tasks')
-        .insert({
-          family_id: TEST_FAMILY_ID,
-          title: taskData.title,
-          icon: taskData.icon,
-          points: taskData.points,
-          type: taskData.type,
-          target_user_ids: taskData.assignee,
-          description: taskData.description,
-          status: 'active'
-        })
+        .insert(insertData)
       
       if (error) {
         console.error('Insert task error:', error)
+        console.error('插入失敗的資料:', insertData)
         throw new Error(`新增任務失敗: ${error.message || error.code || '未知錯誤'}`)
       }
     }
