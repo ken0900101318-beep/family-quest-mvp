@@ -618,7 +618,12 @@ export const mockAPI = {
   getWishes: async (userId = null) => {
     let query = supabase
       .from('wishes')
-      .select('*')
+      .select(`
+        *,
+        users!wishes_user_id_fkey (
+          name
+        )
+      `)
       .order('created_at', { ascending: false })
     
     if (userId) {
@@ -632,7 +637,11 @@ export const mockAPI = {
       return []
     }
     
-    return data
+    // 展平資料結構
+    return data.map(wish => ({
+      ...wish,
+      user_name: wish.users?.name || '未知用戶'
+    }))
   },
   
   // 核准願望

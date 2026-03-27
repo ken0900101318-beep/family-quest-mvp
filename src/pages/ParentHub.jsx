@@ -1731,13 +1731,13 @@ function WishCard({ wish, onApprove, onReject }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <span style={{ fontSize: '24px' }}>🎁</span>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#881337' }}>
-            {wish.item_name}
+            {wish.product_name}
           </h3>
         </div>
         <div style={{ fontSize: '14px', color: '#be185d', marginBottom: '0.5rem' }}>
           👤 {wish.user_name || '未知用戶'}
         </div>
-        {wish.reason && (
+        {wish.description && (
           <div style={{
             background: 'rgba(236, 72, 153, 0.1)',
             padding: '0.75rem',
@@ -1746,7 +1746,7 @@ function WishCard({ wish, onApprove, onReject }) {
             color: '#9d174d',
             marginBottom: '0.5rem'
           }}>
-            許願原因：{wish.reason}
+            許願原因：{wish.description}
           </div>
         )}
         <div style={{ fontSize: '12px', color: '#db2777' }}>
