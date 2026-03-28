@@ -1514,6 +1514,17 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
     }
   }
 
+  const handleDeleteProduct = async (productId) => {
+    try {
+      await mockAPI.deleteProduct(productId)
+      showToast('✅ 商品已刪除', 'success')
+      loadProducts()
+    } catch (error) {
+      showToast('❌ 刪除失敗', 'error')
+      console.error('Delete product error:', error)
+    }
+  }
+
   // 從 localStorage 獲取所有交易記錄
   const getAllTransactions = () => {
     const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
@@ -1724,6 +1735,7 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
                     setShowProductForm(true)
                   }}
                   onToggleStatus={handleToggleProductStatus}
+                  onDelete={handleDeleteProduct}
                 />
               ))}
             </div>
@@ -2453,7 +2465,7 @@ function TaskForm({ task, onSubmit, onClose }) {
   )
 }
 // 商品管理相關組件
-export function ProductCard({ product, onEdit, onToggleStatus }) {
+export function ProductCard({ product, onEdit, onToggleStatus, onDelete }) {
   const isActive = product.status === 'active'
   
   return (
@@ -2522,6 +2534,26 @@ export function ProductCard({ product, onEdit, onToggleStatus }) {
           }}
         >
           {isActive ? '🔒 停用' : '✅ 啟用'}
+        </button>
+        <button
+          onClick={() => {
+            if (confirm(`確定要刪除「${product.name}」嗎？此操作無法復原！`)) {
+              onDelete(product.id)
+            }
+          }}
+          style={{
+            flex: 1,
+            background: 'linear-gradient(to right, #dc2626, #b91c1c)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.75rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          🗑️ 刪除
         </button>
       </div>
     </div>
