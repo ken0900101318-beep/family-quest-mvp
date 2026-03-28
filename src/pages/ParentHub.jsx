@@ -887,10 +887,17 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
 // 任務管理
 function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask }) {
   const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
+  const [filterCategory, setFilterCategory] = useState('all') // all / daily / challenge / longterm
 
-  const filteredTasks = selectedMember === 'all' 
+  // 雙重過濾：成員 + 類別
+  let filteredTasks = selectedMember === 'all' 
     ? tasks 
     : tasks.filter(t => t.assignedTo === selectedMember || t.assignedTo === 'all')
+  
+  // 類別過濾
+  if (filterCategory !== 'all') {
+    filteredTasks = filteredTasks.filter(t => t.type === filterCategory)
+  }
 
   // 統計數據
   // 注意：daily 要包含所有顯示為黃色卡片的任務（daily + longterm）
@@ -905,23 +912,32 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
 
   return (
     <div>
-      {/* 頂部統計卡片 */}
+      {/* 頂部快速過濾器 */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: '1rem',
         marginBottom: '1.5rem'
       }}>
-        <div style={{
-          background: 'white',
-          border: '2px solid #fbbf24',
-          borderRadius: '0.5rem',
-          padding: '0.75rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
+        {/* 總任務 - 點擊顯示全部 */}
+        <div 
+          onClick={() => setFilterCategory(filterCategory === 'all' ? 'all' : 'all')}
+          style={{
+            background: filterCategory === 'all' ? '#fef3c7' : 'white',
+            border: filterCategory === 'all' ? '3px solid #fbbf24' : '2px solid #fbbf24',
+            borderRadius: '0.5rem',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: filterCategory === 'all' ? '0 4px 12px rgba(251,191,36,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: filterCategory === 'all' ? 'translateY(-2px)' : 'none'
+          }}
+          onMouseOver={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'scale(1.02)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'scale(1)' }}
+        >
           <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
             {stats.total}
           </div>
@@ -929,16 +945,25 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
             總任務數
           </div>
         </div>
-        <div style={{
-          background: 'white',
-          border: '2px solid #10b981',
-          borderRadius: '0.5rem',
-          padding: '0.75rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
+
+        {/* 啟用中 - 點擊顯示全部 */}
+        <div 
+          onClick={() => setFilterCategory('all')}
+          style={{
+            background: 'white',
+            border: '2px solid #10b981',
+            borderRadius: '0.5rem',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)' }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
+        >
           <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>
             {stats.active}
           </div>
@@ -946,16 +971,26 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
             啟用中
           </div>
         </div>
-        <div style={{
-          background: 'white',
-          border: '2px solid #3b82f6',
-          borderRadius: '0.5rem',
-          padding: '0.75rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
+
+        {/* 每日任務 - 點擊過濾 */}
+        <div 
+          onClick={() => setFilterCategory(filterCategory === 'daily' ? 'all' : 'daily')}
+          style={{
+            background: filterCategory === 'daily' ? '#dbeafe' : 'white',
+            border: filterCategory === 'daily' ? '3px solid #3b82f6' : '2px solid #3b82f6',
+            borderRadius: '0.5rem',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: filterCategory === 'daily' ? '0 4px 12px rgba(59,130,246,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: filterCategory === 'daily' ? 'translateY(-2px)' : 'none'
+          }}
+          onMouseOver={(e) => { if (filterCategory !== 'daily') e.currentTarget.style.transform = 'scale(1.02)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'daily') e.currentTarget.style.transform = 'scale(1)' }}
+        >
           <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
             {stats.daily}
           </div>
@@ -963,16 +998,26 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
             每日任務
           </div>
         </div>
-        <div style={{
-          background: 'white',
-          border: '2px solid #ec4899',
-          borderRadius: '0.5rem',
-          padding: '0.75rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
+
+        {/* 挑戰任務 - 點擊過濾 */}
+        <div 
+          onClick={() => setFilterCategory(filterCategory === 'challenge' ? 'all' : 'challenge')}
+          style={{
+            background: filterCategory === 'challenge' ? '#fce7f3' : 'white',
+            border: filterCategory === 'challenge' ? '3px solid #ec4899' : '2px solid #ec4899',
+            borderRadius: '0.5rem',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: filterCategory === 'challenge' ? '0 4px 12px rgba(236,72,153,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: filterCategory === 'challenge' ? 'translateY(-2px)' : 'none'
+          }}
+          onMouseOver={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'scale(1.02)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'scale(1)' }}
+        >
           <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ec4899' }}>
             {stats.challenge}
           </div>
@@ -1054,76 +1099,30 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           textAlign: 'center',
           border: '2px dashed #d8b4fe'
         }}>
-          <div style={{ fontSize: '72px', marginBottom: '1rem' }}>📋</div>
+          <div style={{ fontSize: '72px', marginBottom: '1rem' }}>
+            {filterCategory === 'daily' ? '📅' : filterCategory === 'challenge' ? '🏆' : filterCategory === 'longterm' ? '🎯' : '📋'}
+          </div>
           <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce', marginBottom: '0.5rem' }}>
-            還沒有任務
+            {filterCategory === 'daily' ? '目前沒有每日任務' : 
+             filterCategory === 'challenge' ? '目前沒有挑戰任務' :
+             filterCategory === 'longterm' ? '目前沒有長期任務' : '還沒有任務'}
           </div>
           <div style={{ fontSize: '14px', color: '#9333ea' }}>
-            點上方按鈕發布第一個任務吧！
+            {filterCategory !== 'all' ? '要不要新增一個？點上方按鈕發布！' : '點上方按鈕發布第一個任務吧！'}
           </div>
         </div>
       ) : (
-        <>
-          {/* 每日任務區塊 */}
-          {filteredTasks.filter(t => t.type === 'daily').length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
-                📅 每日例行任務
-              </h3>
-              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-                {filteredTasks.filter(t => t.type === 'daily').map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onEdit={onEditTask}
-                    onToggle={onToggleTask}
-                    onDelete={onDeleteTask}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 挑戰任務區塊 */}
-          {filteredTasks.filter(t => t.type === 'challenge').length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
-                🏆 長期挑戰任務
-              </h3>
-              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-                {filteredTasks.filter(t => t.type === 'challenge').map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onEdit={onEditTask}
-                    onToggle={onToggleTask}
-                    onDelete={onDeleteTask}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 單次任務區塊 */}
-          {filteredTasks.filter(t => t.type === 'extra').length > 0 && (
-            <div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
-                ⚡ 單次任務
-              </h3>
-              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-                {filteredTasks.filter(t => t.type === 'extra').map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onEdit={onEditTask}
-                    onToggle={onToggleTask}
-                    onDelete={onDeleteTask}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          {filteredTasks.map(task => (
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              onEdit={onEditTask}
+              onToggle={onToggleTask}
+              onDelete={onDeleteTask}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
