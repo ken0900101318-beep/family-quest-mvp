@@ -125,12 +125,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
 
   const handleApprove = async (request, adjustedPoints) => {
     try {
+      console.log('🔍 開始核准:', { request, adjustedPoints })
       await mockAPI.approveSubmission(request.id, adjustedPoints)
+      console.log('✅ 核准成功')
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
       showToast(`已核准「${request.title}」 (${adjustedPoints || request.points} 點)`, 'success')
     } catch (err) {
-      showToast('核准失敗，請稍後再試', 'error')
+      console.error('❌ 核准失敗:', err)
+      showToast(`核准失敗：${err.message || '請稍後再試'}`, 'error')
     }
   }
 

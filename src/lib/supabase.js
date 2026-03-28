@@ -495,7 +495,7 @@ export const mockAPI = {
         amount: points,
         source: 'task_completion',
         source_id: submissionId,
-        description: `完成任務：${submission.task.title}`
+        description: `完成任務：${submission.tasks?.title || '未知任務'}`
       })
     
     return {
