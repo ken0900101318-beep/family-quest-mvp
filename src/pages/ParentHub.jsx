@@ -37,17 +37,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
   }, [])
 
   const loadData = async (showLoadingState = true) => {
-    console.log('🚀 loadData 開始執行...', { showLoadingState, isInitialLoad })
-    
     // 只有首次載入才顯示 loading
     if (showLoadingState && isInitialLoad) {
       setLoading(true)
-      console.log('✅ loading 設為 true')
     }
     
     try {
-      console.log('📡 開始並行載入三個API...')
-      
     // 從 Supabase 讀取待審核任務
     // 並行載入（更快！）+ 超時保護
         const timeout = (ms) => new Promise((_, reject) => 
@@ -62,12 +57,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
           ]),
           timeout(10000) // 10秒超時
         ])
-        
-        console.log('✅ Promise.all 完成！', { 
-          pendingCount: pendingSubmissions?.length || 0,
-          wishesCount: allWishes?.length || 0,
-          usersCount: users?.length || 0
-        })
     
     // 轉換格式以匹配 UI
       const formattedRequests = pendingSubmissions.map(sub => ({
@@ -86,16 +75,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       setPendingRequests(formattedRequests)
     
-      console.log('✅ 步驟1: 待審核任務已載入')
-    
       // 從 Supabase 載入所有任務
       const allTasksData = await mockAPI.getAllTasks()
       setAllTasks(allTasksData)
-      
-      console.log('✅ 步驟2: 所有任務已載入')
     
-    // 從 localStorage 計算真實統計數據
-    // 統計數據（暫時簡化，之後可以從 Supabase 計算）
+    // 統計數據
       setStats({
         totalPoints: 0,
         completedTasks: 0,
@@ -103,38 +87,26 @@ export default function ParentHub({ user, onBack, onLogout }) {
         childStats: []
       })
     
-    // 讀取待發放的購買記錄（所有兒童）
+    // 讀取待發放的購買記錄
       const allPurchases = await mockAPI.getPurchases()
       setPurchases(allPurchases)
-      
-      console.log('✅ 步驟3: 購買記錄已載入')
       
       // 讀取已發放的購買記錄
       const deliveredList = await mockAPI.getDeliveredPurchases()
       setDeliveredPurchases(deliveredList)
       
-      console.log('✅ 步驟4: 發放記錄已載入')
-      
       // 讀取所有交易記錄
       const allTransactions = await mockAPI.getTransactions()
       setTransactions(allTransactions)
-      
-      console.log('✅ 步驟5: 交易記錄已載入')
     
     // 讀取待審核的許願清單
-    // allWishes 已在上方並行載入
       const pendingWishes = allWishes.filter(w => w.status === 'pending')
       setWishes(pendingWishes)
-      
-      console.log('✅ 步驟6: 許願清單已載入')
       
       // 設定用戶列表
       setAllUsers(users)
       
-      console.log('✅ 所有資料載入完成！')
-      
       // ✅ 成功載入後，強制關閉loading
-      console.log('🔄 成功載入，強制 setLoading(false)')
       setLoading(false)
       setIsInitialLoad(false)
     
@@ -149,19 +121,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // setPendingRequests([])
       showToast(`資料載入失敗：${error.message || '請重新整理頁面'}`, 'error')
     } finally {
-      console.log('🏁 finally 區塊', { showLoadingState, isInitialLoad, loading })
       // ✅ 無論成功或失敗，都要關閉 loading
       if (showLoadingState) {
-        console.log('🔄 setLoading(false)')
         setLoading(false)
-      } else {
-        console.log('⚠️ showLoadingState 是 false，不設定 loading')
       }
       if (isInitialLoad) {
-        console.log('🔄 setIsInitialLoad(false)')
         setIsInitialLoad(false)
       }
-      console.log('✅ finally 完成')
     }
   }
 
