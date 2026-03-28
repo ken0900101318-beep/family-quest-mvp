@@ -771,9 +771,7 @@ export const mockAPI = {
     const { error } = await supabase
       .from('purchases')
       .update({
-        status: 'delivered',
-        delivered_at: new Date().toISOString(),
-        delivered_by: deliveredBy
+        status: 'completed'
       })
       .eq('id', purchaseId)
     
