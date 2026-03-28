@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import ChildDashboard from './pages/ChildDashboard'
-import ParentDashboard from './pages/ParentDashboard'
 import ParentHub from './pages/ParentHub'
 import TaskSquare from './pages/TaskSquare'
 import Shop from './pages/Shop'
@@ -11,8 +10,8 @@ import Passbook from './pages/Passbook'
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
 
+  // 暫時保留的 localStorage 登入邏輯（下一步會換成 Supabase）
   useEffect(() => {
-    // 檢查 localStorage 是否有登入資訊
     const savedUser = localStorage.getItem('currentUser')
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser))
@@ -29,108 +28,65 @@ function App() {
     localStorage.removeItem('currentUser')
   }
 
+  // ✨ 完美優化：建立統一的「路由守衛」
+  // 負責檢查 1. 是否已登入 2. 角色權限是否正確
+  const ProtectedRoute = ({ children, allowedRole }) => {
+    if (!currentUser) return <Navigate to="/login" replace />
+    if (allowedRole && currentUser.role !== allowedRole) {
+      // 如果小孩想闖入家長頁（或反過來），強制送回他們該去的地方
+      return <Navigate to={currentUser.role === 'parent' ? '/parent/hub' : '/child'} replace />
+    }
+    return children
+  }
+
   return (
     <BrowserRouter>
       <Routes>
+        {/* 🚪 登入入口 */}
         <Route 
           path="/login" 
           element={
-            currentUser ? 
-              <Navigate to={currentUser.role === 'parent' ? '/parent' : '/child'} /> : 
-              <Login onLogin={handleLogin} />
+            currentUser 
+              ? <Navigate to={currentUser.role === 'parent' ? '/parent/hub' : '/child'} replace /> 
+              : <Login onLogin={handleLogin} />
           } 
         />
-        <Route 
-          path="/child" 
-          element={
-            currentUser && currentUser.role === 'child' ? 
-              <ChildWrapper user={currentUser} onLogout={handleLogout} /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/child/square" 
-          element={
-            currentUser && currentUser.role === 'child' ? 
-              <TaskSquareWrapper user={currentUser} /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/child/shop" 
-          element={
-            currentUser && currentUser.role === 'child' ? 
-              <ShopWrapper user={currentUser} /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/child/passbook" 
-          element={
-            currentUser && currentUser.role === 'child' ? 
-              <PassbookWrapper user={currentUser} /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/parent" 
-          element={
-            currentUser && currentUser.role === 'parent' ? 
-              <Navigate to="/parent/hub" /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/parent/hub" 
-          element={
-            currentUser && currentUser.role === 'parent' ? 
-              <ParentHubWrapper user={currentUser} onLogout={handleLogout} /> : 
-              <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/" 
-          element={<Navigate to="/login" />} 
-        />
+
+        {/* 🧒 小孩專區 */}
+        <Route path="/child" element={
+          <ProtectedRoute allowedRole="child">
+            <ChildDashboard user={currentUser} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+        <Route path="/child/square" element={
+          <ProtectedRoute allowedRole="child">
+            <TaskSquare user={currentUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/child/shop" element={
+          <ProtectedRoute allowedRole="child">
+            <Shop user={currentUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/child/passbook" element={
+          <ProtectedRoute allowedRole="child">
+            <Passbook user={currentUser} />
+          </ProtectedRoute>
+        } />
+
+        {/* 👨‍👩‍👧‍👦 家長專區 */}
+        <Route path="/parent" element={<Navigate to="/parent/hub" replace />} />
+        <Route path="/parent/hub" element={
+          <ProtectedRoute allowedRole="parent">
+            <ParentHub user={currentUser} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+
+        {/* 🛡️ 迷路防呆：亂打網址一律送回登入頁 */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   )
-}
-
-// Child Dashboard Wrapper
-function ChildWrapper({ user, onLogout }) {
-  const navigate = useNavigate()
-  return <ChildDashboard user={user} onLogout={onLogout} onNavigate={(page) => navigate(`/child/${page}`)} />
-}
-
-// Task Square Wrapper
-function TaskSquareWrapper({ user }) {
-  const navigate = useNavigate()
-  return <TaskSquare user={user} onBack={() => navigate('/child')} />
-}
-
-// Shop Wrapper
-function ShopWrapper({ user }) {
-  const navigate = useNavigate()
-  return <Shop user={user} onNavigate={(page) => page === 'home' ? navigate('/child') : navigate(`/child/${page}`)} />
-}
-
-// Passbook Wrapper
-function PassbookWrapper({ user }) {
-  const navigate = useNavigate()
-  return <Passbook user={user} onNavigate={(page) => page === 'home' ? navigate('/child') : navigate(`/child/${page}`)} />
-}
-
-// Parent Dashboard Wrapper
-function ParentWrapper({ user, onLogout }) {
-  const navigate = useNavigate()
-  return <ParentDashboard user={user} onLogout={onLogout} onNavigate={(page) => navigate(`/parent/${page}`)} />
-}
-
-// Parent Hub Wrapper
-function ParentHubWrapper({ user, onLogout }) {
-  const navigate = useNavigate()
-  return <ParentHub user={user} onBack={() => navigate('/parent')} onLogout={onLogout} />
 }
 
 export default App
