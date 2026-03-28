@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
 import { AnnouncementCard } from '../components/Announcements'
+import { useToast } from '../components/Toast'
 
 export default function ChildDashboard({ user, onLogout, onNavigate }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadTasks()
@@ -739,6 +741,9 @@ function CameraModal({ task, onSubmit, onClose }) {
         </button>
       </div>
       </div>
+      
+      {/* Toast 通知 */}
+      <ToastContainer />
     </div>
   )
 }
