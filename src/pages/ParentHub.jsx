@@ -913,58 +913,70 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
         marginBottom: '1.5rem'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-          borderRadius: '1rem',
-          padding: '1.25rem',
-          textAlign: 'center',
-          boxShadow: '0 8px 20px rgba(251, 191, 36, 0.3)'
+          background: 'white',
+          border: '2px solid #fbbf24',
+          borderRadius: '0.5rem',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
             {stats.total}
           </div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
             總任務數
           </div>
         </div>
         <div style={{
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          borderRadius: '1rem',
-          padding: '1.25rem',
-          textAlign: 'center',
-          boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)'
+          background: 'white',
+          border: '2px solid #10b981',
+          borderRadius: '0.5rem',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>
             {stats.active}
           </div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
             啟用中
           </div>
         </div>
         <div style={{
-          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-          borderRadius: '1rem',
-          padding: '1.25rem',
-          textAlign: 'center',
-          boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
+          background: 'white',
+          border: '2px solid #3b82f6',
+          borderRadius: '0.5rem',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
             {stats.daily}
           </div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
             每日任務
           </div>
         </div>
         <div style={{
-          background: 'linear-gradient(135deg, #ec4899, #db2777)',
-          borderRadius: '1rem',
-          padding: '1.25rem',
-          textAlign: 'center',
-          boxShadow: '0 8px 20px rgba(236, 72, 153, 0.3)'
+          background: 'white',
+          border: '2px solid #ec4899',
+          borderRadius: '0.5rem',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ec4899' }}>
             {stats.challenge}
           </div>
-          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
             挑戰任務
           </div>
         </div>
@@ -1051,17 +1063,67 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
-          {filteredTasks.map(task => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
-              onEdit={onEditTask}
-              onToggle={onToggleTask}
-              onDelete={onDeleteTask}
-            />
-          ))}
-        </div>
+        <>
+          {/* 每日任務區塊 */}
+          {filteredTasks.filter(t => t.type === 'daily').length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
+                📅 每日例行任務
+              </h3>
+              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                {filteredTasks.filter(t => t.type === 'daily').map(task => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onEdit={onEditTask}
+                    onToggle={onToggleTask}
+                    onDelete={onDeleteTask}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 挑戰任務區塊 */}
+          {filteredTasks.filter(t => t.type === 'challenge').length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
+                🏆 長期挑戰任務
+              </h3>
+              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                {filteredTasks.filter(t => t.type === 'challenge').map(task => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onEdit={onEditTask}
+                    onToggle={onToggleTask}
+                    onDelete={onDeleteTask}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 單次任務區塊 */}
+          {filteredTasks.filter(t => t.type === 'extra').length > 0 && (
+            <div>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '0.75rem', paddingLeft: '0.25rem' }}>
+                ⚡ 單次任務
+              </h3>
+              <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                {filteredTasks.filter(t => t.type === 'extra').map(task => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onEdit={onEditTask}
+                    onToggle={onToggleTask}
+                    onDelete={onDeleteTask}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -1070,9 +1132,9 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
 // 任務卡片（管理視圖 - 緊湊版）
 function TaskCard({ task, onEdit, onToggle, onDelete }) {
   const typeConfig = {
-    daily: { sideColor: '#10b981', emoji: '📅', label: '日' },
-    challenge: { sideColor: '#f59e0b', emoji: '🏆', label: '戰' },
-    extra: { sideColor: '#8b5cf6', emoji: '⚡', label: '單' }
+    daily: { sideColor: '#10b981', emoji: '📅', label: '每日例行' },
+    challenge: { sideColor: '#f59e0b', emoji: '🏆', label: '長期挑戰' },
+    extra: { sideColor: '#8b5cf6', emoji: '⚡', label: '單次任務' }
   }
 
   const config = typeConfig[task.type] || typeConfig.daily
@@ -1085,55 +1147,45 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
       border: '1px solid #e5e7eb',
       borderLeft: `4px solid ${isInactive ? '#9ca3af' : config.sideColor}`,
       borderRadius: '0.5rem',
-      padding: '0.75rem 1rem',
-      opacity: isInactive ? 0.7 : 1,
+      padding: '1rem',
+      opacity: isInactive ? 0.5 : 1,
       transition: 'all 0.2s',
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     }}>
-      {/* 主要內容區 - 單行 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        {/* 左側：圖示 + 標題 + 點數 */}
+      {/* 第一行：圖示 + 標題 + 操作按鈕 */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+        {/* 左側：圖示 + 標題 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: '24px', flexShrink: 0 }}>{task.icon}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {task.title}
-            </span>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b', flexShrink: 0 }}>
-              ({task.points}💰)
-            </span>
-          </div>
+          <span style={{ fontSize: '28px', flexShrink: 0 }}>{task.icon}</span>
+          <h3 style={{ 
+            fontSize: '16px', 
+            fontWeight: '700', 
+            color: '#111827',
+            margin: 0,
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis', 
+            whiteSpace: 'nowrap'
+          }}>
+            {task.title}
+          </h3>
         </div>
 
-        {/* 右側：標籤 + 操作按鈕 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {/* 類型標籤 */}
-          <span style={{
-            background: isInactive ? '#f3f4f6' : `${config.sideColor}20`,
-            color: isInactive ? '#9ca3af' : config.sideColor,
-            padding: '0.25rem 0.5rem',
-            borderRadius: '0.375rem',
-            fontSize: '11px',
-            fontWeight: '600'
-          }}>
-            {config.emoji} {config.label}
-          </span>
-
-          {/* 操作按鈕組 */}
+        {/* 右側：操作按鈕組 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
           <button
             onClick={() => onEdit(task)}
             style={{
-              background: 'transparent',
+              background: '#f3f4f6',
               color: '#6b7280',
-              border: '1px solid #d1d5db',
+              border: 'none',
               borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
+              padding: '0.5rem 0.75rem',
+              fontSize: '14px',
               cursor: 'pointer',
               transition: 'all 0.15s'
             }}
-            onMouseOver={(e) => { e.target.style.background = '#f3f4f6'; e.target.style.color = '#374151' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#6b7280' }}
+            onMouseOver={(e) => { e.target.style.background = '#e5e7eb'; e.target.style.color = '#374151' }}
+            onMouseOut={(e) => { e.target.style.background = '#f3f4f6'; e.target.style.color = '#6b7280' }}
           >
             ✏️
           </button>
@@ -1141,17 +1193,17 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
           <button
             onClick={() => onToggle(task)}
             style={{
-              background: 'transparent',
-              color: isInactive ? '#10b981' : '#ef4444',
-              border: `1px solid ${isInactive ? '#d1fae5' : '#fecaca'}`,
+              background: isInactive ? '#d1fae5' : '#fee2e2',
+              color: isInactive ? '#059669' : '#dc2626',
+              border: 'none',
               borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
+              padding: '0.5rem 0.75rem',
+              fontSize: '14px',
               cursor: 'pointer',
               transition: 'all 0.15s'
             }}
-            onMouseOver={(e) => { e.target.style.background = isInactive ? '#d1fae5' : '#fecaca' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent' }}
+            onMouseOver={(e) => { e.target.style.opacity = '0.8' }}
+            onMouseOut={(e) => { e.target.style.opacity = '1' }}
           >
             {isInactive ? '✅' : '🔒'}
           </button>
@@ -1163,39 +1215,41 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
               }
             }}
             style={{
-              background: 'transparent',
+              background: '#fee2e2',
               color: '#dc2626',
-              border: '1px solid #fecaca',
+              border: 'none',
               borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
+              padding: '0.5rem 0.75rem',
+              fontSize: '14px',
               cursor: 'pointer',
               transition: 'all 0.15s'
             }}
-            onMouseOver={(e) => { e.target.style.background = '#fee2e2'; e.target.style.color = '#b91c1c' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#dc2626' }}
+            onMouseOver={(e) => { e.target.style.background = '#fecaca'; e.target.style.color = '#b91c1c' }}
+            onMouseOut={(e) => { e.target.style.background = '#fee2e2'; e.target.style.color = '#dc2626' }}
           >
             🗑️
           </button>
         </div>
       </div>
 
-      {/* 停用狀態標籤 */}
-      {isInactive && (
-        <div style={{
-          marginTop: '0.5rem',
-          paddingTop: '0.5rem',
-          borderTop: '1px solid #f3f4f6',
-          fontSize: '11px',
-          color: '#9ca3af',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.25rem'
-        }}>
-          <span>⚠️</span>
-          <span>此任務已停用</span>
-        </div>
-      )}
+      {/* 第二行：點數 + 類型標籤 */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '0.5rem',
+        fontSize: '13px',
+        color: '#6b7280',
+        paddingLeft: '2.25rem' // 對齊第一行文字（圖示寬度 + gap）
+      }}>
+        <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+          {task.points} 💰
+        </span>
+        <span style={{ color: '#d1d5db' }}>·</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <span>{config.emoji}</span>
+          <span>{config.label}</span>
+        </span>
+      </div>
     </div>
   )
 }
