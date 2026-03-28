@@ -597,6 +597,7 @@ export const mockAPI = {
         users (name, avatar),
         products (name, icon)
       `)
+      .eq('status', 'pending')
       .order('created_at', { ascending: false })
     
     // 如果有 userId，只查詢該用戶的購買記錄
