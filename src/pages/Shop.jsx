@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { mockAPI } from '../lib/supabase'
 import { useToast } from '../components/Toast'
 
-export default function Shop({ user, onNavigate }) {
+export default function Shop({ user }) {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [myPurchases, setMyPurchases] = useState([])
   const [activeTab, setActiveTab] = useState('shop') // shop / purchases / wish
@@ -121,7 +123,8 @@ export default function Shop({ user, onNavigate }) {
             🎁 獎勵商店
           </h1>
           <button
-            onClick={() => onNavigate('home')}
+            type="button"
+            onClick={() => navigate('/child')}
             style={{
               background: 'rgba(255, 255, 255, 0.9)',
               border: '2px solid #d8b4fe',
