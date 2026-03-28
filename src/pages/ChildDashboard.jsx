@@ -16,13 +16,6 @@ export default function ChildDashboard({ user, onLogout }) {
 
   useEffect(() => {
     loadTasks(true) // 首次載入
-    
-    // 每30秒背景更新任務列表（靜默更新）
-    const interval = setInterval(() => {
-      loadTasks(false) // 背景更新，不顯示 loading
-    }, 30000)
-    
-    return () => clearInterval(interval)
   }, [])
 
   const loadTasks = async (showLoadingState = true) => {
@@ -142,15 +135,6 @@ export default function ChildDashboard({ user, onLogout }) {
     if (tasks.length > 0) {
       loadTodayStats()
     }
-    
-    // ✨ 每30秒自動刷新任務狀態
-    const statusInterval = setInterval(() => {
-      if (tasks.length > 0) {
-        loadTodayStats()
-      }
-    }, 30000)
-    
-    return () => clearInterval(statusInterval)
   }, [tasks, user.id])
   
   const getTaskStatus = (taskId) => {

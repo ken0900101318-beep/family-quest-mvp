@@ -26,14 +26,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   useEffect(() => {
-    loadData(true) // 首次載入，顯示 loading
-    
-    // 每30秒自動刷新（背景靜默更新）
-    const interval = setInterval(() => {
-      loadData(false) // 背景更新，不顯示 loading
-    }, 30000)
-    
-    return () => clearInterval(interval)
+    loadData(true) // 首次載入
   }, [])
 
   const loadData = async (showLoadingState = true) => {
@@ -139,11 +132,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
       showToast(`已核准「${request.title}」 (${adjustedPoints || request.points} 點)`, 'success')
-      
-      // ✨ 核准後立即重新載入數據，確保同步
-      setTimeout(() => {
-        loadData(false) // 背景更新
-      }, 1000)
     } catch (err) {
       console.error('❌ 核准失敗:', err)
       showToast(`核准失敗：${err.message || '請稍後再試'}`, 'error')
@@ -975,16 +963,7 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
     if (tasks.length > 0) {
       loadTodayProgress()
     }
-    
-    // 每30秒自動更新統計
-    const statsInterval = setInterval(() => {
-      if (tasks.length > 0) {
-        loadTodayProgress()
-      }
-    }, 30000)
-    
-    return () => clearInterval(statsInterval)
-  }, [selectedMember]) // 只依賴 selectedMember，不依賴 tasks
+  }, [selectedMember, tasks.length]) // 成員切換或任務數量變化時更新
 
   // 雙重過濾：成員 + 類別
   let filteredTasks = tasks

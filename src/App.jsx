@@ -40,16 +40,7 @@ function App() {
     }
 
     syncUser()
-    
-    // ✨ 每30秒自動同步用戶資料（點數等）
-    const syncInterval = setInterval(() => {
-      if (currentUser) {
-        syncUser()
-      }
-    }, 30000)
-    
-    return () => clearInterval(syncInterval)
-  }, [currentUser])
+  }, [])
 
   const handleLogin = (user) => {
     setCurrentUser(user)
