@@ -397,8 +397,10 @@ export const mockAPI = {
   
   // 核准任務
   approveSubmission: async (submissionId, adjustedPoints) => {
+    console.log('🔍 Approving submission:', submissionId)
+    
     // 查詢提交記錄
-    const { data: submission } = await supabase
+    const { data: submission, error: queryError } = await supabase
       .from('submissions')
       .select(`
         *,
@@ -408,10 +410,17 @@ export const mockAPI = {
       .eq('id', submissionId)
       .single()
     
-    if (!submission) {
-      console.error('Submission not found')
-      return null
+    if (queryError) {
+      console.error('❌ Query submission error:', queryError)
+      throw new Error(`查詢提交記錄失敗: ${queryError.message}`)
     }
+    
+    if (!submission) {
+      console.error('❌ Submission not found:', submissionId)
+      throw new Error('找不到提交記錄')
+    }
+    
+    console.log('✅ Found submission:', submission)
     
     const points = adjustedPoints || submission.task.points
     
