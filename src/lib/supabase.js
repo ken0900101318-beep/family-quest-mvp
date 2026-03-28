@@ -268,6 +268,19 @@ export const mockAPI = {
     return await mockAPI.getAllTasks()
   },
   
+  // 刪除任務
+  deleteTask: async (taskId) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId)
+    
+    if (error) {
+      console.error('Delete task error:', error)
+      throw new Error(`刪除任務失敗: ${error.message}`)
+    }
+  },
+
   // 更新任務進度
   updateTaskProgress: async (assignmentId, newProgress, target) => {
     const isCompleted = target && newProgress >= target

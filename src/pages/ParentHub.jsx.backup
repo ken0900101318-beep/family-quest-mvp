@@ -184,17 +184,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
     showToast(`任務已${newStatus === 'active' ? '啟用' : '停用'}`, 'success')
   }
 
-  const handleDeleteTask = async (taskId) => {
-    try {
-      await mockAPI.deleteTask(taskId)
-      setAllTasks(prev => prev.filter(t => t.id !== taskId))
-      showToast('✅ 任務已刪除', 'success')
-    } catch (error) {
-      showToast('❌ 刪除失敗', 'error')
-      console.error('Delete task error:', error)
-    }
-  }
-
   const handleDeliverPurchase = async (purchase) => {
     try {
       await mockAPI.deliverPurchase(purchase.id, user.id)
@@ -410,7 +399,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 onCreateNew={() => { setEditingTask(null); setShowTaskForm(true); }}
                 onEditTask={handleEditTask}
                 onToggleTask={handleToggleTask}
-                onDeleteTask={handleDeleteTask}
               />
             )}
             {activeTab === 'shop' && (
@@ -885,7 +873,7 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
 }
 
 // 任務管理
-function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask }) {
+function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask }) {
   const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
 
   const filteredTasks = selectedMember === 'all' 
@@ -1058,7 +1046,6 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
               task={task} 
               onEdit={onEditTask}
               onToggle={onToggleTask}
-              onDelete={onDeleteTask}
             />
           ))}
         </div>
@@ -1069,132 +1056,167 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
 
 // 任務卡片（管理視圖 - 緊湊版）
 function TaskCard({ task, onEdit, onToggle, onDelete }) {
-  const typeConfig = {
-    daily: { sideColor: '#10b981', emoji: '📅', label: '日' },
-    challenge: { sideColor: '#f59e0b', emoji: '🏆', label: '戰' },
-    extra: { sideColor: '#8b5cf6', emoji: '⚡', label: '單' }
+  const typeColors = {
+    daily: { 
+      bg: 'linear-gradient(135deg, #fef3c7, #fde047)', 
+      border: '#fbbf24',
+      color: '#f59e0b', 
+      label: '每日例行',
+      emoji: '🌅'
+    },
+    challenge: { 
+      bg: 'linear-gradient(135deg, #fce7f3, #fbcfe8)', 
+      border: '#ec4899',
+      color: '#db2777', 
+      label: '長期挑戰',
+      emoji: '🏆'
+    },
+    extra: { 
+      bg: 'linear-gradient(135deg, #ddd6fe, #c4b5fd)', 
+      border: '#8b5cf6',
+      color: '#7c3aed', 
+      label: '單次任務',
+      emoji: '⭐'
+    }
   }
 
-  const config = typeConfig[task.type] || typeConfig.daily
-  const isInactive = task.status === 'inactive'
+  const config = typeColors[task.type] || typeColors.daily
 
   return (
     <div style={{
       background: 'white',
-      border: '1px solid #e5e7eb',
-      borderLeft: `4px solid ${isInactive ? '#9ca3af' : config.sideColor}`,
-      borderRadius: '0.5rem',
-      padding: '0.75rem 1rem',
-      opacity: isInactive ? 0.6 : 1,
-      transition: 'all 0.2s',
-      ':hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+      borderRadius: '1.25rem',
+      padding: '0',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+      border: `3px solid ${config.border}`,
+      opacity: task.status === 'inactive' ? 0.5 : 1,
+      overflow: 'hidden',
+      transition: 'transform 0.2s, box-shadow 0.2s'
     }}>
-      {/* 主要內容區 - 單行 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        {/* 左側：圖示 + 標題 + 點數 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: '24px', flexShrink: 0 }}>{task.icon}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* 頂部彩色區塊 */}
+      <div style={{
+        background: config.bg,
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ fontSize: '36px' }}>{task.icon}</div>
+          <div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.25rem' }}>
               {task.title}
-            </span>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b', flexShrink: 0 }}>
-              ({task.points}💰)
-            </span>
+            </h3>
+            <div style={{ 
+              fontSize: '12px', 
+              fontWeight: 'bold',
+              color: config.color,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}>
+              <span>{config.emoji}</span>
+              <span>{config.label}</span>
+            </div>
+          </div>
+        </div>
+        {task.status === 'inactive' && (
+          <div style={{
+            background: 'rgba(0,0,0,0.3)',
+            color: 'white',
+            padding: '0.25rem 0.75rem',
+            borderRadius: '0.5rem',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          }}>
+            已停用
+          </div>
+        )}
+      </div>
+
+      {/* 內容區 */}
+      <div style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.75rem',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(251, 191, 36, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>💰</span>
+            <span>{task.points} 點</span>
+          </div>
+          <div style={{ 
+            background: 'rgba(139, 92, 246, 0.15)',
+            color: '#7e22ce', 
+            padding: '0.5rem 1rem',
+            borderRadius: '0.75rem',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            border: '2px solid #e9d5ff'
+          }}>
+            {task.assignedTo === 'all' ? '👨‍👩‍👧‍👦 全家' : task.assignedTo === '哥哥' ? '👦 哥哥' : '👧 妹妹'}
           </div>
         </div>
 
-        {/* 右側：標籤 + 操作按鈕 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {/* 類型標籤 */}
-          <span style={{
-            background: isInactive ? '#f3f4f6' : `${config.sideColor}20`,
-            color: isInactive ? '#9ca3af' : config.sideColor,
-            padding: '0.25rem 0.5rem',
-            borderRadius: '0.375rem',
-            fontSize: '11px',
-            fontWeight: '600'
-          }}>
-            {config.emoji} {config.label}
-          </span>
 
-          {/* 操作按鈕組 */}
-          <button
+
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button 
             onClick={() => onEdit(task)}
             style={{
-              background: 'transparent',
-              color: '#6b7280',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
+              flex: 1,
+              background: 'linear-gradient(135deg, #e9d5ff, #d8b4fe)',
+              color: '#7e22ce',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              padding: '0.875rem',
+              borderRadius: '0.75rem',
+              border: '2px solid #d8b4fe',
               cursor: 'pointer',
-              transition: 'all 0.15s'
+              boxShadow: '0 4px 10px rgba(168, 85, 247, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
             }}
-            onMouseOver={(e) => { e.target.style.background = '#f3f4f6'; e.target.style.color = '#374151' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#6b7280' }}
           >
-            ✏️
+            <span>✏️</span>
+            <span>編輯</span>
           </button>
-
-          <button
+          <button 
             onClick={() => onToggle(task)}
             style={{
-              background: 'transparent',
-              color: isInactive ? '#10b981' : '#ef4444',
-              border: `1px solid ${isInactive ? '#d1fae5' : '#fecaca'}`,
-              borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
+              background: task.status === 'active' 
+                ? 'linear-gradient(135deg, #fca5a5, #f87171)' 
+                : 'linear-gradient(135deg, #86efac, #4ade80)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              padding: '0.875rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.15s'
+              boxShadow: task.status === 'active'
+                ? '0 4px 10px rgba(239, 68, 68, 0.3)'
+                : '0 4px 10px rgba(16, 185, 129, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              whiteSpace: 'nowrap'
             }}
-            onMouseOver={(e) => { e.target.style.background = isInactive ? '#d1fae5' : '#fecaca' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent' }}
           >
-            {isInactive ? '✅' : '🔒'}
-          </button>
-
-          <button
-            onClick={() => {
-              if (confirm(`確定要永久刪除「${task.title}」嗎？此操作無法復原！`)) {
-                onDelete(task.id)
-              }
-            }}
-            style={{
-              background: 'transparent',
-              color: '#dc2626',
-              border: '1px solid #fecaca',
-              borderRadius: '0.375rem',
-              padding: '0.375rem 0.625rem',
-              fontSize: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-            onMouseOver={(e) => { e.target.style.background = '#fee2e2'; e.target.style.color = '#b91c1c' }}
-            onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#dc2626' }}
-          >
-            🗑️
+            <span>{task.status === 'active' ? '❌' : '✅'}</span>
+            <span>{task.status === 'active' ? '停用' : '啟用'}</span>
           </button>
         </div>
       </div>
-
-      {/* 停用狀態標籤 */}
-      {isInactive && (
-        <div style={{
-          marginTop: '0.5rem',
-          paddingTop: '0.5rem',
-          borderTop: '1px solid #f3f4f6',
-          fontSize: '11px',
-          color: '#9ca3af',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.25rem'
-        }}>
-          <span>⚠️</span>
-          <span>此任務已停用</span>
-        </div>
-      )}
     </div>
   )
 }
