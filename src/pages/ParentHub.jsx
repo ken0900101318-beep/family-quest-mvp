@@ -23,20 +23,24 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [editingUser, setEditingUser] = useState(null)
   
   const { showToast, ToastContainer } = useToast()
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   useEffect(() => {
-    loadData()
+    loadData(true) // 首次載入，顯示 loading
     
-    // 每30秒自動刷新（偵測孩子的新購買）
+    // 每30秒自動刷新（背景靜默更新）
     const interval = setInterval(() => {
-      loadData()
+      loadData(false) // 背景更新，不顯示 loading
     }, 30000)
     
     return () => clearInterval(interval)
   }, [])
 
-  const loadData = async () => {
-    setLoading(true)
+  const loadData = async (showLoadingState = true) => {
+    // 只有首次載入才顯示 loading
+    if (showLoadingState && isInitialLoad) {
+      setLoading(true)
+    }
     
     try {
     
@@ -112,7 +116,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       console.error('載入失敗:', error)
       setPendingRequests([])
     } finally {
-      setLoading(false)
+      if (showLoadingState && isInitialLoad) {
+        setLoading(false)
+        setIsInitialLoad(false)
+      }
     }
   }
 

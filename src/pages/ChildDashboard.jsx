@@ -11,17 +11,36 @@ export default function ChildDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
-  // 🗑️ 已經幫你把沒用到的 useToast 宣告刪除了
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   useEffect(() => {
-    loadTasks()
+    loadTasks(true) // 首次載入
+    
+    // 每30秒背景更新任務列表（靜默更新）
+    const interval = setInterval(() => {
+      loadTasks(false) // 背景更新，不顯示 loading
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
-  const loadTasks = async () => {
-    setLoading(true)
-    const userTasks = await mockAPI.getTasks(user.id)
-    setTasks(userTasks)
-    setLoading(false)
+  const loadTasks = async (showLoadingState = true) => {
+    // 只有首次載入才顯示 loading
+    if (showLoadingState && isInitialLoad) {
+      setLoading(true)
+    }
+    
+    try {
+      const userTasks = await mockAPI.getTasks(user.id)
+      setTasks(userTasks)
+    } catch (error) {
+      console.error('載入任務失敗:', error)
+    } finally {
+      if (showLoadingState && isInitialLoad) {
+        setLoading(false)
+        setIsInitialLoad(false)
+      }
+    }
   }
 
   const handleComplete = async (task) => {
@@ -65,7 +84,7 @@ export default function ChildDashboard({ user, onLogout }) {
       }, 300)
       
       setSelectedTask(null)
-      loadTasks() 
+      loadTasks(false) // 背景更新，不顯示 loading
     } catch (err) {
       console.error('提交失敗:', err)
       alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
