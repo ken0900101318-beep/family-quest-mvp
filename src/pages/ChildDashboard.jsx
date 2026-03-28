@@ -9,12 +9,12 @@ import { useToast } from '../components/Toast'
 export default function ChildDashboard({ user, onLogout }) {
   // ✨ 3. 呼叫導航鉤子
   const navigate = useNavigate()
+  const { showToast, ToastContainer } = useToast()
   
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
-  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     loadTasks()
