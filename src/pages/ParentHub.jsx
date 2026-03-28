@@ -132,6 +132,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
       setAllUsers(users)
       
       console.log('✅ 所有資料載入完成！')
+      
+      // ✅ 成功載入後，強制關閉loading
+      console.log('🔄 成功載入，強制 setLoading(false)')
+      setLoading(false)
+      setIsInitialLoad(false)
     
     } catch (error) {
       console.error('❌ loadData 失敗:', error)
@@ -144,13 +149,19 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // setPendingRequests([])
       showToast(`資料載入失敗：${error.message || '請重新整理頁面'}`, 'error')
     } finally {
+      console.log('🏁 finally 區塊', { showLoadingState, isInitialLoad, loading })
       // ✅ 無論成功或失敗，都要關閉 loading
       if (showLoadingState) {
+        console.log('🔄 setLoading(false)')
         setLoading(false)
+      } else {
+        console.log('⚠️ showLoadingState 是 false，不設定 loading')
       }
       if (isInitialLoad) {
+        console.log('🔄 setIsInitialLoad(false)')
         setIsInitialLoad(false)
       }
+      console.log('✅ finally 完成')
     }
   }
 
