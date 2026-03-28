@@ -5,10 +5,12 @@ import { useToast } from '../components/Toast'
 
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop, users
+  const [shopTab, setShopTab] = useState('pending') // pending, history, products, wishes
   const [pendingRequests, setPendingRequests] = useState([])
   const [allTasks, setAllTasks] = useState([])
   const [stats, setStats] = useState({})
   const [purchases, setPurchases] = useState([])
+  const [deliveredPurchases, setDeliveredPurchases] = useState([])
   const [wishes, setWishes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
@@ -84,6 +86,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
     // 讀取待發放的購買記錄（所有兒童）
       const allPurchases = await mockAPI.getPurchases()
       setPurchases(allPurchases)
+      
+      // 讀取已發放的購買記錄
+      const deliveredList = await mockAPI.getDeliveredPurchases()
+      setDeliveredPurchases(deliveredList)
     
     // 讀取待審核的許願清單
     // allWishes 已在上方並行載入
@@ -392,7 +398,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
             )}
             {activeTab === 'shop' && (
               <ShopManagement
+                shopTab={shopTab}
+                setShopTab={setShopTab}
                 purchases={purchases}
+                deliveredPurchases={deliveredPurchases}
                 wishes={wishes}
                 onDeliverPurchase={handleDeliverPurchase}
                 onApproveWish={handleApproveWish}
@@ -1452,8 +1461,8 @@ function Statistics({ stats }) {
 }
 
 // 商店管理
-function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish, showToast }) {
-  const [activeSubTab, setActiveSubTab] = useState('purchases') // purchases / wishes / ledger / products
+function ShopManagement({ shopTab, setShopTab, purchases, deliveredPurchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish, showToast }) {
+  const [activeSubTab, setActiveSubTab] = useState(shopTab || 'purchases') // purchases / history / wishes / ledger / products
   const [products, setProducts] = useState([])
   const [showProductForm, setShowProductForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -1591,6 +1600,24 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
           📦 待發放 ({purchases.length})
         </button>
         <button
+          onClick={() => setActiveSubTab('history')}
+          style={{
+            flex: 1,
+            background: activeSubTab === 'history'
+              ? 'linear-gradient(135deg, #10b981, #059669)'
+              : 'transparent',
+            color: activeSubTab === 'history' ? 'white' : '#10b981',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          ✅ 發放記錄 ({deliveredPurchases.length})
+        </button>
+        <button
           onClick={() => setActiveSubTab('wishes')}
           style={{
             flex: 1,
@@ -1661,6 +1688,51 @@ function ShopManagement({ purchases, wishes, onDeliverPurchase, onApproveWish, o
                   purchase={purchase}
                   onDeliver={onDeliverPurchase}
                 />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 發放記錄 */}
+      {activeSubTab === 'history' && (
+        <div>
+          {deliveredPurchases.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+              目前沒有發放記錄
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {deliveredPurchases.map(purchase => (
+                <div
+                  key={purchase.id}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '1rem',
+                    padding: '1.5rem',
+                    border: '2px solid #d1fae5',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ fontSize: '36px' }}>{purchase.productIcon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#059669', marginBottom: '0.5rem' }}>
+                        {purchase.userName} {purchase.userAvatar}
+                      </div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#581c87' }}>
+                        {purchase.productName}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#7e22ce', marginTop: '0.25rem' }}>
+                        數量：{purchase.quantity} | 花費：{purchase.totalPrice} 點
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#10b981', marginTop: '0.5rem' }}>
+                        ✅ 已發放 · {new Date(purchase.createdAt).toLocaleString('zh-TW')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}

@@ -626,6 +626,38 @@ export const mockAPI = {
       createdAt: p.created_at
     }))
   },
+
+  // 取得已發放的購買記錄
+  getDeliveredPurchases: async () => {
+    const { data, error } = await supabase
+      .from('purchases')
+      .select(`
+        *,
+        users (name, avatar),
+        products (name, icon)
+      `)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    
+    if (error) {
+      console.error('Get delivered purchases error:', error)
+      return []
+    }
+    
+    return data.map(p => ({
+      id: p.id,
+      userId: p.user_id,
+      userName: p.users?.name || '未知用戶',
+      userAvatar: p.users?.avatar || '👤',
+      productName: p.products?.name || '未知商品',
+      productIcon: p.products?.icon || '🎁',
+      quantity: p.quantity,
+      totalPrice: p.price || p.total_price || 0,
+      status: p.status,
+      createdAt: p.created_at
+    }))
+  },
   
   // 購買商品
   purchaseProduct: async (userId, productId) => {
