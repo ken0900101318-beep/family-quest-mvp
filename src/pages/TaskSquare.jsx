@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { mockAPI } from '../lib/supabase'
 import { useToast } from '../components/Toast'
 
-export default function TaskSquare({ user, onBack }) {
+export default function TaskSquare({ user }) {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('ongoing')
   const [tasks, setTasks] = useState([])
   const [myRequests, setMyRequests] = useState([])
@@ -149,16 +151,19 @@ export default function TaskSquare({ user, onBack }) {
           <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#581c87' }}>
             🏛️ 任務廣場
           </h1>
-          <button onClick={onBack} style={{
-            background: 'white',
-            color: '#7e22ce',
-            border: '2px solid #d8b4fe',
-            borderRadius: '0.75rem',
-            padding: '0.5rem 1rem',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}>
+          <button 
+            type="button"
+            onClick={() => navigate('/child')} 
+            style={{
+              background: 'white',
+              color: '#7e22ce',
+              border: '2px solid #d8b4fe',
+              borderRadius: '0.75rem',
+              padding: '0.5rem 1rem',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}>
             ← 返回
           </button>
         </div>

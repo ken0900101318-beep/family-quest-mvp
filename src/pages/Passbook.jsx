@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { mockAPI } from '../lib/supabase'
 
-export default function Passbook({ user, onNavigate }) {
+export default function Passbook({ user }) {
+  const navigate = useNavigate()
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('all') // all / earn / spend
 
@@ -81,7 +83,8 @@ export default function Passbook({ user, onNavigate }) {
             💰 我的存摺
           </h1>
           <button
-            onClick={() => onNavigate('home')}
+            type="button"
+            onClick={() => navigate('/child')}
             style={{
               background: 'rgba(255, 255, 255, 0.9)',
               border: '2px solid #d8b4fe',
