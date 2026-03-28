@@ -224,7 +224,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
       setShowUserForm(false)
       setEditingUser(null)
     } catch (error) {
-      showToast('❌ 操作失敗，請重試', 'error')
+      showToast(`❌ ${error.message || '操作失敗，請重試'}`, 'error')
       console.error('Save user error:', error)
     }
   }
