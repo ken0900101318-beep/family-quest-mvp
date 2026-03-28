@@ -4,7 +4,7 @@ import { AnnouncementManager } from '../components/Announcements'
 import { useToast } from '../components/Toast'
 
 export default function ParentHub({ user, onBack, onLogout }) {
-  const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop
+  const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop, users
   const [pendingRequests, setPendingRequests] = useState([])
   const [allTasks, setAllTasks] = useState([])
   const [stats, setStats] = useState({})
@@ -13,6 +13,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  
+  // 用戶管理
+  const [allUsers, setAllUsers] = useState([])
+  const [showUserForm, setShowUserForm] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  
   const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
@@ -26,9 +32,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
     
     // 從 Supabase 讀取待審核任務
     // 並行載入（更快！）
-        const [pendingSubmissions, allWishes] = await Promise.all([
+        const [pendingSubmissions, allWishes, users] = await Promise.all([
           mockAPI.getPendingSubmissions(),
-          mockAPI.getWishes()
+          mockAPI.getWishes(),
+          mockAPI.getAllUsers()
         ])
     
     // 轉換格式以匹配 UI
@@ -79,6 +86,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
     // 讀取所有任務
       const tasks = await mockAPI.getAllTasks()
       setAllTasks(tasks)
+      
+      // 設定用戶列表
+      setAllUsers(users)
     
     } catch (error) {
       console.error('載入失敗:', error)
@@ -196,6 +206,50 @@ export default function ParentHub({ user, onBack, onLogout }) {
     }
   }
 
+  // 用戶管理處理函數
+  const handleSaveUser = async (userData) => {
+    showToast('⏳ 處理中，請稍候...', 'info')
+    
+    try {
+      if (editingUser) {
+        await mockAPI.updateUser(editingUser.id, userData)
+      } else {
+        await mockAPI.createUser(userData)
+      }
+      
+      const users = await mockAPI.getAllUsers()
+      setAllUsers(users)
+      
+      showToast(editingUser ? '✅ 用戶已更新！' : '✅ 用戶已創建！', 'success')
+      setShowUserForm(false)
+      setEditingUser(null)
+    } catch (error) {
+      showToast('❌ 操作失敗，請重試', 'error')
+      console.error('Save user error:', error)
+    }
+  }
+
+  const handleEditUser = (user) => {
+    setEditingUser(user)
+    setShowUserForm(true)
+  }
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('確定要刪除此用戶嗎？刪除後將無法恢復。')) {
+      return
+    }
+    
+    try {
+      await mockAPI.deleteUser(userId)
+      const users = await mockAPI.getAllUsers()
+      setAllUsers(users)
+      showToast('✅ 用戶已刪除', 'success')
+    } catch (error) {
+      showToast('❌ 刪除失敗，請重試', 'error')
+      console.error('Delete user error:', error)
+    }
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -288,6 +342,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
             badge={purchases.length + wishes.length}
           />
           <TabButton
+            active={activeTab === 'users'}
+            onClick={() => setActiveTab('users')}
+            icon="👥"
+            label="用戶管理"
+          />
+          <TabButton
             active={activeTab === 'stats'}
             onClick={() => setActiveTab('stats')}
             icon="📊"
@@ -337,6 +397,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
               <Statistics stats={stats} />
             )}
 
+            {activeTab === 'users' && (
+              <UserManagement 
+                users={allUsers}
+                onAdd={() => { setEditingUser(null); setShowUserForm(true); }}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+              />
+            )}
+
             {activeTab === 'announcements' && (
               <AnnouncementManager userId={user.id} />
             )}
@@ -349,6 +418,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
             task={editingTask}
             onSubmit={handleCreateTask}
             onClose={() => { setShowTaskForm(false); setEditingTask(null); }}
+          />
+        )}
+
+        {/* 創建/編輯用戶表單 */}
+        {showUserForm && (
+          <UserForm
+            user={editingUser}
+            onSubmit={handleSaveUser}
+            onClose={() => { setShowUserForm(false); setEditingUser(null); }}
           />
         )}
 
@@ -2608,6 +2686,428 @@ export function ProductFormModal({ product, onSubmit, onClose }) {
               }}
             >
               {product ? '✅ 儲存' : '✨ 新增'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// 用戶管理組件
+function UserManagement({ users, onAdd, onEdit, onDelete }) {
+  return (
+    <div>
+      {/* 新增用戶按鈕 */}
+      <button
+        onClick={onAdd}
+        style={{
+          width: '100%',
+          background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '18px',
+          padding: '1.25rem',
+          borderRadius: '1rem',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 10px 30px rgba(139, 92, 246, 0.4)',
+          marginBottom: '1.5rem'
+        }}
+      >
+        ➕ 新增用戶
+      </button>
+
+      {/* 用戶列表 */}
+      {users.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#7e22ce' }}>
+          還沒有用戶，點擊上方按鈕新增
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {users.map(user => (
+            <UserCard
+              key={user.id}
+              user={user}
+              onEdit={() => onEdit(user)}
+              onDelete={() => onDelete(user.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 用戶卡片組件
+function UserCard({ user, onEdit, onDelete }) {
+  const roleText = user.role === 'parent' ? '家長' : '兒童'
+  const roleColor = user.role === 'parent' ? '#7e22ce' : '#0891b2'
+  
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.9)',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+      border: '2px solid #e9d5ff'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '48px' }}>{user.avatar}</div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#581c87', marginBottom: '0.25rem' }}>
+            {user.name}
+          </h3>
+          <div style={{ display: 'flex', gap: '1rem', fontSize: '14px', color: '#7e22ce' }}>
+            <span style={{
+              background: roleColor,
+              color: 'white',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '0.5rem',
+              fontWeight: 'bold'
+            }}>
+              {roleText}
+            </span>
+            <span>🔢 PIN: {user.pin}</span>
+            {user.role === 'child' && (
+              <>
+                <span>💰 {user.points} 點</span>
+                <span>⭐ Lv.{user.level}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button
+          onClick={onEdit}
+          style={{
+            flex: 1,
+            background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.75rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          ✏️ 編輯
+        </button>
+        <button
+          onClick={onDelete}
+          style={{
+            flex: 1,
+            background: 'linear-gradient(to right, #f87171, #ef4444)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            padding: '0.75rem',
+            borderRadius: '0.75rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          🗑️ 刪除
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// 用戶表單組件
+function UserForm({ user, onSubmit, onClose }) {
+  const [formData, setFormData] = useState(user || {
+    name: '',
+    role: 'child',
+    pin: '',
+    avatar: '👤',
+    points: 0,
+    level: 1
+  })
+  const [submitting, setSubmitting] = useState(false)
+
+  const avatars = ['👤', '👨', '👩', '👦', '👧', '🧒', '👶', '🧑', '👨‍🦱', '👩‍🦰', '👨‍🦰', '👩‍🦱']
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (submitting) return
+    
+    if (!formData.name || !formData.pin) {
+      alert('請填寫完整資訊')
+      return
+    }
+    
+    if (formData.pin.length !== 4 || !/^\d+$/.test(formData.pin)) {
+      alert('PIN 必須是 4 位數字')
+      return
+    }
+    
+    setSubmitting(true)
+    try {
+      await onSubmit(formData)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 100,
+      padding: '1rem',
+      overflowY: 'auto'
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '1.5rem',
+        padding: '2rem',
+        maxWidth: '600px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}>
+        <h2 style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#581c87',
+          marginBottom: '1.5rem',
+          textAlign: 'center'
+        }}>
+          {user ? '✏️ 編輯用戶' : '➕ 新增用戶'}
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          {/* 頭像 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              頭像
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem' }}>
+              {avatars.map(avatar => (
+                <button
+                  key={avatar}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, avatar })}
+                  style={{
+                    fontSize: '32px',
+                    padding: '0.5rem',
+                    borderRadius: '0.75rem',
+                    border: formData.avatar === avatar ? '3px solid #8b5cf6' : '2px solid #e9d5ff',
+                    background: formData.avatar === avatar ? '#f3e8ff' : 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {avatar}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 姓名 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              姓名
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="例：小明"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '2px solid #d8b4fe',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+
+          {/* 角色 */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              角色
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+              {[
+                { value: 'parent', label: '👨‍👩‍👧 家長' },
+                { value: 'child', label: '👦 兒童' }
+              ].map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: option.value })}
+                  style={{
+                    background: formData.role === option.value
+                      ? 'linear-gradient(135deg, #a78bfa, #8b5cf6)'
+                      : 'white',
+                    color: formData.role === option.value ? 'white' : '#8b5cf6',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #c4b5fd',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* PIN */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#7e22ce',
+              marginBottom: '0.5rem'
+            }}>
+              PIN 碼（4 位數字）
+            </label>
+            <input
+              type="text"
+              value={formData.pin}
+              onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+              placeholder="例：1234"
+              maxLength="4"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '2px solid #d8b4fe',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+
+          {/* 兒童額外欄位 */}
+          {formData.role === 'child' && (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#7e22ce',
+                  marginBottom: '0.5rem'
+                }}>
+                  初始點數
+                </label>
+                <input
+                  type="number"
+                  value={formData.points}
+                  onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #d8b4fe',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#7e22ce',
+                  marginBottom: '0.5rem'
+                }}>
+                  等級
+                </label>
+                <input
+                  type="number"
+                  value={formData.level}
+                  onChange={(e) => setFormData({ ...formData, level: parseInt(e.target.value) || 1 })}
+                  placeholder="1"
+                  min="1"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #d8b4fe',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* 按鈕 */}
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                flex: 1,
+                background: '#e9d5ff',
+                color: '#7e22ce',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                flex: 1,
+                background: submitting 
+                  ? '#d1d5db' 
+                  : 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
+                opacity: submitting ? 0.6 : 1
+              }}
+            >
+              {submitting ? '⏳ 處理中...' : (user ? '✅ 儲存' : '➕ 新增')}
             </button>
           </div>
         </form>

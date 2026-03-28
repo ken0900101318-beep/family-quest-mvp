@@ -889,6 +889,84 @@ export const mockAPI = {
       points: sub.points || sub.task?.points,
       rejectReason: sub.reject_reason
     }))
+  },
+  
+  // 用戶管理 API
+  getAllUsers: async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('family_id', TEST_FAMILY_ID)
+      .order('role', { ascending: true })
+      .order('name', { ascending: true })
+    
+    if (error) {
+      console.error('Get all users error:', error)
+      return []
+    }
+    
+    return data
+  },
+  
+  createUser: async (userData) => {
+    const { error } = await supabase
+      .from('users')
+      .insert({
+        family_id: TEST_FAMILY_ID,
+        name: userData.name,
+        role: userData.role,
+        pin: userData.pin,
+        avatar: userData.avatar,
+        points: userData.points || 0,
+        level: userData.level || 1
+      })
+    
+    if (error) {
+      console.error('Create user error:', error)
+      throw new Error(`新增用戶失敗: ${error.message || '未知錯誤'}`)
+    }
+    
+    return true
+  },
+  
+  updateUser: async (userId, userData) => {
+    const updateData = {
+      name: userData.name,
+      role: userData.role,
+      pin: userData.pin,
+      avatar: userData.avatar
+    }
+    
+    if (userData.role === 'child') {
+      updateData.points = userData.points || 0
+      updateData.level = userData.level || 1
+    }
+    
+    const { error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Update user error:', error)
+      throw new Error(`更新用戶失敗: ${error.message || '未知錯誤'}`)
+    }
+    
+    return true
+  },
+  
+  deleteUser: async (userId) => {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Delete user error:', error)
+      throw new Error(`刪除用戶失敗: ${error.message || '未知錯誤'}`)
+    }
+    
+    return true
   }
 }
 
