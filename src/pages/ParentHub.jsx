@@ -897,9 +897,22 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
   const [filterCategory, setFilterCategory] = useState('all') // all / daily / challenge / longterm
 
   // 雙重過濾：成員 + 類別
-  let filteredTasks = selectedMember === 'all' 
-    ? tasks 
-    : tasks.filter(t => t.assignedTo === selectedMember || t.assignedTo === 'all')
+  let filteredTasks = tasks
+  
+  // 成員過濾
+  if (selectedMember !== 'all') {
+    filteredTasks = filteredTasks.filter(t => {
+      // 如果任務有 assignedUsers 陣列
+      if (t.assignedUsers && t.assignedUsers.length > 0) {
+        return t.assignedUsers.some(user => user.name === selectedMember)
+      }
+      // 舊資料相容：如果有 assignedTo 欄位
+      if (t.assignedTo) {
+        return t.assignedTo === selectedMember || t.assignedTo === 'all'
+      }
+      return false
+    })
+  }
   
   // 類別過濾
   if (filterCategory !== 'all') {
@@ -1107,15 +1120,23 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           border: '2px dashed #d8b4fe'
         }}>
           <div style={{ fontSize: '72px', marginBottom: '1rem' }}>
-            {filterCategory === 'daily' ? '📅' : filterCategory === 'challenge' ? '🏆' : filterCategory === 'longterm' ? '🎯' : '📋'}
+            {tasks.length === 0 ? '📋' : 
+             selectedMember !== 'all' ? '👤' :
+             filterCategory === 'daily' ? '📅' : 
+             filterCategory === 'challenge' ? '🏆' : 
+             filterCategory === 'longterm' ? '🎯' : '📋'}
           </div>
           <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7e22ce', marginBottom: '0.5rem' }}>
-            {filterCategory === 'daily' ? '目前沒有每日任務' : 
+            {tasks.length === 0 ? '還沒有任務' :
+             selectedMember !== 'all' ? `${selectedMember}目前沒有專屬任務` :
+             filterCategory === 'daily' ? '目前沒有每日任務' : 
              filterCategory === 'challenge' ? '目前沒有挑戰任務' :
-             filterCategory === 'longterm' ? '目前沒有長期任務' : '還沒有任務'}
+             filterCategory === 'longterm' ? '目前沒有長期任務' : '沒有符合條件的任務'}
           </div>
           <div style={{ fontSize: '14px', color: '#9333ea' }}>
-            {filterCategory !== 'all' ? '要不要新增一個？點上方按鈕發布！' : '點上方按鈕發布第一個任務吧！'}
+            {tasks.length === 0 ? '點上方按鈕發布第一個任務吧！' :
+             selectedMember !== 'all' ? '可以為此成員新增專屬任務！' :
+             '要不要新增一個？點上方按鈕發布！'}
           </div>
         </div>
       ) : (
@@ -1238,7 +1259,7 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
         </div>
       </div>
 
-      {/* 第二行：點數 + 類型標籤 */}
+      {/* 第二行：點數 + 類型標籤 + 指派對象 */}
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -1255,6 +1276,34 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
           <span>{config.emoji}</span>
           <span>{config.label}</span>
         </span>
+        
+        {/* 指派對象標籤 */}
+        {task.assignedUsers && task.assignedUsers.length > 0 && (
+          <>
+            <span style={{ color: '#d1d5db' }}>·</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+              {task.assignedUsers.map((user, idx) => (
+                <span 
+                  key={idx}
+                  style={{
+                    background: '#f3f4f6',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                >
+                  <span>{user.avatar || '👤'}</span>
+                  <span>{user.name}</span>
+                </span>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
