@@ -904,16 +904,34 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
     const loadTodayProgress = async () => {
       setIsLoadingStats(true)
       try {
-        const today = new Date().toISOString().split('T')[0]
+        // 取得今天的日期（YYYY-MM-DD 格式）
+        const now = new Date()
+        const today = now.toISOString().split('T')[0]
         
-        // 獲取所有今日已完成的submissions
+        console.log('📅 今日進度計算:', {
+          today,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          localDate: now.toLocaleDateString('zh-TW')
+        })
+        
+        // 獲取所有submissions
         const allSubmissions = await mockAPI.getAllSubmissions()
-        const todayApproved = allSubmissions.filter(s => 
-          s.status === 'approved' &&
-          s.timestamp.startsWith(today)
-        )
+        console.log('📊 所有 submissions:', allSubmissions.length)
         
-        // 計算當前成員的今日完成數
+        // 過濾今日已完成的submissions（增強容錯）
+        const todayApproved = allSubmissions.filter(s => {
+          if (s.status !== 'approved') return false
+          
+          // 支援多種時間格式
+          const submissionDate = new Date(s.timestamp)
+          const submissionDateStr = submissionDate.toISOString().split('T')[0]
+          
+          return submissionDateStr === today
+        })
+        
+        console.log('✅ 今日已完成 submissions:', todayApproved.length, todayApproved)
+        
+        // 計算當前成員的每日任務
         let memberDailyTasks = tasks.filter(t => t.type === 'daily' && t.status === 'active')
         
         if (selectedMember !== 'all') {
@@ -928,18 +946,31 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           })
         }
         
-        // 計算今日完成數（針對當前成員）
-        const completedCount = todayApproved.filter(s => {
-          // 檢查submission是否屬於當前成員的任務
+        console.log('📋 成員每日任務:', {
+          member: selectedMember,
+          count: memberDailyTasks.length,
+          tasks: memberDailyTasks.map(t => ({ id: t.id, title: t.title }))
+        })
+        
+        // 計算今日完成數（針對當前成員的任務）
+        const completedSubmissions = todayApproved.filter(s => {
           return memberDailyTasks.some(t => t.id === s.taskId)
-        }).length
+        })
+        
+        const completedCount = completedSubmissions.length
+        
+        console.log('🎯 今日完成數:', {
+          completed: completedCount,
+          total: memberDailyTasks.length,
+          submissions: completedSubmissions
+        })
         
         setTodayStats({
           completed: completedCount,
           total: memberDailyTasks.length
         })
       } catch (error) {
-        console.error('載入今日進度失敗:', error)
+        console.error('❌ 載入今日進度失敗:', error)
       } finally {
         setIsLoadingStats(false)
       }
