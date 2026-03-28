@@ -114,38 +114,61 @@ export const mockAPI = {
     }
   },
   
-  // 取得用戶任務
+  // 取得用戶任務（使用新的 task_assignments）
   getTasks: async (userId) => {
     const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('family_id', TEST_FAMILY_ID)
-      .eq('status', 'active')
-      .contains('target_user_ids', [userId])
+      .from('task_assignments')
+      .select(`
+        id,
+        progress,
+        status,
+        completed_at,
+        tasks!inner (
+          id,
+          family_id,
+          title,
+          icon,
+          points,
+          type,
+          target,
+          description,
+          status
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('tasks.status', 'active')
     
     if (error) {
       console.error('Get tasks error:', error)
       return []
     }
     
-    return data.map(task => ({
-      id: task.id,
-      title: task.title,
-      icon: task.icon,
-      points: task.points,
-      type: task.type,
-      assignee: task.target_user_ids,
-      status: task.status,
-      progress: task.progress || 0,
-      description: task.description
+    return data.map(assignment => ({
+      assignmentId: assignment.id,
+      id: assignment.tasks.id,
+      title: assignment.tasks.title,
+      icon: assignment.tasks.icon,
+      points: assignment.tasks.points,
+      type: assignment.tasks.type,
+      target: assignment.tasks.target,
+      status: assignment.status,
+      progress: assignment.progress,
+      description: assignment.tasks.description,
+      completedAt: assignment.completed_at
     }))
   },
   
-  // 取得所有任務
+  // 取得所有任務（家長端用，需要顯示有哪些人被指派）
   getAllTasks: async () => {
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select(`
+        *,
+        task_assignments (
+          user_id,
+          users (name, avatar)
+        )
+      `)
       .eq('family_id', TEST_FAMILY_ID)
     
     if (error) {
@@ -159,13 +182,18 @@ export const mockAPI = {
       icon: task.icon,
       points: task.points,
       type: task.type,
-      assignee: task.target_user_ids,
+      target: task.target,
       status: task.status,
-      description: task.description
+      description: task.description,
+      assignedUsers: task.task_assignments?.map(a => ({
+        userId: a.user_id,
+        name: a.users?.name,
+        avatar: a.users?.avatar
+      })) || []
     }))
   },
   
-  // 儲存任務（新增或更新）
+  // 儲存任務（新增或更新 - 使用新的 task_assignments）
   saveTask: async (taskData) => {
     if (taskData.id) {
       // 更新現有任務
@@ -176,7 +204,7 @@ export const mockAPI = {
           icon: taskData.icon,
           points: taskData.points,
           type: taskData.type,
-          target_user_ids: taskData.assignee,
+          target: taskData.target,
           status: taskData.status,
           description: taskData.description
         })
@@ -186,34 +214,75 @@ export const mockAPI = {
         console.error('Update task error:', error)
         throw new Error(`更新任務失敗: ${error.message || error.code || '未知錯誤'}`)
       }
+      
+      // TODO: 更新指派（如果 assignee 有變動）
+      
     } else {
-      // 新增任務
-      const insertData = {
-        family_id: TEST_FAMILY_ID,
-        title: taskData.title,
-        icon: taskData.icon,
-        points: taskData.points,
-        type: taskData.type,
-        target_user_ids: taskData.assignee,
-        description: taskData.description,
-        status: 'active'
+      // 新增任務（兩階段：先建任務，再建指派）
+      const { data: newTask, error: taskError } = await supabase
+        .from('tasks')
+        .insert({
+          family_id: TEST_FAMILY_ID,
+          title: taskData.title,
+          icon: taskData.icon,
+          points: taskData.points,
+          type: taskData.type,
+          target: taskData.target,
+          description: taskData.description,
+          status: 'active'
+        })
+        .select()
+        .single()
+      
+      if (taskError) {
+        console.error('Insert task error:', taskError)
+        throw new Error(`新增任務失敗: ${taskError.message || '未知錯誤'}`)
       }
       
-      console.log('插入任務資料:', insertData)
-      
-      const { error } = await supabase
-        .from('tasks')
-        .insert(insertData)
-      
-      if (error) {
-        console.error('Insert task error:', error)
-        console.error('插入失敗的資料:', insertData)
-        throw new Error(`新增任務失敗: ${error.message || error.code || '未知錯誤'}`)
+      // 建立任務指派
+      if (taskData.assignee && taskData.assignee.length > 0) {
+        const assignments = taskData.assignee.map(userId => ({
+          task_id: newTask.id,
+          user_id: userId,
+          progress: 0,
+          status: 'assigned'
+        }))
+        
+        const { error: assignError } = await supabase
+          .from('task_assignments')
+          .insert(assignments)
+        
+        if (assignError) {
+          console.error('Create assignments error:', assignError)
+          // 任務已建立，但指派失敗（不拋出錯誤，只記錄）
+        }
       }
     }
     
     // 返回更新後的所有任務
     return await mockAPI.getAllTasks()
+  },
+  
+  // 更新任務進度
+  updateTaskProgress: async (assignmentId, newProgress, target) => {
+    const isCompleted = target && newProgress >= target
+    
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .update({ 
+        progress: newProgress,
+        status: isCompleted ? 'completed' : 'in_progress',
+        completed_at: isCompleted ? new Date().toISOString() : null
+      })
+      .eq('id', assignmentId)
+      .select()
+    
+    if (error) {
+      console.error('Update task progress error:', error)
+      throw new Error(`更新進度失敗: ${error.message || '未知錯誤'}`)
+    }
+    
+    return data
   },
   
   // 提交任務
