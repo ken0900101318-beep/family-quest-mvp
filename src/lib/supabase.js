@@ -428,13 +428,13 @@ export const mockAPI = {
   approveSubmission: async (submissionId, adjustedPoints) => {
     console.log('🔍 Approving submission:', submissionId)
     
-    // 查詢提交記錄
+    // 查詢提交記錄（修正JOIN語法）
     const { data: submission, error: queryError } = await supabase
       .from('submissions')
       .select(`
         *,
-        task:tasks(title, points),
-        user:users(name, points)
+        tasks!submissions_task_id_fkey(title, points),
+        users!submissions_user_id_fkey(name, points)
       `)
       .eq('id', submissionId)
       .single()
@@ -451,7 +451,7 @@ export const mockAPI = {
     
     console.log('✅ Found submission:', submission)
     
-    const points = adjustedPoints || submission.task.points
+    const points = adjustedPoints || submission.tasks?.points || 10
     
     // 更新提交狀態
     const { error: updateError } = await supabase
@@ -480,7 +480,7 @@ export const mockAPI = {
     console.log(`🔍 Verify submission ${submissionId} status:`, verifyData?.status)
     
     // 更新用戶點數
-    const newPoints = (submission.user.points || 0) + points
+    const newPoints = (submission.users?.points || 0) + points
     await supabase
       .from('users')
       .update({ points: newPoints })
