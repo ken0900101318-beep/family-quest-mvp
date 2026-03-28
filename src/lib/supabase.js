@@ -597,12 +597,14 @@ export const mockAPI = {
         users (name, avatar),
         products (name, icon)
       `)
-      .eq('status', 'pending')
       .order('created_at', { ascending: false })
     
-    // 如果有 userId，只查詢該用戶的購買記錄
+    // 如果有 userId，查詢該用戶的所有購買記錄（包含已發放）
+    // 如果沒有 userId（家長端），只查詢 pending（待發放）
     if (userId) {
       query = query.eq('user_id', userId)
+    } else {
+      query = query.eq('status', 'pending')
     }
     
     const { data, error } = await query

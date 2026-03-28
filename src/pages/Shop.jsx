@@ -419,6 +419,7 @@ function ProductCard({ product, userPoints, onPurchase }) {
 function PurchaseCard({ purchase }) {
   const statusConfig = {
     pending: { label: '待發放', color: '#f59e0b', bg: '#fef3c7' },
+    completed: { label: '已發放', color: '#10b981', bg: '#d1fae5' },
     delivered: { label: '已發放', color: '#10b981', bg: '#d1fae5' }
   }
 
@@ -455,7 +456,7 @@ function PurchaseCard({ purchase }) {
             {config.label}
           </div>
           <div style={{ fontSize: '18px', fontWeight: '900', color: '#9333ea' }}>
-            -{purchase.price} 💰
+            -{purchase.totalPrice || purchase.price || 0} 💰
           </div>
         </div>
       </div>
