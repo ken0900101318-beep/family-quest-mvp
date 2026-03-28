@@ -114,12 +114,20 @@ export default function ParentHub({ user, onBack, onLogout }) {
     
     } catch (error) {
       console.error('❌ loadData 失敗:', error)
+      console.error('錯誤詳情:', {
+        message: error.message,
+        stack: error.stack,
+        error: error
+      })
       // 不要清空 pendingRequests，保留舊資料
       // setPendingRequests([])
-      showToast('資料載入失敗，請重新整理頁面', 'error')
+      showToast(`資料載入失敗：${error.message || '請重新整理頁面'}`, 'error')
     } finally {
-      if (showLoadingState && isInitialLoad) {
+      // ✅ 無論成功或失敗，都要關閉 loading
+      if (showLoadingState) {
         setLoading(false)
+      }
+      if (isInitialLoad) {
         setIsInitialLoad(false)
       }
     }
