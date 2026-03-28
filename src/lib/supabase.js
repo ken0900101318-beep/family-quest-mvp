@@ -1,8 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 配置（新專案 - 2026-03-27）
-const supabaseUrl = 'https://mnaqdossobzodcyafruy.supabase.co'
-const supabaseKey = 'sb_publishable__izsGe4hjkAOfQ10TNSfzw_Xb3QGJOZ'
+// Supabase 配置（使用環境變數）
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// 檢查環境變數是否設定
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables. Please check .env.local file.')
+}
 
 // Mock mode - 設為 false 啟用真實資料庫
 export const MOCK_MODE = false
