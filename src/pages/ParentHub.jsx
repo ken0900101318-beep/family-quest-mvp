@@ -2146,8 +2146,14 @@ function TaskForm({ task, onSubmit, onClose }) {
     
     if (submitting) return // 防止重複提交
     
-    if (!formData.title || !formData.points) {
-      alert('請填寫完整資訊')
+    if (!formData.title || !formData.points || formData.points <= 0) {
+      alert('請填寫完整資訊並確保點數大於 0')
+      return
+    }
+    
+    // 如果類型是挑戰，必須填寫目標天數
+    if (formData.type === 'challenge' && (!formData.target || formData.target <= 0)) {
+      alert('挑戰任務必須設定目標天數')
       return
     }
     
@@ -2307,7 +2313,7 @@ function TaskForm({ task, onSubmit, onClose }) {
             <input
               type="number"
               value={formData.points}
-              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || '' })}
               placeholder="例：10"
               style={{
                 width: '100%',
@@ -2374,7 +2380,7 @@ function TaskForm({ task, onSubmit, onClose }) {
               <input
                 type="number"
                 value={formData.target}
-                onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, target: parseInt(e.target.value) || '' })}
                 placeholder="例：21（天）"
                 style={{
                   width: '100%',
