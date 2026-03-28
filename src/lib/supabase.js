@@ -416,7 +416,7 @@ export const mockAPI = {
     const points = adjustedPoints || submission.task.points
     
     // 更新提交狀態
-    await supabase
+    const { error: updateError } = await supabase
       .from('submissions')
       .update({
         status: 'approved',
@@ -424,6 +424,22 @@ export const mockAPI = {
         approved_at: new Date().toISOString()
       })
       .eq('id', submissionId)
+    
+    if (updateError) {
+      console.error('Update submission status error:', updateError)
+      throw new Error(`更新提交狀態失敗: ${updateError.message}`)
+    }
+    
+    console.log(`✅ Submission ${submissionId} status updated to approved`)
+    
+    // 驗證更新
+    const { data: verifyData } = await supabase
+      .from('submissions')
+      .select('status')
+      .eq('id', submissionId)
+      .single()
+    
+    console.log(`🔍 Verify submission ${submissionId} status:`, verifyData?.status)
     
     // 更新用戶點數
     const newPoints = (submission.user.points || 0) + points
