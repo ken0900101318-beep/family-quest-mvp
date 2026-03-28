@@ -909,6 +909,18 @@ export const mockAPI = {
   },
   
   createUser: async (userData) => {
+    // 檢查 PIN 是否已存在
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id, name')
+      .eq('family_id', TEST_FAMILY_ID)
+      .eq('pin', userData.pin)
+      .single()
+    
+    if (existingUser) {
+      throw new Error(`PIN 碼 ${userData.pin} 已被「${existingUser.name}」使用，請更換其他 PIN 碼`)
+    }
+    
     const { error } = await supabase
       .from('users')
       .insert({
@@ -930,6 +942,19 @@ export const mockAPI = {
   },
   
   updateUser: async (userId, userData) => {
+    // 檢查 PIN 是否被其他用戶使用
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id, name')
+      .eq('family_id', TEST_FAMILY_ID)
+      .eq('pin', userData.pin)
+      .neq('id', userId)
+      .single()
+    
+    if (existingUser) {
+      throw new Error(`PIN 碼 ${userData.pin} 已被「${existingUser.name}」使用，請更換其他 PIN 碼`)
+    }
+    
     const updateData = {
       name: userData.name,
       role: userData.role,
