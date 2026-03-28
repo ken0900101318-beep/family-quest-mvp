@@ -2126,10 +2126,10 @@ function TaskForm({ task, onSubmit, onClose }) {
   const [formData, setFormData] = useState(task || {
     title: '',
     icon: '⭐',
-    points: '',
+    points: 10,
     type: 'daily',
     assignedTo: 'all',
-    target: '',
+    target: null,
     description: ''
   })
   const [submitting, setSubmitting] = useState(false)
@@ -2159,7 +2159,13 @@ function TaskForm({ task, onSubmit, onClose }) {
     
     setSubmitting(true)
     try {
-      await onSubmit(formData)
+      // 確保數字欄位是整數（不是空字串）
+      const cleanedData = {
+        ...formData,
+        points: parseInt(formData.points) || 0,
+        target: formData.target ? parseInt(formData.target) : null
+      }
+      await onSubmit(cleanedData)
     } finally {
       setSubmitting(false)
     }
