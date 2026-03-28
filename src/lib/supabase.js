@@ -305,9 +305,23 @@ export const mockAPI = {
   
   // 提交任務
   submitTask: async (taskId, userId, photoData = null) => {
-    // 防止重複提交：檢查是否已有今日pending的submission
+    // 防止重複提交：檢查最近30秒內是否有相同的submission（任何狀態）
+    const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString()
+    const { data: recentSubmissions } = await supabase
+      .from('submissions')
+      .select('id, created_at, status')
+      .eq('task_id', taskId)
+      .eq('user_id', userId)
+      .gte('created_at', thirtySecondsAgo)
+    
+    if (recentSubmissions && recentSubmissions.length > 0) {
+      console.warn('⚠️ 防止重複提交：30秒內已提交過', recentSubmissions)
+      throw new Error('請勿重複提交！請等待幾秒後再試。')
+    }
+    
+    // 額外檢查：今日是否已有pending的submission
     const today = new Date().toISOString().split('T')[0]
-    const { data: existingSubmissions } = await supabase
+    const { data: todayPending } = await supabase
       .from('submissions')
       .select('id, created_at, status')
       .eq('task_id', taskId)
@@ -316,8 +330,8 @@ export const mockAPI = {
       .gte('created_at', `${today}T00:00:00`)
       .lte('created_at', `${today}T23:59:59`)
     
-    if (existingSubmissions && existingSubmissions.length > 0) {
-      console.warn('⚠️ 防止重複提交：今日已有pending的submission', existingSubmissions)
+    if (todayPending && todayPending.length > 0) {
+      console.warn('⚠️ 防止重複提交：今日已有pending的submission', todayPending)
       throw new Error('今天已經提交過這個任務了，請等待審核！')
     }
     
