@@ -971,8 +971,20 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
       }
     }
     
-    loadTodayProgress()
-  }, [tasks, selectedMember])
+    // 只在首次載入時執行
+    if (tasks.length > 0) {
+      loadTodayProgress()
+    }
+    
+    // 每30秒自動更新統計
+    const statsInterval = setInterval(() => {
+      if (tasks.length > 0) {
+        loadTodayProgress()
+      }
+    }, 30000)
+    
+    return () => clearInterval(statsInterval)
+  }, [selectedMember]) // 只依賴 selectedMember，不依賴 tasks
 
   // 雙重過濾：成員 + 類別
   let filteredTasks = tasks
