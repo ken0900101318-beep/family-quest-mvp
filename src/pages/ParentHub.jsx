@@ -66,12 +66,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
         photo: sub.photo,
         taskId: sub.taskId
       }))
-    
-      console.log('🔍 待審核 Debug:', {
-        原始數量: pendingSubmissions.length,
-        第一筆原始: pendingSubmissions[0],
-        第一筆轉換: formattedRequests[0]
-      })
       
       setPendingRequests(formattedRequests)
     
@@ -926,15 +920,8 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
         const now = new Date()
         const today = now.toISOString().split('T')[0]
         
-        console.log('📅 今日進度計算:', {
-          today,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          localDate: now.toLocaleDateString('zh-TW')
-        })
-        
         // 獲取所有submissions
         const allSubmissions = await mockAPI.getAllSubmissions()
-        console.log('📊 所有 submissions:', allSubmissions.length)
         
         // 過濾今日已完成的submissions（增強容錯）
         const todayApproved = allSubmissions.filter(s => {
@@ -946,8 +933,6 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           
           return submissionDateStr === today
         })
-        
-        console.log('✅ 今日已完成 submissions:', todayApproved.length, todayApproved)
         
         // 計算當前成員的每日任務
         let memberDailyTasks = tasks.filter(t => t.type === 'daily' && t.status === 'active')
@@ -964,24 +949,12 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           })
         }
         
-        console.log('📋 成員每日任務:', {
-          member: selectedMember,
-          count: memberDailyTasks.length,
-          tasks: memberDailyTasks.map(t => ({ id: t.id, title: t.title }))
-        })
-        
         // 計算今日完成數（針對當前成員的任務）
         const completedSubmissions = todayApproved.filter(s => {
           return memberDailyTasks.some(t => t.id === s.taskId)
         })
         
         const completedCount = completedSubmissions.length
-        
-        console.log('🎯 今日完成數:', {
-          completed: completedCount,
-          total: memberDailyTasks.length,
-          submissions: completedSubmissions
-        })
         
         setTodayStats({
           completed: completedCount,
