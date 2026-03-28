@@ -1080,14 +1080,15 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
 
   return (
     <div style={{
-      background: 'white',
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(10px)',
       border: '1px solid #e5e7eb',
       borderLeft: `4px solid ${isInactive ? '#9ca3af' : config.sideColor}`,
       borderRadius: '0.5rem',
       padding: '0.75rem 1rem',
-      opacity: isInactive ? 0.6 : 1,
+      opacity: isInactive ? 0.7 : 1,
       transition: 'all 0.2s',
-      ':hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     }}>
       {/* 主要內容區 - 單行 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
