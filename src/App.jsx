@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import ChildDashboard from './pages/ChildDashboard'
 import ParentHub from './pages/ParentHub'
@@ -10,12 +11,35 @@ import Passbook from './pages/Passbook'
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
 
-  // 暫時保留的 localStorage 登入邏輯（下一步會換成 Supabase）
+  // ✨ 同步用戶資料：每次重新整理時從資料庫取得最新狀態
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser')
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser))
+    const syncUser = async () => {
+      const savedUser = localStorage.getItem('currentUser')
+      if (savedUser) {
+        const user = JSON.parse(savedUser)
+        
+        try {
+          // ✨ 魔法就在這：去資料庫抓這個 ID 的最新狀態
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (data && !error) {
+            setCurrentUser(data)
+            localStorage.setItem('currentUser', JSON.stringify(data))
+            console.log('✅ 使用者資料已同步至最新狀態')
+          } else {
+            setCurrentUser(user) // 如果網路不通，先用舊的頂著
+          }
+        } catch (err) {
+          setCurrentUser(user)
+        }
+      }
     }
+
+    syncUser()
   }, [])
 
   const handleLogin = (user) => {
