@@ -113,8 +113,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       setAllUsers(users)
     
     } catch (error) {
-      console.error('載入失敗:', error)
-      setPendingRequests([])
+      console.error('❌ loadData 失敗:', error)
+      // 不要清空 pendingRequests，保留舊資料
+      // setPendingRequests([])
+      showToast('資料載入失敗，請重新整理頁面', 'error')
     } finally {
       if (showLoadingState && isInitialLoad) {
         setLoading(false)

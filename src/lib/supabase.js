@@ -382,6 +382,8 @@ export const mockAPI = {
   // 取得待審核任務
   getPendingSubmissions: async () => {
     try {
+      console.log('📊 getPendingSubmissions: 開始查詢...')
+      
       // 超快查詢：最少欄位 + 最少數量 + 不排序
       const { data, error } = await supabase
         .from('submissions')
@@ -389,19 +391,29 @@ export const mockAPI = {
         .eq('status', 'pending')
         .limit(20)
       
+      console.log('📊 查詢結果:', { 
+        error: error ? error.message : null, 
+        dataLength: data?.length || 0,
+        data: data 
+      })
+      
       if (error) {
-        console.error('Get pending submissions error:', error)
+        console.error('❌ Get pending submissions error:', error)
         // 超時時返回 mock 資料讓 UI 至少能動
         if (error.code === '57014') {
           console.warn('⚠️ Supabase 超時，使用 mock 資料')
           return getMockPendingSubmissions()
         }
+        console.warn('⚠️ 查詢失敗，返回空陣列')
         return []
       }
       
       if (!data || data.length === 0) {
+        console.log('✅ 查詢成功，但無待審核任務')
         return []
       }
+      
+      console.log('✅ 找到待審核任務:', data.length, '筆')
       
       // 取得相關的 tasks 和 users（批次查詢）
       const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
