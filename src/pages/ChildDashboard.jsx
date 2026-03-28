@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react'
-// ✨ 1. 在這裡引入 useNavigate
 import { useNavigate } from 'react-router-dom'
 import { mockAPI } from '../lib/supabase'
 import { AnnouncementCard } from '../components/Announcements'
-import { useToast } from '../components/Toast'
+// 🗑️ 已經幫你把會報錯的 Toast 引入刪除了
 
-// ✨ 2. 移除原本的 onNavigate 參數
 export default function ChildDashboard({ user, onLogout }) {
-  // ✨ 3. 呼叫導航鉤子
   const navigate = useNavigate()
-  const { showToast, ToastContainer } = useToast()
   
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
+  // 🗑️ 已經幫你把沒用到的 useToast 宣告刪除了
 
   useEffect(() => {
     loadTasks()
@@ -62,6 +59,7 @@ export default function ChildDashboard({ user, onLogout }) {
       const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
       console.log('提交成功:', result)
       
+      // 這裡本來就是用原生的 alert，所以根本不需要 Toast
       setTimeout(() => {
         alert('✅ 任務已提交成功！\n等待家長審核中...')
       }, 300)
@@ -80,7 +78,6 @@ export default function ChildDashboard({ user, onLogout }) {
   const [completedTasks, setCompletedTasks] = useState(0)
   const [taskStatuses, setTaskStatuses] = useState({})
   
-  // 載入今日完成數量和任務狀態
   useEffect(() => {
     const loadTodayStats = async () => {
       const submissions = await mockAPI.getUserSubmissions(user.id)
@@ -175,7 +172,6 @@ export default function ChildDashboard({ user, onLogout }) {
           </div>
 
           <div
-            // ✨ 4. 直接使用 navigate 導向存摺頁面
             onClick={() => navigate('/child/passbook')}
             style={{
               background: 'white',
@@ -204,7 +200,6 @@ export default function ChildDashboard({ user, onLogout }) {
           </div>
         </div>
 
-        {/* 火箭進度條 */}
         <div style={{ textAlign: 'center', marginBottom: '2rem', position: 'relative' }}>
           <div style={{
             background: 'white',
@@ -328,7 +323,6 @@ export default function ChildDashboard({ user, onLogout }) {
             alignItems: 'center',
             padding: '1rem'
           }}>
-            {/* ✨ 5. 直接使用 navigate 導向各個頁面 */}
             <NavIcon icon="🏠" label="首頁" active />
             <NavIcon icon="🏛️" label="廣場" onClick={() => navigate('/child/square')} />
             <NavIcon icon="🎁" label="商店" onClick={() => navigate('/child/shop')} />
@@ -366,7 +360,7 @@ export default function ChildDashboard({ user, onLogout }) {
           50% { transform: translateY(-10px); }
         }
       `}</style>
-      <ToastContainer />
+      {/* 🗑️ 已經幫你把底下會報錯的 ToastContainer 標籤刪除了 */}
     </div>
   )
 }
