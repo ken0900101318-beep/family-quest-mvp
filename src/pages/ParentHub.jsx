@@ -37,20 +37,37 @@ export default function ParentHub({ user, onBack, onLogout }) {
   }, [])
 
   const loadData = async (showLoadingState = true) => {
+    console.log('🚀 loadData 開始執行...', { showLoadingState, isInitialLoad })
+    
     // 只有首次載入才顯示 loading
     if (showLoadingState && isInitialLoad) {
       setLoading(true)
+      console.log('✅ loading 設為 true')
     }
     
     try {
-    
+      console.log('📡 開始並行載入三個API...')
+      
     // 從 Supabase 讀取待審核任務
-    // 並行載入（更快！）
-        const [pendingSubmissions, allWishes, users] = await Promise.all([
-          mockAPI.getPendingSubmissions(),
-          mockAPI.getWishes(),
-          mockAPI.getAllUsers()
+    // 並行載入（更快！）+ 超時保護
+        const timeout = (ms) => new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('請求超時')), ms)
+        )
+        
+        const [pendingSubmissions, allWishes, users] = await Promise.race([
+          Promise.all([
+            mockAPI.getPendingSubmissions(),
+            mockAPI.getWishes(),
+            mockAPI.getAllUsers()
+          ]),
+          timeout(10000) // 10秒超時
         ])
+        
+        console.log('✅ Promise.all 完成！', { 
+          pendingCount: pendingSubmissions?.length || 0,
+          wishesCount: allWishes?.length || 0,
+          usersCount: users?.length || 0
+        })
     
     // 轉換格式以匹配 UI
       const formattedRequests = pendingSubmissions.map(sub => ({
