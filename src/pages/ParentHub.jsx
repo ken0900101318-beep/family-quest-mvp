@@ -23,6 +23,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
 
   useEffect(() => {
     loadData()
+    
+    // 每30秒自動刷新（偵測孩子的新購買）
+    const interval = setInterval(() => {
+      loadData()
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   const loadData = async () => {
@@ -75,8 +82,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
       })
     
     // 讀取待發放的購買記錄（所有兒童）
-    // TODO: 需要改為查詢家庭內所有pending purchases
-      setPurchases([])
+      const allPurchases = await mockAPI.getPurchases()
+      setPurchases(allPurchases)
     
     // 讀取待審核的許願清單
     // allWishes 已在上方並行載入
