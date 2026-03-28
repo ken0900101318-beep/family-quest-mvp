@@ -589,15 +589,22 @@ export const mockAPI = {
   },
   
   // 取得購買記錄
-  getPurchases: async (userId) => {
-    const { data, error } = await supabase
+  getPurchases: async (userId = null) => {
+    let query = supabase
       .from('purchases')
       .select(`
         *,
-        product:products(name, icon, price)
+        users (name, avatar),
+        products (name, icon)
       `)
-      .eq('user_id', userId)
       .order('created_at', { ascending: false })
+    
+    // 如果有 userId，只查詢該用戶的購買記錄
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    
+    const { data, error } = await query
     
     if (error) {
       console.error('Get purchases error:', error)
@@ -607,10 +614,13 @@ export const mockAPI = {
     return data.map(p => ({
       id: p.id,
       userId: p.user_id,
-      productId: p.product_id,
-      productName: p.product?.name || '未知商品',
-      icon: p.product?.icon || '🎁',
-      price: p.price,
+      userName: p.users?.name || '未知用戶',
+      userAvatar: p.users?.avatar || '👤',
+      productName: p.products?.name || '未知商品',
+      productIcon: p.products?.icon || '🎁',
+      quantity: p.quantity,
+      // ✨ 關鍵修正：優先用 price，沒有就用 total_price
+      totalPrice: p.price || p.total_price || 0,
       status: p.status,
       createdAt: p.created_at
     }))
