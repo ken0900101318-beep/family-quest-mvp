@@ -414,6 +414,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
             {activeTab === 'tasks' && (
               <TaskManagement 
                 tasks={allTasks}
+                pendingSubmissions={pendingRequests}
                 onCreateNew={() => { setEditingTask(null); setShowTaskForm(true); }}
                 onEditTask={handleEditTask}
                 onToggleTask={handleToggleTask}
@@ -892,9 +893,60 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
 }
 
 // 任務管理
-function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask }) {
+function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask, pendingSubmissions = [] }) {
   const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
-  const [filterCategory, setFilterCategory] = useState('all') // all / daily / challenge / longterm
+  const [filterCategory, setFilterCategory] = useState('all') // all / daily / challenge / longterm / pending / todayIncomplete
+  const [todayStats, setTodayStats] = useState({ completed: 0, total: 0 })
+  const [isLoadingStats, setIsLoadingStats] = useState(false)
+
+  // 載入今日進度統計
+  useEffect(() => {
+    const loadTodayProgress = async () => {
+      setIsLoadingStats(true)
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        
+        // 獲取所有今日已完成的submissions
+        const allSubmissions = await mockAPI.getAllSubmissions()
+        const todayApproved = allSubmissions.filter(s => 
+          s.status === 'approved' &&
+          s.timestamp.startsWith(today)
+        )
+        
+        // 計算當前成員的今日完成數
+        let memberDailyTasks = tasks.filter(t => t.type === 'daily' && t.status === 'active')
+        
+        if (selectedMember !== 'all') {
+          memberDailyTasks = memberDailyTasks.filter(t => {
+            if (t.assignedUsers && t.assignedUsers.length > 0) {
+              return t.assignedUsers.some(user => user.name === selectedMember)
+            }
+            if (t.assignedTo) {
+              return t.assignedTo === selectedMember || t.assignedTo === 'all'
+            }
+            return false
+          })
+        }
+        
+        // 計算今日完成數（針對當前成員）
+        const completedCount = todayApproved.filter(s => {
+          // 檢查submission是否屬於當前成員的任務
+          return memberDailyTasks.some(t => t.id === s.taskId)
+        }).length
+        
+        setTodayStats({
+          completed: completedCount,
+          total: memberDailyTasks.length
+        })
+      } catch (error) {
+        console.error('載入今日進度失敗:', error)
+      } finally {
+        setIsLoadingStats(false)
+      }
+    }
+    
+    loadTodayProgress()
+  }, [tasks, selectedMember])
 
   // 雙重過濾：成員 + 類別
   let filteredTasks = tasks
@@ -915,19 +967,32 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
   }
   
   // 類別過濾
-  if (filterCategory !== 'all') {
+  if (filterCategory === 'daily' || filterCategory === 'challenge' || filterCategory === 'longterm') {
     filteredTasks = filteredTasks.filter(t => t.type === filterCategory)
+  } else if (filterCategory === 'todayIncomplete') {
+    // 顯示今日未完成的每日任務
+    filteredTasks = filteredTasks.filter(t => t.type === 'daily' && t.status === 'active')
   }
 
   // 統計數據
-  // 注意：daily 要包含所有顯示為黃色卡片的任務（daily + longterm）
   const stats = {
-    total: filteredTasks.length,
-    active: filteredTasks.filter(t => t.status === 'active').length,
-    daily: filteredTasks.filter(t => 
-      (t.type === 'daily' || t.type === 'longterm') && t.status === 'active'
-    ).length,
-    challenge: filteredTasks.filter(t => t.type === 'challenge' && t.status === 'active').length
+    total: selectedMember === 'all' ? tasks.length : filteredTasks.length,
+    todayProgress: `${todayStats.completed} / ${todayStats.total}`,
+    todayCompleted: todayStats.completed,
+    todayTotal: todayStats.total,
+    pending: pendingSubmissions.length,
+    challenge: tasks.filter(t => {
+      if (t.type !== 'challenge') return false
+      if (selectedMember === 'all') return true
+      
+      if (t.assignedUsers && t.assignedUsers.length > 0) {
+        return t.assignedUsers.some(user => user.name === selectedMember)
+      }
+      if (t.assignedTo) {
+        return t.assignedTo === selectedMember || t.assignedTo === 'all'
+      }
+      return false
+    }).length
   }
 
   return (
@@ -935,113 +1000,107 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
       {/* 頂部快速過濾器 */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         gap: '1rem',
         marginBottom: '1.5rem'
       }}>
-        {/* 總任務 - 點擊顯示全部 */}
-        <div 
-          onClick={() => setFilterCategory(filterCategory === 'all' ? 'all' : 'all')}
-          style={{
-            background: filterCategory === 'all' ? '#fef3c7' : 'white',
-            border: filterCategory === 'all' ? '3px solid #fbbf24' : '2px solid #fbbf24',
-            borderRadius: '0.5rem',
-            padding: '0.75rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: filterCategory === 'all' ? '0 4px 12px rgba(251,191,36,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            transform: filterCategory === 'all' ? 'translateY(-2px)' : 'none'
-          }}
-          onMouseOver={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'scale(1.02)' }}
-          onMouseOut={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'scale(1)' }}
-        >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
-            {stats.total}
-          </div>
-          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-            總任務數
-          </div>
-        </div>
-
-        {/* 啟用中 - 點擊顯示全部 */}
+        {/* 所有任務 */}
         <div 
           onClick={() => setFilterCategory('all')}
           style={{
-            background: 'white',
-            border: '2px solid #10b981',
-            borderRadius: '0.5rem',
-            padding: '0.75rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            background: '#FFFBEB',
+            borderLeft: '4px solid #F59E0B',
+            borderRadius: '0.75rem',
+            padding: '1.25rem 1rem',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.3s',
+            boxShadow: filterCategory === 'all' ? '0 8px 20px rgba(245,158,11,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+            transform: filterCategory === 'all' ? 'translateY(-4px) scale(1.02)' : 'none',
+            borderBottom: filterCategory === 'all' ? '4px solid #F59E0B' : 'none'
           }}
-          onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)' }}
-          onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
+          onMouseOver={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'translateY(-2px)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'all') e.currentTarget.style.transform = 'none' }}
         >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>
-            {stats.active}
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#D97706', marginBottom: '0.5rem' }}>
+            {stats.total}
           </div>
-          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-            啟用中
+          <div style={{ fontSize: '13px', color: '#78716C', fontWeight: '600' }}>
+            所有任務
           </div>
         </div>
 
-        {/* 每日任務 - 點擊過濾 */}
+        {/* 今日進度 */}
         <div 
-          onClick={() => setFilterCategory(filterCategory === 'daily' ? 'all' : 'daily')}
+          onClick={() => setFilterCategory(filterCategory === 'todayIncomplete' ? 'all' : 'todayIncomplete')}
           style={{
-            background: filterCategory === 'daily' ? '#dbeafe' : 'white',
-            border: filterCategory === 'daily' ? '3px solid #3b82f6' : '2px solid #3b82f6',
-            borderRadius: '0.5rem',
-            padding: '0.75rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: filterCategory === 'daily' ? '0 4px 12px rgba(59,130,246,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+            background: '#F0FDF4',
+            borderLeft: '4px solid #10B981',
+            borderRadius: '0.75rem',
+            padding: '1.25rem 1rem',
             cursor: 'pointer',
-            transition: 'all 0.2s',
-            transform: filterCategory === 'daily' ? 'translateY(-2px)' : 'none'
+            transition: 'all 0.3s',
+            boxShadow: filterCategory === 'todayIncomplete' ? '0 8px 20px rgba(16,185,129,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+            transform: filterCategory === 'todayIncomplete' ? 'translateY(-4px) scale(1.02)' : 'none',
+            borderBottom: filterCategory === 'todayIncomplete' ? '4px solid #10B981' : 'none'
           }}
-          onMouseOver={(e) => { if (filterCategory !== 'daily') e.currentTarget.style.transform = 'scale(1.02)' }}
-          onMouseOut={(e) => { if (filterCategory !== 'daily') e.currentTarget.style.transform = 'scale(1)' }}
+          onMouseOver={(e) => { if (filterCategory !== 'todayIncomplete') e.currentTarget.style.transform = 'translateY(-2px)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'todayIncomplete') e.currentTarget.style.transform = 'none' }}
         >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
-            {stats.daily}
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#059669', marginBottom: '0.5rem' }}>
+            {isLoadingStats ? '...' : stats.todayProgress}
           </div>
-          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-            每日任務
+          <div style={{ fontSize: '13px', color: '#78716C', fontWeight: '600' }}>
+            今日進度
           </div>
         </div>
 
-        {/* 挑戰任務 - 點擊過濾 */}
+        {/* 待審核 */}
+        <div 
+          onClick={() => {
+            // 跳轉到待審核分頁
+            window.location.hash = '#reviews'
+          }}
+          style={{
+            background: '#FEF2F2',
+            borderLeft: '4px solid #EF4444',
+            borderRadius: '0.75rem',
+            padding: '1.25rem 1rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(239,68,68,0.3)' }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)' }}
+        >
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#DC2626', marginBottom: '0.5rem' }}>
+            {stats.pending}
+          </div>
+          <div style={{ fontSize: '13px', color: '#78716C', fontWeight: '600' }}>
+            待審核
+          </div>
+        </div>
+
+        {/* 挑戰任務 */}
         <div 
           onClick={() => setFilterCategory(filterCategory === 'challenge' ? 'all' : 'challenge')}
           style={{
-            background: filterCategory === 'challenge' ? '#fce7f3' : 'white',
-            border: filterCategory === 'challenge' ? '3px solid #ec4899' : '2px solid #ec4899',
-            borderRadius: '0.5rem',
-            padding: '0.75rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: filterCategory === 'challenge' ? '0 4px 12px rgba(236,72,153,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+            background: '#F5F3FF',
+            borderLeft: '4px solid #8B5CF6',
+            borderRadius: '0.75rem',
+            padding: '1.25rem 1rem',
             cursor: 'pointer',
-            transition: 'all 0.2s',
-            transform: filterCategory === 'challenge' ? 'translateY(-2px)' : 'none'
+            transition: 'all 0.3s',
+            boxShadow: filterCategory === 'challenge' ? '0 8px 20px rgba(139,92,246,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+            transform: filterCategory === 'challenge' ? 'translateY(-4px) scale(1.02)' : 'none',
+            borderBottom: filterCategory === 'challenge' ? '4px solid #8B5CF6' : 'none'
           }}
-          onMouseOver={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'scale(1.02)' }}
-          onMouseOut={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'scale(1)' }}
+          onMouseOver={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'translateY(-2px)' }}
+          onMouseOut={(e) => { if (filterCategory !== 'challenge') e.currentTarget.style.transform = 'none' }}
         >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ec4899' }}>
+          <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#7C3AED', marginBottom: '0.5rem' }}>
             {stats.challenge}
           </div>
-          <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+          <div style={{ fontSize: '13px', color: '#78716C', fontWeight: '600' }}>
             挑戰任務
           </div>
         </div>

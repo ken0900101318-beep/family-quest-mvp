@@ -1035,6 +1035,27 @@ export const mockAPI = {
   },
   
   // 取得用戶的提交歷史（所有狀態）
+  // 獲取所有submissions（用於統計）
+  getAllSubmissions: async () => {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('id, task_id, user_id, created_at, status')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get all submissions error:', error)
+      return []
+    }
+    
+    return data.map(sub => ({
+      id: sub.id,
+      taskId: sub.task_id,
+      userId: sub.user_id,
+      timestamp: sub.created_at,
+      status: sub.status
+    }))
+  },
+
   getUserSubmissions: async (userId) => {
     const { data, error } = await supabase
       .from('submissions')
