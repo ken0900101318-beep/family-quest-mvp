@@ -16,6 +16,16 @@ export function AnnouncementCard() {
     setAnnouncements(data.slice(0, 3))
   }
 
+  // ✨ 防呆：安全格式化日期
+  const safeFormatDate = (dateString) => {
+    if (!dateString) return '時間未定'
+    const dateObj = new Date(dateString)
+    if (isNaN(dateObj.getTime())) {
+      return '時間未定'
+    }
+    return dateObj.toLocaleDateString('zh-TW')
+  }
+
   if (announcements.length === 0) {
     return null // 沒有公告就不顯示
   }
@@ -73,7 +83,7 @@ export function AnnouncementCard() {
               color: '#a78bfa',
               marginTop: '0.375rem'
             }}>
-              {new Date(announcement.createdAt).toLocaleDateString('zh-TW')}
+              {safeFormatDate(announcement.createdAt)}
             </div>
           </div>
         ))}
