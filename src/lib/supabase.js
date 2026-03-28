@@ -963,20 +963,37 @@ export const mockAPI = {
   },
   
   // 取得交易記錄
-  getTransactions: async (userId) => {
-    const { data, error } = await supabase
+  getTransactions: async (userId = null) => {
+    let query = supabase
       .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
+      .select(`
+        *,
+        users (name, avatar)
+      `)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(100)
+    
+    // 如果有 userId，只查詢該用戶的交易
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+    
+    const { data, error } = await query
     
     if (error) {
       console.error('Get transactions error:', error)
       return []
     }
     
-    return data
+    return data.map(t => ({
+      id: t.id,
+      type: t.type,
+      amount: t.amount,
+      description: t.description,
+      userName: t.users?.name || '未知用戶',
+      userAvatar: t.users?.avatar || '👤',
+      timestamp: t.created_at
+    }))
   },
   
   // 取得用戶的提交歷史（所有狀態）

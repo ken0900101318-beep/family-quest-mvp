@@ -12,6 +12,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [purchases, setPurchases] = useState([])
   const [deliveredPurchases, setDeliveredPurchases] = useState([])
   const [wishes, setWishes] = useState([])
+  const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
@@ -90,6 +91,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 讀取已發放的購買記錄
       const deliveredList = await mockAPI.getDeliveredPurchases()
       setDeliveredPurchases(deliveredList)
+      
+      // 讀取所有交易記錄
+      const allTransactions = await mockAPI.getTransactions()
+      setTransactions(allTransactions)
     
     // 讀取待審核的許願清單
     // allWishes 已在上方並行載入
@@ -403,6 +408,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 purchases={purchases}
                 deliveredPurchases={deliveredPurchases}
                 wishes={wishes}
+                transactions={transactions}
                 onDeliverPurchase={handleDeliverPurchase}
                 onApproveWish={handleApproveWish}
                 onRejectWish={handleRejectWish}
@@ -1461,7 +1467,7 @@ function Statistics({ stats }) {
 }
 
 // 商店管理
-function ShopManagement({ shopTab, setShopTab, purchases, deliveredPurchases, wishes, onDeliverPurchase, onApproveWish, onRejectWish, showToast }) {
+function ShopManagement({ shopTab, setShopTab, purchases, deliveredPurchases, wishes, transactions, onDeliverPurchase, onApproveWish, onRejectWish, showToast }) {
   const [activeSubTab, setActiveSubTab] = useState(shopTab || 'purchases') // purchases / history / wishes / ledger / products
   const [products, setProducts] = useState([])
   const [showProductForm, setShowProductForm] = useState(false)
@@ -1535,40 +1541,7 @@ function ShopManagement({ shopTab, setShopTab, purchases, deliveredPurchases, wi
   }
 
   // 從 localStorage 獲取所有交易記錄
-  const getAllTransactions = () => {
-    const submissions = JSON.parse(localStorage.getItem('submissions') || '[]')
-    const purchaseData = JSON.parse(localStorage.getItem('purchases') || '[]')
-    
-    const transactions = []
-    
-    // 獲得點數（已核准的任務）
-    submissions
-      .filter(s => s.status === 'approved')
-      .forEach(s => {
-        transactions.push({
-          id: `earn-${s.id}`,
-          type: 'earn',
-          amount: s.points || 10,
-          description: s.taskTitle || '完成任務',
-          userName: s.userName,
-          timestamp: s.approvedAt || s.timestamp
-        })
-      })
-    
-    // 消費點數（兌換商品）
-    purchaseData.forEach(p => {
-      transactions.push({
-        id: `spend-${p.id}`,
-        type: 'spend',
-        amount: p.price,
-        description: p.productName,
-        userName: p.userName,
-        timestamp: p.createdAt
-      })
-    })
-    
-    return transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-  }
+
 
   return (
     <div>
@@ -1829,7 +1802,7 @@ function ShopManagement({ shopTab, setShopTab, purchases, deliveredPurchases, wi
 
       {/* 金庫帳本 */}
       {activeSubTab === 'ledger' && (
-        <FinanceLedger transactions={getAllTransactions()} />
+        <FinanceLedger transactions={transactions} />
       )}
     </div>
   )
