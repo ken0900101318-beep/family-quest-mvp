@@ -305,6 +305,22 @@ export const mockAPI = {
   
   // 提交任務
   submitTask: async (taskId, userId, photoData = null) => {
+    // 防止重複提交：檢查是否已有今日pending的submission
+    const today = new Date().toISOString().split('T')[0]
+    const { data: existingSubmissions } = await supabase
+      .from('submissions')
+      .select('id, created_at, status')
+      .eq('task_id', taskId)
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .gte('created_at', `${today}T00:00:00`)
+      .lte('created_at', `${today}T23:59:59`)
+    
+    if (existingSubmissions && existingSubmissions.length > 0) {
+      console.warn('⚠️ 防止重複提交：今日已有pending的submission', existingSubmissions)
+      throw new Error('今天已經提交過這個任務了，請等待審核！')
+    }
+    
     // 查詢任務資訊
     const { data: task } = await supabase
       .from('tasks')

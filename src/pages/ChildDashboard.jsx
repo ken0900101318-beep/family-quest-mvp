@@ -12,6 +12,7 @@ export default function ChildDashboard({ user, onLogout }) {
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     loadTasks(true) // 首次載入
@@ -58,8 +59,15 @@ export default function ChildDashboard({ user, onLogout }) {
       selectedTask,
       taskId: selectedTask?.id, 
       userId: user?.id, 
-      hasPhoto: !!photoData 
+      hasPhoto: !!photoData,
+      isSubmitting
     })
+    
+    // 防止重複提交
+    if (isSubmitting) {
+      console.warn('⚠️ 正在提交中，請勿重複點擊')
+      return
+    }
     
     if (!photoData) {
       alert('⚠️ 請先拍照')
@@ -73,6 +81,7 @@ export default function ChildDashboard({ user, onLogout }) {
     }
     
     try {
+      setIsSubmitting(true)
       setShowCamera(false)
       
       const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
@@ -90,6 +99,8 @@ export default function ChildDashboard({ user, onLogout }) {
       alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
       setShowCamera(false)
       setSelectedTask(null)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
