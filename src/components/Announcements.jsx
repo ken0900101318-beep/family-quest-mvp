@@ -78,9 +78,6 @@ export function AnnouncementCard() {
           </div>
         ))}
       </div>
-
-      {/* Toast 通知 */}
-      <ToastContainer />
     </div>
   )
 }
