@@ -69,9 +69,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       setPendingRequests(formattedRequests)
     
+      console.log('✅ 步驟1: 待審核任務已載入')
+    
       // 從 Supabase 載入所有任務
       const allTasksData = await mockAPI.getAllTasks()
       setAllTasks(allTasksData)
+      
+      console.log('✅ 步驟2: 所有任務已載入')
     
     // 從 localStorage 計算真實統計數據
     // 統計數據（暫時簡化，之後可以從 Supabase 計算）
@@ -86,25 +90,31 @@ export default function ParentHub({ user, onBack, onLogout }) {
       const allPurchases = await mockAPI.getPurchases()
       setPurchases(allPurchases)
       
+      console.log('✅ 步驟3: 購買記錄已載入')
+      
       // 讀取已發放的購買記錄
       const deliveredList = await mockAPI.getDeliveredPurchases()
       setDeliveredPurchases(deliveredList)
       
+      console.log('✅ 步驟4: 發放記錄已載入')
+      
       // 讀取所有交易記錄
       const allTransactions = await mockAPI.getTransactions()
       setTransactions(allTransactions)
+      
+      console.log('✅ 步驟5: 交易記錄已載入')
     
     // 讀取待審核的許願清單
     // allWishes 已在上方並行載入
       const pendingWishes = allWishes.filter(w => w.status === 'pending')
       setWishes(pendingWishes)
-    
-    // 讀取所有任務
-      const tasks = await mockAPI.getAllTasks()
-      setAllTasks(tasks)
+      
+      console.log('✅ 步驟6: 許願清單已載入')
       
       // 設定用戶列表
       setAllUsers(users)
+      
+      console.log('✅ 所有資料載入完成！')
     
     } catch (error) {
       console.error('❌ loadData 失敗:', error)
