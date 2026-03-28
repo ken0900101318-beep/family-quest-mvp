@@ -142,6 +142,15 @@ export default function ChildDashboard({ user, onLogout }) {
     if (tasks.length > 0) {
       loadTodayStats()
     }
+    
+    // ✨ 每30秒自動刷新任務狀態
+    const statusInterval = setInterval(() => {
+      if (tasks.length > 0) {
+        loadTodayStats()
+      }
+    }, 30000)
+    
+    return () => clearInterval(statusInterval)
   }, [tasks, user.id])
   
   const getTaskStatus = (taskId) => {
