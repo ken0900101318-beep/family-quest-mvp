@@ -133,6 +133,16 @@ export function AnnouncementManager({ userId }) {
     }
   }
 
+  // ✨ 新增防呆：安全格式化日期時間的函數
+  const safeFormatDateTime = (dateString) => {
+    if (!dateString) return '時間未定' 
+    const dateObj = new Date(dateString)
+    if (isNaN(dateObj.getTime())) {
+      return '時間未定' // 解析失敗時顯示預設文字，避免 Invalid Date
+    }
+    return dateObj.toLocaleString('zh-TW')
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -276,7 +286,8 @@ export function AnnouncementManager({ userId }) {
                 {announcement.content}
               </div>
               <div style={{ fontSize: '12px', color: '#a78bfa' }}>
-                發布時間：{new Date(announcement.createdAt).toLocaleString('zh-TW')}
+                {/* ✨ 使用防呆函數來顯示時間 */}
+                發布時間：{safeFormatDateTime(announcement.createdAt)}
               </div>
             </div>
           ))
