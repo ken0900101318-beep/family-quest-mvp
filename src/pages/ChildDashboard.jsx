@@ -221,40 +221,27 @@ export default function ChildDashboard({ user, onLogout }) {
   const [taskStatuses, setTaskStatuses] = useState({})
   
   useEffect(() => {
-    const loadTodayStats = async () => {
-      const submissions = await mockAPI.getUserSubmissions(user.id)
-      const today = new Date().toISOString().split('T')[0]
-      
-      const todayCompleted = submissions.filter(s => 
-        s.status === 'approved' &&
-        s.timestamp.startsWith(today)
-      ).length
-      setCompletedTasks(todayCompleted)
-      
-      const statuses = {}
-      for (const task of tasks) {
-        const todaySubmission = submissions.find(s => 
-          s.taskId === task.id &&
-          s.timestamp.startsWith(today)
-        )
-        
-        if (!todaySubmission) {
-          statuses[task.id] = 'notStarted'
-        } else if (todaySubmission.status === 'approved') {
-          statuses[task.id] = 'completed'
-        } else if (todaySubmission.status === 'pending') {
-          statuses[task.id] = 'pending'
-        } else {
-          statuses[task.id] = 'notStarted'
-        }
-      }
-      setTaskStatuses(statuses)
-    }
+    // ✅ 使用新的 todayStatus 計算完成數
+    const todayCompleted = tasks.filter(t => t.todayStatus === 'approved').length
+    setCompletedTasks(todayCompleted)
     
-    if (tasks.length > 0) {
-      loadTodayStats()
+    // ✅ 使用新的 todayStatus 設定任務狀態
+    const statuses = {}
+    for (const task of tasks) {
+      if (!task.todayStatus) {
+        statuses[task.id] = 'notStarted'
+      } else if (task.todayStatus === 'approved') {
+        statuses[task.id] = 'completed'
+      } else if (task.todayStatus === 'pending') {
+        statuses[task.id] = 'pending'
+      } else if (task.todayStatus === 'rejected') {
+        statuses[task.id] = 'notStarted' // 被退回視為未完成，可重試
+      } else {
+        statuses[task.id] = 'notStarted'
+      }
     }
-  }, [tasks, user.id])
+    setTaskStatuses(statuses)
+  }, [tasks])
   
   const getTaskStatus = (taskId) => {
     return taskStatuses[taskId] || 'notStarted'
