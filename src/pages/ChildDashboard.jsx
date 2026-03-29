@@ -19,6 +19,26 @@ export default function ChildDashboard({ user, onLogout }) {
 
   useEffect(() => {
     loadTasks(true) // 首次載入
+    
+    // ✅ 低頻率自動輪詢（60秒）
+    const pollInterval = setInterval(() => {
+      refreshData() // 靜默刷新
+    }, 60000)
+    
+    // ✅ 視窗聚焦觸發
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👀 視窗聚焦，觸發同步')
+        refreshData()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // ✅ Cleanup
+    return () => {
+      clearInterval(pollInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const loadTasks = async (showLoadingState = true) => {
@@ -52,6 +72,40 @@ export default function ChildDashboard({ user, onLogout }) {
         setLoading(false)
         setIsInitialLoad(false)
       }
+      isFetching.current = false
+    }
+  }
+  
+  // ✅ 靜默刷新函數（防干擾式同步）
+  const refreshData = async () => {
+    // 1. Ref 鎖定
+    if (isFetching.current) {
+      console.log('⏭️ 跳過refreshData：正在載入中')
+      return
+    }
+    
+    isFetching.current = true
+    
+    try {
+      // 2. 獲取最新任務
+      const userTasks = await mockAPI.getTasks(user.id)
+      
+      // 3. 深層比對
+      setTasks(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(userTasks)) {
+          console.log('✅ 任務列表無變化')
+          return prev
+        }
+        console.log('🔄 任務列表已更新')
+        return userTasks
+      })
+      
+      console.log('✅ refreshData 完成（靜默）')
+      
+    } catch (error) {
+      console.error('❌ refreshData 失敗:', error.message)
+      // 失敗不影響用戶，靜默處理
+    } finally {
       isFetching.current = false
     }
   }
@@ -110,7 +164,9 @@ export default function ChildDashboard({ user, onLogout }) {
       alert('✅ 任務已提交成功！\n等待家長審核中...')
       
       setSelectedTask(null)
-      loadTasks(false) // 背景更新，不顯示 loading
+      
+      // ✅ 提交後立即同步
+      setTimeout(() => refreshData(), 500)
     } catch (err) {
       console.error('❌ 提交失敗:', err)
       alert('❌ 提交失敗：' + (err.message || '請稍後再試'))

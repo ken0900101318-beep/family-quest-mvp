@@ -30,6 +30,26 @@ export default function ParentHub({ user, onBack, onLogout }) {
 
   useEffect(() => {
     loadData(true) // 首次載入
+    
+    // ✅ 低頻率自動輪詢（60秒）
+    const pollInterval = setInterval(() => {
+      refreshData() // 靜默刷新
+    }, 60000)
+    
+    // ✅ 視窗聚焦觸發
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👀 視窗聚焦，觸發同步')
+        refreshData()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // ✅ Cleanup
+    return () => {
+      clearInterval(pollInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const loadData = async (showLoadingState = true) => {
@@ -136,6 +156,86 @@ export default function ParentHub({ user, onBack, onLogout }) {
       isFetching.current = false
     }
   }
+  
+  // ✅ 靜默刷新函數（防干擾式同步）
+  const refreshData = async () => {
+    // 1. Ref 鎖定
+    if (isFetching.current) {
+      console.log('⏭️ 跳過refreshData：正在載入中')
+      return
+    }
+    
+    isFetching.current = true
+    
+    try {
+      // 2. 獲取最新資料
+      const timeout = (ms) => new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('請求超時')), ms)
+      )
+      
+      const [pendingSubmissions, allWishes, users, tasks] = await Promise.race([
+        Promise.all([
+          mockAPI.getPendingSubmissions(),
+          mockAPI.getWishes(),
+          mockAPI.getAllUsers(),
+          mockAPI.getAllTasks()
+        ]),
+        timeout(10000)
+      ])
+      
+      // 3. 深層比對 - 待審核任務
+      const formattedRequests = pendingSubmissions.map(sub => ({
+        id: sub.id,
+        childId: sub.userId,
+        childName: sub.userName,
+        title: sub.taskTitle,
+        points: sub.points,
+        description: '',
+        status: 'submitted',
+        submittedAt: new Date(sub.timestamp).toLocaleString('zh-TW'),
+        type: 'taskSubmit',
+        photo: sub.photo,
+        taskId: sub.taskId
+      }))
+      
+      setPendingRequests(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(formattedRequests)) {
+          console.log('✅ 待審核任務無變化')
+          return prev
+        }
+        console.log('🔄 待審核任務已更新')
+        return formattedRequests
+      })
+      
+      // 4. 深層比對 - 任務列表
+      setAllTasks(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(tasks)) {
+          console.log('✅ 任務列表無變化')
+          return prev
+        }
+        console.log('🔄 任務列表已更新')
+        return tasks
+      })
+      
+      // 5. 深層比對 - 用戶列表
+      setAllUsers(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(users)) {
+          console.log('✅ 用戶列表無變化')
+          return prev
+        }
+        console.log('🔄 用戶列表已更新')
+        return users
+      })
+      
+      console.log('✅ refreshData 完成（靜默）')
+      
+    } catch (error) {
+      console.error('❌ refreshData 失敗:', error.message)
+      // 失敗不影響用戶，靜默處理
+    } finally {
+      isFetching.current = false
+    }
+  }
 
   const handleApprove = async (request, adjustedPoints) => {
     try {
@@ -145,6 +245,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
       showToast(`已核准「${request.title}」 (${adjustedPoints || request.points} 點)`, 'success')
+      
+      // ✅ 核准後立即同步
+      setTimeout(() => refreshData(), 500)
     } catch (err) {
       console.error('❌ 核准失敗:', err)
       showToast(`核准失敗：${err.message || '請稍後再試'}`, 'error')
