@@ -77,9 +77,9 @@ export const mockAPI = {
     console.log('🔑 登入中...', { pin })
     
     try {
-      // 10秒超時保護
+      // 30秒超時保護
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('登入請求超時（10秒）')), 10000)
+        setTimeout(() => reject(new Error('登入請求超時（30秒）')), 30000)
       )
       
       const query = supabase
