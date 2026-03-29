@@ -9,6 +9,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [reviewTab, setReviewTab] = useState('pending') // ✅ pending, history
   const [pendingRequests, setPendingRequests] = useState([])
   const [reviewHistory, setReviewHistory] = useState([])
+  const [historyPage, setHistoryPage] = useState(0) // ✅ 分頁
+  const [hasMoreHistory, setHasMoreHistory] = useState(true) // ✅ 是否還有更多
+  const [loadingMore, setLoadingMore] = useState(false) // ✅ 載入中
   const [allTasks, setAllTasks] = useState([])
   const [stats, setStats] = useState({})
   const [purchases, setPurchases] = useState([])
@@ -104,6 +107,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       // ✅ 設定審核歷史
       setReviewHistory(history)
+      if (history.length < 20) {
+        setHasMoreHistory(false)
+      }
     
       // 從 Supabase 載入所有任務
       const allTasksData = await mockAPI.getAllTasks()
@@ -367,6 +373,33 @@ export default function ParentHub({ user, onBack, onLogout }) {
     }
   }
 
+  // ✅ 載入更多審核歷史
+  const loadMoreHistory = async () => {
+    if (loadingMore || !hasMoreHistory) return
+    
+    setLoadingMore(true)
+    try {
+      const nextPage = historyPage + 1
+      const newHistory = await mockAPI.getReviewHistory(20, nextPage * 20)
+      
+      if (newHistory.length === 0) {
+        setHasMoreHistory(false)
+        showToast('已載入所有記錄', 'info')
+      } else {
+        setReviewHistory(prev => [...prev, ...newHistory])
+        setHistoryPage(nextPage)
+        if (newHistory.length < 20) {
+          setHasMoreHistory(false)
+        }
+      }
+    } catch (err) {
+      console.error('載入更多失敗:', err)
+      showToast('載入失敗，請稍後再試', 'error')
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+  
   const handleApprove = async (request, adjustedPoints) => {
     try {
       console.log('🔍 開始核准:', { request, adjustedPoints })
@@ -705,6 +738,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 {reviewTab === 'history' && (
                   <ReviewHistory 
                     history={reviewHistory}
+                    onLoadMore={loadMoreHistory}
+                    hasMore={hasMoreHistory}
+                    loading={loadingMore}
                   />
                 )}
               </>
@@ -3678,7 +3714,7 @@ function UserForm({ user, onSubmit, onClose }) {
 
 
 // ✅ 審核歷史組件
-function ReviewHistory({ history }) {
+function ReviewHistory({ history, onLoadMore, hasMore, loading }) {
   const [selectedItem, setSelectedItem] = useState(null)
   const [searchText, setSearchText] = useState('')
   const [selectedMember, setSelectedMember] = useState('all')
@@ -3950,6 +3986,35 @@ function ReviewHistory({ history }) {
               borderRadius: "1rem"
             }}
           />
+        </div>
+      )}
+      
+      {/* ✅ 載入更多按鈕 */}
+      {hasMore && filteredHistory.length > 0 && (
+        <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+          <button
+            onClick={onLoadMore}
+            disabled={loading}
+            style={{
+              padding: "0.75rem 2rem",
+              background: loading ? "#d1d5db" : "linear-gradient(to right, #8b5cf6, #7c3aed)",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "14px",
+              borderRadius: "0.75rem",
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              boxShadow: loading ? "none" : "0 4px 15px rgba(139, 92, 246, 0.4)"
+            }}
+          >
+            {loading ? "⏳ 載入中..." : "📋 載入更多"}
+          </button>
+        </div>
+      )}
+      
+      {!hasMore && filteredHistory.length > 0 && (
+        <div style={{ textAlign: "center", marginTop: "1.5rem", color: "#9ca3af", fontSize: "14px" }}>
+          ✓ 已載入所有記錄
         </div>
       )}
     </div>
