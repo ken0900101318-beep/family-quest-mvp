@@ -519,7 +519,7 @@ export const mockAPI = {
       id: submissionId,
       status: 'approved',
       points: points,
-      taskTitle: submission.task.title
+      taskTitle: submission.tasks?.title || '未知任務'
     }
   },
   
