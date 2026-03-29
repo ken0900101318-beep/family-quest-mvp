@@ -79,6 +79,26 @@ export default function TaskSquare({ user }) {
 
   // 開啟拍照
   const openCamera = (task) => {
+    console.log('📝 選擇任務:', task.title, '狀態:', task.todayStatus)
+    
+    // ✅ 檢查今日狀態 - 直接阻止
+    if (task.todayStatus === 'pending') {
+      showToast('⏰ 任務已提交，請等待家長審核！', 'warning')
+      return
+    }
+    
+    if (task.todayStatus === 'approved') {
+      showToast('🎉 今日已完成，明天再來挑戰吧！', 'success')
+      return
+    }
+    
+    // 如果是 rejected，顯示退回原因後繼續
+    if (task.todayStatus === 'rejected' && task.rejectReason) {
+      const retry = confirm(`❌ 任務被退回\n原因：${task.rejectReason}\n\n要重新挑戰嗎？`)
+      if (!retry) return
+    }
+    
+    console.log('✅ 狀態檢查通過，開啟相機')
     setCurrentTask(task)
     setCapturedPhoto(null)
     setCameraOpen(true)
@@ -413,19 +433,31 @@ function TaskCard({ task, onComplete }) {
       </div>
       <button
         onClick={() => onComplete(task)}
+        disabled={task.todayStatus === 'pending' || task.todayStatus === 'approved'}
         style={{
           width: '100%',
-          background: 'linear-gradient(to right, #a78bfa, #8b5cf6)',
+          background: task.todayStatus === 'pending' 
+            ? '#f59e0b'
+            : task.todayStatus === 'approved'
+            ? '#10b981'
+            : 'linear-gradient(to right, #a78bfa, #8b5cf6)',
           color: 'white',
           fontWeight: 'bold',
           fontSize: '14px',
           padding: '0.5rem',
           borderRadius: '0.5rem',
           border: 'none',
-          cursor: 'pointer'
+          cursor: task.todayStatus === 'pending' || task.todayStatus === 'approved' ? 'not-allowed' : 'pointer',
+          opacity: task.todayStatus === 'pending' || task.todayStatus === 'approved' ? 0.7 : 1
         }}
       >
-        我完成了！✨
+        {task.todayStatus === 'pending' 
+          ? '已提交，等待審核 ⏰'
+          : task.todayStatus === 'approved'
+          ? '今日已達成 🎉'
+          : task.todayStatus === 'rejected'
+          ? '重新挑戰（被退回）❌'
+          : '我完成了！✨'}
       </button>
     </div>
   )
