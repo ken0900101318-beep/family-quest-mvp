@@ -489,16 +489,6 @@ function NavIcon({ icon, label, active, onClick }) {
 
 function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
   const [photo, setPhoto] = useState(null)
-  const [, forceUpdate] = useState(0) // 強制重新渲染
-  
-  // ✅ 監聽 isSubmittingRef 變化，強制重新渲染按鈕
-  useEffect(() => {
-    const checkInterval = setInterval(() => {
-      forceUpdate(n => n + 1)
-    }, 100) // 每100ms檢查一次
-    
-    return () => clearInterval(checkInterval)
-  }, [])
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
@@ -658,10 +648,10 @@ function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
 
           <button
             onClick={handleSubmit}
-            disabled={!photo || isSubmittingRef.current}
+            disabled={!photo}
             style={{
               width: '100%',
-              background: (photo && !isSubmittingRef.current)
+              background: photo
                 ? 'linear-gradient(to right, #10b981, #059669)' 
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
@@ -670,14 +660,14 @@ function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
               padding: '1rem',
               borderRadius: '0.75rem',
               border: 'none',
-              cursor: (photo && !isSubmittingRef.current) ? 'pointer' : 'not-allowed',
-              boxShadow: (photo && !isSubmittingRef.current)
+              cursor: photo ? 'pointer' : 'not-allowed',
+              boxShadow: photo
                 ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
                 : 'none',
-              opacity: (photo && !isSubmittingRef.current) ? 1 : 0.6
+              opacity: photo ? 1 : 0.6
             }}
           >
-            {isSubmittingRef.current ? '⏳ 提交中...' : '✅ 提交任務'}
+            ✅ 提交任務
           </button>
         </div>
       </div>
