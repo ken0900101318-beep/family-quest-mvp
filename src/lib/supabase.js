@@ -510,7 +510,7 @@ export const mockAPI = {
       
       const { data, error } = await supabase
         .from('submissions')
-        .select('id, task_id, user_id, created_at, status, photo, points, approved_at, reject_reason')
+        .select('id, task_id, user_id, created_at, status, points, approved_at, reject_reason')
         .in('status', ['approved', 'rejected'])
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -556,7 +556,7 @@ export const mockAPI = {
           timestamp: sub.created_at,
           approvedAt: sub.approved_at,
           status: sub.status,
-          photo: sub.photo,
+          photo: null, // ✅ 列表不載入照片，減少資料量
           points: sub.points || task?.points || 10,
           rejectReason: sub.reject_reason
         }
@@ -564,6 +564,27 @@ export const mockAPI = {
     } catch (err) {
       console.error('getReviewHistory 失敗:', err)
       return []
+    }
+  },
+  
+  // ✅ 取得單筆審核記錄的照片
+  getSubmissionPhoto: async (submissionId) => {
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('photo')
+        .eq('id', submissionId)
+        .single()
+      
+      if (error) {
+        console.error('❌ Get submission photo error:', error)
+        return null
+      }
+      
+      return data?.photo || null
+    } catch (err) {
+      console.error('getSubmissionPhoto 失敗:', err)
+      return null
     }
   },
   

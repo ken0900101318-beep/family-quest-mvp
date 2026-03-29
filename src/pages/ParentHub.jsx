@@ -107,6 +107,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       // ✅ 設定審核歷史
       setReviewHistory(history)
+      setHistoryError(null) // 清除錯誤
       if (history.length < 20) {
         setHasMoreHistory(false)
       }
@@ -378,6 +379,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
     }
   }
 
+  // ✅ 重試載入審核歷史
+  const retryLoadHistory = async () => {
+    setHistoryError(null)
+    await loadData(false)
+  }
+  
   // ✅ 載入更多審核歷史
   const loadMoreHistory = async () => {
     if (loadingMore || !hasMoreHistory) return
@@ -3721,9 +3728,24 @@ function UserForm({ user, onSubmit, onClose }) {
 // ✅ 審核歷史組件
 function ReviewHistory({ history, onLoadMore, hasMore, loading }) {
   const [selectedItem, setSelectedItem] = useState(null)
+  const [loadingPhoto, setLoadingPhoto] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [selectedMember, setSelectedMember] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  
+  // ✅ 載入照片
+  const handleViewPhoto = async (item) => {
+    setLoadingPhoto(true)
+    try {
+      const photo = await mockAPI.getSubmissionPhoto(item.id)
+      setSelectedItem({ ...item, photo })
+    } catch (err) {
+      console.error('載入照片失敗:', err)
+      alert('載入照片失敗，請稍後再試')
+    } finally {
+      setLoadingPhoto(false)
+    }
+  }
   
   // 取得所有成員列表
   const members = [...new Set(history.map(item => item.userName))].sort()
@@ -3927,22 +3949,25 @@ function ReviewHistory({ history, onLoadMore, hasMore, loading }) {
             </div>
           </div>
           
-          {item.photo && (
-            <div style={{ marginBottom: "1rem" }}>
-              <img
-                src={item.photo}
-                alt="任務照片"
-                style={{
-                  width: "100%",
-                  maxHeight: "300px",
-                  objectFit: "cover",
-                  borderRadius: "0.75rem",
-                  cursor: "pointer"
-                }}
-                onClick={() => setSelectedItem(item)}
-              />
-            </div>
-          )}
+          {/* ✅ 照片改為按鈕點擊載入，不在列表顯示 */}
+          <button
+            onClick={() => handleViewPhoto(item)}
+            disabled={loadingPhoto}
+            style={{
+              marginBottom: "1rem",
+              padding: "0.75rem",
+              background: loadingPhoto ? "#d1d5db" : "#f3f4f6",
+              border: "2px solid #e5e7eb",
+              borderRadius: "0.75rem",
+              cursor: loadingPhoto ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#6b7280",
+              width: "100%"
+            }}
+          >
+            {loadingPhoto ? "⏳ 載入中..." : "📷 查看提交照片"}
+          </button>
           
           {item.status === "rejected" && item.rejectReason && (
             <div style={{
