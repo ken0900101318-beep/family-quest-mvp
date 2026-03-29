@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { mockAPI } from '../lib/supabase'
 
 export default function Login({ onLogin }) {
@@ -6,12 +6,51 @@ export default function Login({ onLogin }) {
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
 
-  const users = [
-    { id: 1, name: '媽媽', emoji: '👩', pin: '1234', color: 'linear-gradient(135deg, #a78bfa, #8b5cf6)' },
-    { id: 2, name: '哥哥', emoji: '👦', pin: '1111', color: 'linear-gradient(135deg, #60a5fa, #3b82f6)' },
-    { id: 3, name: '妹妹', emoji: '👧', pin: '2222', color: 'linear-gradient(135deg, #f9a8d4, #ec4899)' }
+  // 默认头像和颜色映射
+  const defaultAvatars = {
+    'parent': '👩',
+    'child': '👦'
+  }
+  
+  const defaultColors = [
+    'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+    'linear-gradient(135deg, #60a5fa, #3b82f6)',
+    'linear-gradient(135deg, #f9a8d4, #ec4899)',
+    'linear-gradient(135deg, #fbbf24, #f59e0b)',
+    'linear-gradient(135deg, #34d399, #10b981)'
   ]
+
+  // 加载用户列表
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoadingUsers(true)
+        const allUsers = await mockAPI.getAllUsers()
+        
+        // 转换为登入页面格式
+        const formattedUsers = allUsers.map((user, index) => ({
+          id: user.id,
+          name: user.name,
+          emoji: user.avatar || defaultAvatars[user.role] || '👤',
+          pin: user.pin,
+          role: user.role,
+          color: defaultColors[index % defaultColors.length]
+        }))
+        
+        setUsers(formattedUsers)
+      } catch (err) {
+        console.error('加载用户失败:', err)
+        setError('加载用户列表失败')
+      } finally {
+        setLoadingUsers(false)
+      }
+    }
+    
+    loadUsers()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -95,6 +134,15 @@ export default function Login({ onLogin }) {
 
         {!selectedUser ? (
           /* 用戶選擇畫面 */
+          loadingUsers ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'white', fontSize: '18px', fontWeight: '600', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+              載入中...
+            </div>
+          ) : users.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'white', fontSize: '18px', fontWeight: '600', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+              找不到用戶
+            </div>
+          ) : (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
             {users.map(user => (
               <button
@@ -141,6 +189,7 @@ export default function Login({ onLogin }) {
               </button>
             ))}
           </div>
+          )
         ) : (
           /* 密碼輸入畫面 */
           <div style={{
