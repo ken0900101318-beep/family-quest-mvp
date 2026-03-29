@@ -173,12 +173,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
         setTimeout(() => reject(new Error('請求超時')), ms)
       )
       
-      const [pendingSubmissions, allWishes, users, tasks] = await Promise.race([
+      const [pendingSubmissions, allWishes, users, tasks, allPurchases, deliveredList, allTransactions] = await Promise.race([
         Promise.all([
           mockAPI.getPendingSubmissions(),
           mockAPI.getWishes(),
           mockAPI.getAllUsers(),
-          mockAPI.getAllTasks()
+          mockAPI.getAllTasks(),
+          mockAPI.getPurchases(),
+          mockAPI.getDeliveredPurchases(),
+          mockAPI.getTransactions()
         ]),
         timeout(10000)
       ])
@@ -225,6 +228,51 @@ export default function ParentHub({ user, onBack, onLogout }) {
         }
         console.log('🔄 用戶列表已更新')
         return users
+      })
+      
+      // 6. 深層比對 - 購買記錄
+      setPurchases(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(allPurchases)) {
+          return prev
+        }
+        console.log('🔄 購買記錄已更新')
+        return allPurchases
+      })
+      
+      // 7. 深層比對 - 發放記錄
+      setDeliveredPurchases(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(deliveredList)) {
+          return prev
+        }
+        console.log('🔄 發放記錄已更新')
+        return deliveredList
+      })
+      
+      // 8. 深層比對 - 交易記錄
+      setTransactions(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(allTransactions)) {
+          return prev
+        }
+        console.log('🔄 交易記錄已更新')
+        return allTransactions
+      })
+      
+      // 9. 深層比對 - 許願清單
+      const pendingWishes = allWishes.filter(w => w.status === 'pending')
+      setWishes(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(pendingWishes)) {
+          return prev
+        }
+        console.log('🔄 許願清單已更新')
+        return pendingWishes
+      })
+      
+      // 10. 更新統計數據
+      setStats({
+        totalPoints: 0,
+        completedTasks: 0,
+        pendingReviews: pendingSubmissions.length,
+        childStats: []
       })
       
       console.log('✅ refreshData 完成（靜默）')
