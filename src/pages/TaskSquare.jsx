@@ -346,21 +346,31 @@ export default function TaskSquare({ user }) {
 
               <button
                 onClick={submitTask}
-                disabled={!capturedPhoto}
+                disabled={!capturedPhoto || currentTask?.todayStatus === 'pending' || currentTask?.todayStatus === 'approved'}
                 style={{
                   minWidth: '180px',
-                  background: capturedPhoto ? 'linear-gradient(to right, #10b981, #059669)' : '#e5e7eb',
-                  color: capturedPhoto ? 'white' : '#9ca3af',
+                  background: currentTask?.todayStatus === 'pending'
+                    ? '#f59e0b'
+                    : currentTask?.todayStatus === 'approved'
+                    ? '#10b981'
+                    : capturedPhoto
+                    ? 'linear-gradient(to right, #10b981, #059669)'
+                    : '#e5e7eb',
+                  color: (currentTask?.todayStatus === 'pending' || currentTask?.todayStatus === 'approved' || capturedPhoto) ? 'white' : '#9ca3af',
                   fontWeight: 'bold',
                   fontSize: '16px',
                   padding: '0.75rem 1rem',
                   borderRadius: '0.75rem',
                   border: 'none',
-                  cursor: capturedPhoto ? 'pointer' : 'not-allowed',
+                  cursor: (currentTask?.todayStatus === 'pending' || currentTask?.todayStatus === 'approved' || !capturedPhoto) ? 'not-allowed' : 'pointer',
                   boxSizing: 'border-box'
                 }}
               >
-                ✅ 提交任務
+                {currentTask?.todayStatus === 'pending'
+                  ? '⏰ 審核中，請等媽咪確認'
+                  : currentTask?.todayStatus === 'approved'
+                  ? '🎉 今日已完成'
+                  : '✅ 提交任務'}
               </button>
             </div>
           </div>

@@ -755,10 +755,14 @@ function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
 
           <button
             onClick={handleSubmit}
-            disabled={!photo}
+            disabled={!photo || task.todayStatus === 'pending' || task.todayStatus === 'approved'}
             style={{
               width: '100%',
-              background: photo
+              background: task.todayStatus === 'pending'
+                ? '#f59e0b'
+                : task.todayStatus === 'approved'
+                ? '#10b981'
+                : photo
                 ? 'linear-gradient(to right, #10b981, #059669)' 
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
@@ -767,14 +771,18 @@ function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
               padding: '1rem',
               borderRadius: '0.75rem',
               border: 'none',
-              cursor: photo ? 'pointer' : 'not-allowed',
-              boxShadow: photo
+              cursor: (task.todayStatus === 'pending' || task.todayStatus === 'approved' || !photo) ? 'not-allowed' : 'pointer',
+              boxShadow: photo && !task.todayStatus
                 ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
                 : 'none',
-              opacity: photo ? 1 : 0.6
+              opacity: (task.todayStatus || photo) ? 1 : 0.6
             }}
           >
-            ✅ 提交任務
+            {task.todayStatus === 'pending'
+              ? '⏰ 審核中，請等媽咪確認'
+              : task.todayStatus === 'approved'
+              ? '🎉 今日已完成'
+              : '✅ 提交任務'}
           </button>
         </div>
       </div>
