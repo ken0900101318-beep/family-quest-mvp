@@ -204,13 +204,13 @@ export default function ChildDashboard({ user, onLogout }) {
       console.log('🔍 原始錯誤訊息:', errorMsg)
       
       // 檢查是否是重複提交錯誤
-      if (errorMsg.includes('今天已經提交過')) {
-        console.log('✅ 匹配到「今天已經提交過」')
+      if (errorMsg.includes('今天已經提交過') || errorMsg.includes('今天已經提過') || errorMsg.includes('請等待審核')) {
+        console.log('✅ 匹配到「今天已經提交過」或「請等待審核」')
         errorMsg = '⏰ 任務已提交\n請等待家長審核！'
-      } else if (errorMsg.includes('今天已經完成')) {
-        console.log('✅ 匹配到「今天已經完成」')
+      } else if (errorMsg.includes('今天已經完成') || errorMsg.includes('明天再來')) {
+        console.log('✅ 匹配到「今天已經完成」或「明天再來」')
         errorMsg = '🎉 今日已完成\n明天再來挑戰吧！'
-      } else if (errorMsg.includes('請勿重複提交')) {
+      } else if (errorMsg.includes('請勿重複提交') || errorMsg.includes('重複點擊')) {
         console.log('✅ 匹配到「請勿重複提交」')
         errorMsg = '⚠️ 請勿重複點擊\n正在處理中...'
       } else {

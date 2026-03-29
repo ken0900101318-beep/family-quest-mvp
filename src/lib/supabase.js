@@ -395,7 +395,7 @@ export const mockAPI = {
           const status = nonRejected[0].status
           if (status === 'pending') {
             console.warn('⚠️ 防止重複提交：今日已有pending的submission')
-            throw new Error('今天已經提交過這個任務了，請等待審核！')
+            throw new Error('今天已經提過這個任務了，請等待審核！')
           } else if (status === 'approved') {
             console.warn('⚠️ 防止重複提交：今日已完成此任務')
             throw new Error('今天已經完成這個任務了，明天再來挑戰吧！')
