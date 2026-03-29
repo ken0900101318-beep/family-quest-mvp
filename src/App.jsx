@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import Login from './pages/Login'
@@ -10,32 +10,50 @@ import Passbook from './pages/Passbook'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
+  const isSyncing = useRef(false)
 
-  // ✨ 同步用戶資料：每次重新整理時從資料庫取得最新狀態
+  // ✨ 同步用戶資料：只在頁面載入時執行一次
   useEffect(() => {
     const syncUser = async () => {
+      // ✅ 防止重複執行
+      if (isSyncing.current) {
+        console.log('⏭️ 跳過：正在同步中')
+        return
+      }
+      
       const savedUser = localStorage.getItem('currentUser')
-      if (savedUser) {
-        const user = JSON.parse(savedUser)
-        
-        try {
-          // ✨ 魔法就在這：去資料庫抓這個 ID 的最新狀態
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single()
+      if (!savedUser) return
+      
+      isSyncing.current = true
+      const user = JSON.parse(savedUser)
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single()
 
-          if (data && !error) {
+        if (data && !error) {
+          // ✅ 深層比對：只有資料真的不同才更新
+          const hasChanged = JSON.stringify(data) !== JSON.stringify(user)
+          
+          if (hasChanged) {
             setCurrentUser(data)
             localStorage.setItem('currentUser', JSON.stringify(data))
-            console.log('✅ 使用者資料已同步至最新狀態')
+            console.log('✅ 使用者資料已更新')
           } else {
-            setCurrentUser(user) // 如果網路不通，先用舊的頂著
+            setCurrentUser(user)
+            console.log('✅ 使用者資料無變化')
           }
-        } catch (err) {
+        } else {
           setCurrentUser(user)
         }
+      } catch (err) {
+        console.error('❌ 同步失敗:', err)
+        setCurrentUser(user)
+      } finally {
+        isSyncing.current = false
       }
     }
 

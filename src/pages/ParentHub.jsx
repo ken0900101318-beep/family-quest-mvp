@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { mockAPI, mockData } from '../lib/supabase'
 import { AnnouncementManager } from '../components/Announcements'
 import { useToast } from '../components/Toast'
@@ -24,12 +24,23 @@ export default function ParentHub({ user, onBack, onLogout }) {
   
   const { showToast, ToastContainer } = useToast()
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  
+  // ✅ 防止重複抓取
+  const isFetching = useRef(false)
 
   useEffect(() => {
     loadData(true) // 首次載入
   }, [])
 
   const loadData = async (showLoadingState = true) => {
+    // ✅ 防止重複執行
+    if (isFetching.current) {
+      console.log('⏭️ 跳過loadData：正在載入中')
+      return
+    }
+    
+    isFetching.current = true
+    
     // 只有首次載入才顯示 loading
     if (showLoadingState && isInitialLoad) {
       setLoading(true)
@@ -121,6 +132,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
       if (isInitialLoad) {
         setIsInitialLoad(false)
       }
+      // ✅ 釋放鎖定
+      isFetching.current = false
     }
   }
 
@@ -948,9 +961,15 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
         
         const completedCount = completedSubmissions.length
         
-        setTodayStats({
-          completed: completedCount,
-          total: memberDailyTasks.length
+        // ✅ 深層比對：只有數字真的不同才更新
+        setTodayStats(prev => {
+          if (prev.completed === completedCount && prev.total === memberDailyTasks.length) {
+            return prev // 不更新，避免觸發重新渲染
+          }
+          return {
+            completed: completedCount,
+            total: memberDailyTasks.length
+          }
         })
       } catch (error) {
         console.error('❌ 載入今日進度失敗:', error)

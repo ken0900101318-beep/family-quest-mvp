@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { mockAPI } from '../lib/supabase'
 import { AnnouncementCard } from '../components/Announcements'
@@ -13,12 +13,23 @@ export default function ChildDashboard({ user, onLogout }) {
   const [showCamera, setShowCamera] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // ✅ 防止重複抓取
+  const isFetching = useRef(false)
 
   useEffect(() => {
     loadTasks(true) // 首次載入
   }, [])
 
   const loadTasks = async (showLoadingState = true) => {
+    // ✅ 防止重複執行
+    if (isFetching.current) {
+      console.log('⏭️ 跳過loadTasks：正在載入中')
+      return
+    }
+    
+    isFetching.current = true
+    
     // 只有首次載入才顯示 loading
     if (showLoadingState && isInitialLoad) {
       setLoading(true)
@@ -26,7 +37,14 @@ export default function ChildDashboard({ user, onLogout }) {
     
     try {
       const userTasks = await mockAPI.getTasks(user.id)
-      setTasks(userTasks)
+      
+      // ✅ 深層比對：只有資料真的不同才更新
+      setTasks(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(userTasks)) {
+          return prev // 不更新，避免觸發重新渲染
+        }
+        return userTasks
+      })
     } catch (error) {
       console.error('載入任務失敗:', error)
     } finally {
@@ -34,6 +52,7 @@ export default function ChildDashboard({ user, onLogout }) {
         setLoading(false)
         setIsInitialLoad(false)
       }
+      isFetching.current = false
     }
   }
 
