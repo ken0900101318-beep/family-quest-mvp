@@ -510,7 +510,7 @@ export const mockAPI = {
         .from('submissions')
         .select('id, task_id, user_id, created_at, status, photo, points, approved_at, reject_reason')
         .in('status', ['approved', 'rejected'])
-        .order('approved_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
       
       if (error) {
