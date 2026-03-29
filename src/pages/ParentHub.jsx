@@ -107,7 +107,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       // ✅ 設定審核歷史
       setReviewHistory(history)
-      setHistoryError(null) // 清除錯誤
       if (history.length < 20) {
         setHasMoreHistory(false)
       }
@@ -381,7 +380,6 @@ export default function ParentHub({ user, onBack, onLogout }) {
 
   // ✅ 重試載入審核歷史
   const retryLoadHistory = async () => {
-    setHistoryError(null)
     await loadData(false)
   }
   
