@@ -194,7 +194,20 @@ export default function ChildDashboard({ user, onLogout }) {
       setTimeout(() => refreshData(), 500)
     } catch (err) {
       console.error('❌ 提交失敗:', err)
-      alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
+      
+      // ✅ 根據錯誤訊息顯示友善提示
+      let errorMsg = err.message || '請稍後再試'
+      
+      // 檢查是否是重複提交錯誤
+      if (errorMsg.includes('今天已經提交過')) {
+        errorMsg = '⏰ 任務已提交\n請等待家長審核！'
+      } else if (errorMsg.includes('今天已經完成')) {
+        errorMsg = '🎉 今日已完成\n明天再來挑戰吧！'
+      } else if (errorMsg.includes('請勿重複提交')) {
+        errorMsg = '⚠️ 請勿重複點擊\n正在處理中...'
+      }
+      
+      alert('❌ ' + errorMsg)
       setShowCamera(false)
       setSelectedTask(null)
     } finally {
