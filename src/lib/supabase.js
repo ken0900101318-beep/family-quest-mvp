@@ -443,7 +443,9 @@ export const mockAPI = {
       
       if (error) {
         console.error('❌ Submit task error:', error)
-        throw error
+        // ✅ Supabase 錯誤包含資料庫 TRIGGER 的錯誤訊息
+        const errorMessage = error.message || error.hint || error.details || '提交失敗'
+        throw new Error(errorMessage)
       }
       
       console.log('✅ 任務提交成功！')
