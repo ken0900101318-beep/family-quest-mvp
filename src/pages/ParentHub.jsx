@@ -748,40 +748,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 )}
                 
                 {reviewTab === 'history' && (
-                  historyError ? (
-                    <div style={{ textAlign: 'center', padding: '3rem' }}>
-                      <div style={{ fontSize: '48px', marginBottom: '1rem' }}>⚠️</div>
-                      <div style={{ color: '#dc2626', fontSize: '16px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                        伺服器稍忙
-                      </div>
-                      <div style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '1.5rem' }}>
-                        {historyError}
-                      </div>
-                      <button
-                        onClick={retryLoadHistory}
-                        style={{
-                          padding: '0.75rem 2rem',
-                          background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          fontSize: '14px',
-                          borderRadius: '0.75rem',
-                          border: 'none',
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
-                        }}
-                      >
-                        🔄 點擊重試
-                      </button>
-                    </div>
-                  ) : (
-                    <ReviewHistory 
-                      history={reviewHistory}
-                      onLoadMore={loadMoreHistory}
-                      hasMore={hasMoreHistory}
-                      loading={loadingMore}
-                    />
-                  )
+                  <ReviewHistory 
+                    history={reviewHistory}
+                    onLoadMore={loadMoreHistory}
+                    hasMore={hasMoreHistory}
+                    loading={loadingMore}
+                  />
                 )}
               </>
             )}
