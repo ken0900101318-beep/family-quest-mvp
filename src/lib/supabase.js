@@ -504,14 +504,14 @@ export const mockAPI = {
   },
   
   // ✅ 取得審核歷史記錄
-  getReviewHistory: async (limit = 50, offset = 0) => {
+  getReviewHistory: async (limit = 20, offset = 0) => {
     try {
       const { data, error } = await supabase
         .from('submissions')
         .select('id, task_id, user_id, created_at, status, photo, points, approved_at, reject_reason')
         .in('status', ['approved', 'rejected'])
         .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+        .limit(limit)
       
       if (error) {
         console.error('❌ Get review history error:', error)

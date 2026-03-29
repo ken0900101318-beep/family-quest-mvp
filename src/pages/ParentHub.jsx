@@ -80,7 +80,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
             mockAPI.getPendingSubmissions(),
             mockAPI.getWishes(),
             mockAPI.getAllUsers(),
-            mockAPI.getReviewHistory(50, 0) // ✅ 載入審核歷史
+            mockAPI.getReviewHistory(20, 0) // ✅ 載入最近20筆審核歷史
           ]),
           timeout(10000) // 10秒超時
         ])
