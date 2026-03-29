@@ -198,6 +198,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
   
   // ✅ 靜默刷新函數（防干擾式同步）
   const refreshData = async () => {
+    // 0. 檢查用戶是否存在
+    if (!user || !user.id) {
+      console.log('⏭️ 跳過refreshData：用戶未登入')
+      return
+    }
+    
     // 1. Ref 鎖定
     if (isFetching.current) {
       console.log('⏭️ 跳過refreshData：正在載入中')
