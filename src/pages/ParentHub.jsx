@@ -194,6 +194,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
       })
       // 不要清空 pendingRequests，保留舊資料
       // setPendingRequests([])
+      
+      // ✅ 審核歷史載入失敗時設為空陣列
+      setReviewHistory([])
+      setHasMoreHistory(false)
+      
       showToast(`資料載入失敗：${error.message || '請重新整理頁面'}`, 'error')
     } finally {
       // ✅ 無論成功或失敗，都要關閉 loading

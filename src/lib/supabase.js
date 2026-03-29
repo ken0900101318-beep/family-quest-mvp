@@ -530,25 +530,21 @@ export const mockAPI = {
       
       console.log('✅ 找到審核歷史:', data.length, '筆')
       
-      // 取得相關的 tasks、users 和 transactions（批次查詢）
+      // 取得相關的 tasks 和 users（批次查詢）
       const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
       const userIds = [...new Set(data.map(s => s.user_id).filter(Boolean))]
-      const submissionIds = data.map(s => s.id)
       
-      const [tasksData, usersData, transactionsData] = await Promise.all([
+      const [tasksData, usersData] = await Promise.all([
         supabase.from('tasks').select('id, title, points').in('id', taskIds),
-        supabase.from('users').select('id, name, avatar').in('id', userIds),
-        supabase.from('transactions').select('source_id, amount').eq('source', 'task_completion').in('source_id', submissionIds)
+        supabase.from('users').select('id, name, avatar').in('id', userIds)
       ])
       
       const tasksMap = new Map((tasksData.data || []).map(t => [t.id, t]))
       const usersMap = new Map((usersData.data || []).map(u => [u.id, u]))
-      const transactionsMap = new Map((transactionsData.data || []).map(tr => [tr.source_id, tr]))
       
       return data.map(sub => {
         const task = tasksMap.get(sub.task_id)
         const user = usersMap.get(sub.user_id)
-        const transaction = transactionsMap.get(sub.id)
         
         return {
           id: sub.id,
@@ -561,7 +557,7 @@ export const mockAPI = {
           approvedAt: sub.approved_at,
           status: sub.status,
           photo: sub.photo,
-          points: transaction?.amount || sub.points || task?.points || 10,
+          points: sub.points || task?.points || 10,
           rejectReason: sub.reject_reason
         }
       })
