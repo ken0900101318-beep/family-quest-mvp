@@ -169,19 +169,43 @@ export const mockAPI = {
       return []
     }
     
-    return data.map(assignment => ({
-      assignmentId: assignment.id,
-      id: assignment.tasks.id,
-      title: assignment.tasks.title,
-      icon: assignment.tasks.icon,
-      points: assignment.tasks.points,
-      type: assignment.tasks.type,
-      target: assignment.tasks.target,
-      status: assignment.status,
-      progress: assignment.progress,
-      description: assignment.tasks.description,
-      completedAt: assignment.completed_at
-    }))
+    // ✅ 查詢今日的 submissions 狀態
+    const today = new Date().toISOString().split('T')[0]
+    const { data: todaySubmissions } = await supabase
+      .from('submissions')
+      .select('task_id, status, reject_reason, created_at')
+      .eq('user_id', userId)
+      .gte('created_at', `${today}T00:00:00`)
+      .lte('created_at', `${today}T23:59:59`)
+    
+    // 建立 task_id -> submission 的映射
+    const submissionMap = new Map()
+    if (todaySubmissions) {
+      todaySubmissions.forEach(sub => {
+        submissionMap.set(sub.task_id, sub)
+      })
+    }
+    
+    return data.map(assignment => {
+      const todaySubmission = submissionMap.get(assignment.tasks.id)
+      
+      return {
+        assignmentId: assignment.id,
+        id: assignment.tasks.id,
+        title: assignment.tasks.title,
+        icon: assignment.tasks.icon,
+        points: assignment.tasks.points,
+        type: assignment.tasks.type,
+        target: assignment.tasks.target,
+        status: assignment.status,
+        progress: assignment.progress,
+        description: assignment.tasks.description,
+        completedAt: assignment.completed_at,
+        // ✅ 新增今日提交狀態
+        todayStatus: todaySubmission?.status || null,
+        rejectReason: todaySubmission?.reject_reason || null
+      }
+    })
   },
   
   // 取得所有任務（家長端用，需要顯示有哪些人被指派）
@@ -351,22 +375,34 @@ export const mockAPI = {
         throw new Error('請勿重複提交！請等待幾秒後再試。')
       }
       
-      // 額外檢查：今日是否已有pending的submission
+      // ✅ 每日任務限制：檢查今日是否已提交（排除 rejected）
       const today = new Date().toISOString().split('T')[0]
       const checkToday = supabase
         .from('submissions')
         .select('id, created_at, status')
         .eq('task_id', taskId)
         .eq('user_id', userId)
-        .eq('status', 'pending')
         .gte('created_at', `${today}T00:00:00`)
         .lte('created_at', `${today}T23:59:59`)
       
-      const { data: todayPending } = await Promise.race([checkToday, timeout])
+      const { data: todaySubmissions } = await Promise.race([checkToday, timeout])
       
-      if (todayPending && todayPending.length > 0) {
-        console.warn('⚠️ 防止重複提交：今日已有pending的submission', todayPending)
-        throw new Error('今天已經提交過這個任務了，請等待審核！')
+      if (todaySubmissions && todaySubmissions.length > 0) {
+        // 檢查是否有 pending 或 approved（排除 rejected）
+        const nonRejected = todaySubmissions.filter(s => s.status !== 'rejected')
+        
+        if (nonRejected.length > 0) {
+          const status = nonRejected[0].status
+          if (status === 'pending') {
+            console.warn('⚠️ 防止重複提交：今日已有pending的submission')
+            throw new Error('今天已經提交過這個任務了，請等待審核！')
+          } else if (status === 'approved') {
+            console.warn('⚠️ 防止重複提交：今日已完成此任務')
+            throw new Error('今天已經完成這個任務了，明天再來挑戰吧！')
+          }
+        } else {
+          console.log('✅ 今日submission已被退回，允許重新提交')
+        }
       }
       
       console.log('✅ 防重複檢查通過，開始提交...')

@@ -118,10 +118,29 @@ export default function ChildDashboard({ user, onLogout }) {
 
   const handleComplete = async (task) => {
     console.log('選擇任務:', task)
+    
     if (!task || !task.id) {
       alert('❌ 任務資料錯誤')
       return
     }
+    
+    // ✅ 檢查今日狀態
+    if (task.todayStatus === 'pending') {
+      alert('⏰ 任務已提交\n請等待家長審核！')
+      return
+    }
+    
+    if (task.todayStatus === 'approved') {
+      alert('🎉 今日已完成\n明天再來挑戰吧！')
+      return
+    }
+    
+    // 如果是 rejected，顯示退回原因後繼續
+    if (task.todayStatus === 'rejected' && task.rejectReason) {
+      const retry = confirm(`❌ 任務被退回\n原因：${task.rejectReason}\n\n要重新挑戰嗎？`)
+      if (!retry) return
+    }
+    
     setSelectedTask(task)
     setShowCamera(true)
   }
@@ -477,12 +496,34 @@ export default function ChildDashboard({ user, onLogout }) {
 }
 
 function HomeTaskCard({ task, status }) {
+  // ✅ 根據今日提交狀態決定顯示
+  let displayStatus = status
+  let isLocked = false
+  let opacity = 1
+  
+  if (task.todayStatus) {
+    if (task.todayStatus === 'pending') {
+      displayStatus = 'pending'
+      isLocked = true
+      opacity = 0.7
+    } else if (task.todayStatus === 'approved') {
+      displayStatus = 'completed'
+      isLocked = true
+      opacity = 0.7
+    } else if (task.todayStatus === 'rejected') {
+      displayStatus = 'rejected'
+      isLocked = false // 可以重新挑戰
+      opacity = 1
+    }
+  }
+  
   const statusConfig = {
     notStarted: { label: '未完成', color: '#9ca3af' },
-    pending: { label: '待審核', color: '#f59e0b' },
-    completed: { label: '已完成', color: '#10b981' }
+    pending: { label: '已提交，等待審核', color: '#f59e0b' },
+    completed: { label: '今日已達成', color: '#10b981' },
+    rejected: { label: '重新挑戰（被退回）', color: '#ef4444' }
   }
-  const config = statusConfig[status] || statusConfig.notStarted
+  const config = statusConfig[displayStatus] || statusConfig.notStarted
   
   return (
     <div style={{
@@ -493,11 +534,12 @@ function HomeTaskCard({ task, status }) {
       boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
       border: '2px solid rgba(255, 255, 255, 0.9)',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      opacity: opacity // ✅ 鎖定時淡出
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-          <div style={{ fontSize: '32px' }}>{task.icon}</div>
+          <div style={{ fontSize: '32px', opacity: isLocked ? 0.5 : 1 }}>{task.icon}</div>
           <div style={{ flex: 1 }}>
             <h3 style={{ color: '#581c87', fontSize: '14px', fontWeight: '900', marginBottom: '0.25rem' }}>
               {task.title}
@@ -512,6 +554,17 @@ function HomeTaskCard({ task, status }) {
                 {task.points} pts 🎁
               </span>
             </div>
+            {/* ✅ 顯示退回原因 */}
+            {task.todayStatus === 'rejected' && task.rejectReason && (
+              <div style={{ 
+                marginTop: '0.25rem', 
+                fontSize: '10px', 
+                color: '#dc2626',
+                fontWeight: '600'
+              }}>
+                退回原因：{task.rejectReason}
+              </div>
+            )}
           </div>
         </div>
         <div style={{
