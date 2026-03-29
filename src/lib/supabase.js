@@ -498,13 +498,20 @@ export const mockAPI = {
     
     // 更新用戶點數
     const newPoints = (submission.users?.points || 0) + points
-    await supabase
+    const { error: updateUserError } = await supabase
       .from('users')
       .update({ points: newPoints })
       .eq('id', submission.user_id)
     
+    if (updateUserError) {
+      console.error('❌ Update user points error:', updateUserError)
+      throw new Error(`更新用戶點數失敗: ${updateUserError.message}`)
+    }
+    
+    console.log('✅ 用戶點數已更新:', newPoints)
+    
     // 新增交易記錄
-    await supabase
+    const { error: insertTransactionError } = await supabase
       .from('transactions')
       .insert({
         user_id: submission.user_id,
@@ -514,6 +521,13 @@ export const mockAPI = {
         source_id: submissionId,
         description: `完成任務：${submission.tasks?.title || '未知任務'}`
       })
+    
+    if (insertTransactionError) {
+      console.error('❌ Insert transaction error:', insertTransactionError)
+      throw new Error(`新增交易記錄失敗: ${insertTransactionError.message}`)
+    }
+    
+    console.log('✅ 交易記錄已新增')
     
     return {
       id: submissionId,
