@@ -12,9 +12,9 @@ export default function ChildDashboard({ user, onLogout }) {
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCamera, setShowCamera] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  // ✅ 防止重複抓取
+  // ✅ 改用 useRef 立即生效，防止重複提交
+  const isSubmitting = useRef(false)
   const isFetching = useRef(false)
 
   useEffect(() => {
@@ -67,32 +67,34 @@ export default function ChildDashboard({ user, onLogout }) {
   }
 
   const handlePhotoSubmit = async (photoData) => {
-    // ✅ 第一步：立即鎖定，防止重複點擊
-    if (isSubmitting) {
+    // ✅ useRef 立即生效，防止重複點擊
+    if (isSubmitting.current) {
       console.warn('⚠️ 正在提交中，請勿重複點擊')
-      alert('⏳ 正在提交中，請稍候...')
+      alert('⚠️ 請勿重複點擊！\n正在提交中，請稍候...')
       return
     }
     
-    setIsSubmitting(true)
+    // ✅ 立即鎖定
+    isSubmitting.current = true
     
-    console.log('開始提交任務...', { 
+    console.log('🔒 已鎖定，開始提交任務...', { 
       selectedTask,
       taskId: selectedTask?.id, 
       userId: user?.id, 
-      hasPhoto: !!photoData
+      hasPhoto: !!photoData,
+      timestamp: new Date().toISOString()
     })
     
     if (!photoData) {
       alert('⚠️ 請先拍照')
-      setIsSubmitting(false)
+      isSubmitting.current = false
       return
     }
     
     if (!selectedTask || !selectedTask.id) {
       alert('❌ 任務資料錯誤，請重新選擇')
       setShowCamera(false)
-      setIsSubmitting(false)
+      isSubmitting.current = false
       return
     }
     
@@ -102,7 +104,7 @@ export default function ChildDashboard({ user, onLogout }) {
       alert('⏳ 提交中，請稍候...')
       
       const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
-      console.log('提交成功:', result)
+      console.log('✅ 提交成功:', result)
       
       // ✅ 立即顯示成功訊息
       alert('✅ 任務已提交成功！\n等待家長審核中...')
@@ -110,12 +112,13 @@ export default function ChildDashboard({ user, onLogout }) {
       setSelectedTask(null)
       loadTasks(false) // 背景更新，不顯示 loading
     } catch (err) {
-      console.error('提交失敗:', err)
+      console.error('❌ 提交失敗:', err)
       alert('❌ 提交失敗：' + (err.message || '請稍後再試'))
       setShowCamera(false)
       setSelectedTask(null)
     } finally {
-      setIsSubmitting(false)
+      console.log('🔓 釋放鎖定')
+      isSubmitting.current = false
     }
   }
 
@@ -392,7 +395,7 @@ export default function ChildDashboard({ user, onLogout }) {
           task={selectedTask}
           onSubmit={handlePhotoSubmit}
           onClose={() => { setShowCamera(false); setSelectedTask(null); }}
-          isSubmitting={isSubmitting}
+          isSubmittingRef={isSubmitting}
         />
       )}
 
@@ -484,7 +487,7 @@ function NavIcon({ icon, label, active, onClick }) {
   )
 }
 
-function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
+function CameraModal({ task, onSubmit, onClose, isSubmittingRef }) {
   const [photo, setPhoto] = useState(null)
 
   const handleFileSelect = (e) => {
@@ -499,8 +502,10 @@ function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
   }
 
   const handleSubmit = () => {
-    if (isSubmitting) {
-      alert('⏳ 正在提交中，請稍候...')
+    // ✅ 使用 ref 立即檢查
+    if (isSubmittingRef.current) {
+      console.warn('⚠️ CameraModal: 正在提交中，已阻止')
+      alert('⚠️ 請勿重複點擊！\n正在提交中，請稍候...')
       return
     }
     
@@ -508,6 +513,8 @@ function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
       alert('請先拍照')
       return
     }
+    
+    console.log('📸 CameraModal: 呼叫 onSubmit')
     onSubmit(photo)
   }
 
@@ -641,10 +648,10 @@ function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
 
           <button
             onClick={handleSubmit}
-            disabled={!photo || isSubmitting}
+            disabled={!photo || isSubmittingRef.current}
             style={{
               width: '100%',
-              background: (photo && !isSubmitting)
+              background: (photo && !isSubmittingRef.current)
                 ? 'linear-gradient(to right, #10b981, #059669)' 
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
@@ -653,14 +660,14 @@ function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
               padding: '1rem',
               borderRadius: '0.75rem',
               border: 'none',
-              cursor: (photo && !isSubmitting) ? 'pointer' : 'not-allowed',
-              boxShadow: (photo && !isSubmitting)
+              cursor: (photo && !isSubmittingRef.current) ? 'pointer' : 'not-allowed',
+              boxShadow: (photo && !isSubmittingRef.current)
                 ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
                 : 'none',
-              opacity: (photo && !isSubmitting) ? 1 : 0.6
+              opacity: (photo && !isSubmittingRef.current) ? 1 : 0.6
             }}
           >
-            {isSubmitting ? '⏳ 提交中...' : '✅ 提交任務'}
+            {isSubmittingRef.current ? '⏳ 提交中...' : '✅ 提交任務'}
           </button>
         </div>
       </div>
