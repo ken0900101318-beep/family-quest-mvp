@@ -3680,6 +3680,28 @@ function UserForm({ user, onSubmit, onClose }) {
 // ✅ 審核歷史組件
 function ReviewHistory({ history }) {
   const [selectedItem, setSelectedItem] = useState(null)
+  const [searchText, setSearchText] = useState('')
+  const [selectedMember, setSelectedMember] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  
+  // 取得所有成員列表
+  const members = [...new Set(history.map(item => item.userName))].sort()
+  
+  // 篩選邏輯
+  const filteredHistory = history.filter(item => {
+    // 搜尋文字過濾
+    const matchSearch = searchText === '' || 
+      item.taskTitle.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.userName.toLowerCase().includes(searchText.toLowerCase())
+    
+    // 成員過濾
+    const matchMember = selectedMember === 'all' || item.userName === selectedMember
+    
+    // 狀態過濾
+    const matchStatus = selectedStatus === 'all' || item.status === selectedStatus
+    
+    return matchSearch && matchMember && matchStatus
+  })
   
   if (history.length === 0) {
     return (
@@ -3691,7 +3713,122 @@ function ReviewHistory({ history }) {
   
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      {history.map(item => (
+      {/* ✅ 搜尋和篩選區 */}
+      <div style={{
+        background: "white",
+        borderRadius: "1rem",
+        padding: "1.5rem",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.05)"
+      }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "0.75rem", alignItems: "center" }}>
+          {/* 搜尋框 */}
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              placeholder="🔍 搜尋任務或成員名稱..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.75rem 1rem",
+                border: "2px solid #e5e7eb",
+                borderRadius: "0.75rem",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s"
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#8b5cf6"}
+              onBlur={(e) => e.target.style.borderColor = "#e5e7eb"}
+            />
+          </div>
+          
+          {/* 成員篩選 */}
+          <select
+            value={selectedMember}
+            onChange={(e) => setSelectedMember(e.target.value)}
+            style={{
+              padding: "0.75rem 1rem",
+              border: "2px solid #e5e7eb",
+              borderRadius: "0.75rem",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#374151",
+              background: "white",
+              cursor: "pointer",
+              outline: "none"
+            }}
+          >
+            <option value="all">👥 所有成員</option>
+            {members.map(member => (
+              <option key={member} value={member}>{member}</option>
+            ))}
+          </select>
+          
+          {/* 狀態篩選 */}
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            style={{
+              padding: "0.75rem 1rem",
+              border: "2px solid #e5e7eb",
+              borderRadius: "0.75rem",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#374151",
+              background: "white",
+              cursor: "pointer",
+              outline: "none"
+            }}
+          >
+            <option value="all">📊 所有狀態</option>
+            <option value="approved">✅ 已核准</option>
+            <option value="rejected">❌ 已退回</option>
+          </select>
+        </div>
+        
+        {/* 篩選結果摘要 */}
+        <div style={{ 
+          marginTop: "0.75rem", 
+          fontSize: "13px", 
+          color: "#6b7280",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div>
+            顯示 <strong style={{ color: "#8b5cf6" }}>{filteredHistory.length}</strong> / {history.length} 筆記錄
+          </div>
+          {(searchText || selectedMember !== 'all' || selectedStatus !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchText('')
+                setSelectedMember('all')
+                setSelectedStatus('all')
+              }}
+              style={{
+                background: "#f3f4f6",
+                color: "#6b7280",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              清除篩選
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* 歷史記錄列表 */}
+      {filteredHistory.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af", fontSize: "16px" }}>
+          😕 沒有符合條件的記錄
+        </div>
+      ) : (
+        filteredHistory.map(item => (
         <div
           key={item.id}
           style={{
@@ -3783,7 +3920,8 @@ function ReviewHistory({ history }) {
             </div>
           )}
         </div>
-      ))}
+        ))
+      )}
       
       {selectedItem && (
         <div
