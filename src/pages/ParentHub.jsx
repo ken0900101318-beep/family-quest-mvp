@@ -267,12 +267,39 @@ export default function ParentHub({ user, onBack, onLogout }) {
         return pendingWishes
       })
       
-      // 10. 更新統計數據
+      // 10. 計算統計數據
+      const totalPoints = allTransactions
+        .filter(t => t.type === 'earn')
+        .reduce((sum, t) => sum + t.amount, 0)
+      
+      const completedTasks = allTransactions
+        .filter(t => t.source === 'task_completion')
+        .length
+      
+      const childStats = users
+        .filter(u => u.role === 'child')
+        .map(child => {
+          const childTransactions = allTransactions.filter(t => t.user_id === child.id)
+          const childPoints = childTransactions
+            .filter(t => t.type === 'earn')
+            .reduce((sum, t) => sum + t.amount, 0)
+          const childCompleted = childTransactions
+            .filter(t => t.source === 'task_completion')
+            .length
+          
+          return {
+            name: child.name,
+            points: childPoints,
+            completed: childCompleted,
+            rate: childCompleted > 0 ? Math.round((childCompleted / tasks.length) * 100) : 0
+          }
+        })
+      
       setStats({
-        totalPoints: 0,
-        completedTasks: 0,
+        totalPoints,
+        completedTasks,
         pendingReviews: pendingSubmissions.length,
-        childStats: []
+        childStats
       })
       
       console.log('✅ refreshData 完成（靜默）')
