@@ -74,27 +74,48 @@ function getMockPendingSubmissions() {
 export const mockAPI = {
   // 登入
   login: async (pin) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('pin', pin)
-      .eq('family_id', TEST_FAMILY_ID)
-      .single()
+    console.log('🔑 登入中...', { pin })
     
-    if (error) {
-      console.error('Login error:', error)
-      return null
-    }
-    
-    return {
-      id: data.id,
-      name: data.name,
-      role: data.role,
-      pin: data.pin,
-      avatar: data.avatar,
-      points: data.points,
-      level: data.level,
-      familyId: data.family_id
+    try {
+      // 10秒超時保護
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('登入請求超時（10秒）')), 10000)
+      )
+      
+      const query = supabase
+        .from('users')
+        .select('*')
+        .eq('pin', pin)
+        .eq('family_id', TEST_FAMILY_ID)
+        .single()
+      
+      const { data, error } = await Promise.race([query, timeout])
+      
+      if (error) {
+        console.error('❌ Login error:', error)
+        return null
+      }
+      
+      if (!data) {
+        console.log('❌ 找不到用戶')
+        return null
+      }
+      
+      console.log('✅ 登入成功:', data.name)
+      
+      return {
+        id: data.id,
+        name: data.name,
+        role: data.role,
+        pin: data.pin,
+        avatar: data.avatar,
+        points: data.points,
+        level: data.level,
+        familyId: data.family_id
+      }
+    } catch (err) {
+      console.error('❌ Login 失敗:', err.message)
+      throw err
     }
   },
   
