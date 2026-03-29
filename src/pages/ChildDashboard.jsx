@@ -117,14 +117,14 @@ export default function ChildDashboard({ user, onLogout }) {
   }
 
   const handleComplete = async (task) => {
-    console.log('選擇任務:', task)
+    console.log('📝 選擇任務:', task.title, '狀態:', task.todayStatus)
     
     if (!task || !task.id) {
       alert('❌ 任務資料錯誤')
       return
     }
     
-    // ✅ 檢查今日狀態
+    // ✅ 檢查今日狀態 - 直接阻止
     if (task.todayStatus === 'pending') {
       alert('⏰ 任務已提交\n請等待家長審核！')
       return
@@ -141,6 +141,7 @@ export default function ChildDashboard({ user, onLogout }) {
       if (!retry) return
     }
     
+    console.log('✅ 狀態檢查通過，開啟相機')
     setSelectedTask(task)
     setShowCamera(true)
   }
@@ -194,34 +195,11 @@ export default function ChildDashboard({ user, onLogout }) {
       setTimeout(() => refreshData(), 500)
     } catch (err) {
       console.error('❌ 提交失敗:', err)
-      console.error('❌ 錯誤類型:', typeof err)
-      console.error('❌ 錯誤訊息:', err.message)
-      console.error('❌ 完整錯誤:', JSON.stringify(err, null, 2))
       
-      // ✅ 根據錯誤訊息顯示友善提示
-      let errorMsg = err.message || '請稍後再試'
-      let displayMsg = ''
+      // ✅ 簡化錯誤處理 - 直接顯示原始錯誤
+      const errorMsg = err.message || '提交失敗，請稍後再試'
+      alert(`❌ ${errorMsg}`)
       
-      console.log('🔍 原始錯誤訊息:', errorMsg)
-      
-      // 檢查是否是重複提交錯誤（不是失敗，是已提交）
-      if (errorMsg.includes('今天已經提交過') || errorMsg.includes('今天已經提過') || errorMsg.includes('請等待審核')) {
-        console.log('✅ 匹配到「重複提交 - pending」')
-        displayMsg = '⏰ 任務已提交\n請等待家長審核！'
-      } else if (errorMsg.includes('今天已經完成') || errorMsg.includes('明天再來')) {
-        console.log('✅ 匹配到「重複提交 - approved」')
-        displayMsg = '🎉 今日已完成\n明天再來挑戰吧！'
-      } else if (errorMsg.includes('請勿重複提交') || errorMsg.includes('重複點擊')) {
-        console.log('✅ 匹配到「快速重複點擊」')
-        displayMsg = '⚠️ 請勿重複點擊\n正在處理中...'
-      } else {
-        // 真正的錯誤才顯示「提交失敗」
-        console.log('❌ 真實錯誤，顯示失敗訊息')
-        displayMsg = '❌ 提交失敗\n' + errorMsg
-      }
-      
-      console.log('📝 最終顯示訊息:', displayMsg)
-      alert(displayMsg)
       setShowCamera(false)
       setSelectedTask(null)
     } finally {

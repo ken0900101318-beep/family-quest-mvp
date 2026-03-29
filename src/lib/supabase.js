@@ -375,37 +375,11 @@ export const mockAPI = {
         throw new Error('請勿重複提交！請等待幾秒後再試。')
       }
       
-      // ✅ 每日任務限制：檢查今日是否已提交（排除 rejected）
-      const today = new Date().toISOString().split('T')[0]
-      const checkToday = supabase
-        .from('submissions')
-        .select('id, created_at, status')
-        .eq('task_id', taskId)
-        .eq('user_id', userId)
-        .gte('created_at', `${today}T00:00:00`)
-        .lte('created_at', `${today}T23:59:59`)
-      
-      const { data: todaySubmissions } = await Promise.race([checkToday, timeout])
-      
-      if (todaySubmissions && todaySubmissions.length > 0) {
-        // 檢查是否有 pending 或 approved（排除 rejected）
-        const nonRejected = todaySubmissions.filter(s => s.status !== 'rejected')
-        
-        if (nonRejected.length > 0) {
-          const status = nonRejected[0].status
-          if (status === 'pending') {
-            console.warn('⚠️ 防止重複提交：今日已有pending的submission')
-            throw new Error('今天已經提過這個任務了，請等待審核！')
-          } else if (status === 'approved') {
-            console.warn('⚠️ 防止重複提交：今日已完成此任務')
-            throw new Error('今天已經完成這個任務了，明天再來挑戰吧！')
-          }
-        } else {
-          console.log('✅ 今日submission已被退回，允許重新提交')
-        }
-      }
-      
       console.log('✅ 防重複檢查通過，開始提交...')
+      
+      // ✅ 每日限制由前端UI和資料庫TRIGGER保護
+      // 前端：handleComplete檢查todayStatus
+      // 資料庫：check_daily_task_limit TRIGGER
       
       // 查詢任務資訊
       const getTask = supabase
