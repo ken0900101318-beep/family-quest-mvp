@@ -503,6 +503,68 @@ export const mockAPI = {
     }
   },
   
+  // ✅ 取得審核歷史記錄
+  getReviewHistory: async (limit = 50, offset = 0) => {
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('id, task_id, user_id, created_at, status, photo, points, approved_at, reject_reason')
+        .in('status', ['approved', 'rejected'])
+        .order('approved_at', { ascending: false, nullsFirst: false })
+        .range(offset, offset + limit - 1)
+      
+      if (error) {
+        console.error('❌ Get review history error:', error)
+        return []
+      }
+      
+      if (!data || data.length === 0) {
+        return []
+      }
+      
+      console.log('✅ 找到審核歷史:', data.length, '筆')
+      
+      // 取得相關的 tasks、users 和 transactions（批次查詢）
+      const taskIds = [...new Set(data.map(s => s.task_id).filter(Boolean))]
+      const userIds = [...new Set(data.map(s => s.user_id).filter(Boolean))]
+      const submissionIds = data.map(s => s.id)
+      
+      const [tasksData, usersData, transactionsData] = await Promise.all([
+        supabase.from('tasks').select('id, title, points').in('id', taskIds),
+        supabase.from('users').select('id, name, avatar').in('id', userIds),
+        supabase.from('transactions').select('source_id, amount').eq('source', 'task_completion').in('source_id', submissionIds)
+      ])
+      
+      const tasksMap = new Map((tasksData.data || []).map(t => [t.id, t]))
+      const usersMap = new Map((usersData.data || []).map(u => [u.id, u]))
+      const transactionsMap = new Map((transactionsData.data || []).map(tr => [tr.source_id, tr]))
+      
+      return data.map(sub => {
+        const task = tasksMap.get(sub.task_id)
+        const user = usersMap.get(sub.user_id)
+        const transaction = transactionsMap.get(sub.id)
+        
+        return {
+          id: sub.id,
+          taskId: sub.task_id,
+          taskTitle: task?.title || '未知任務',
+          userId: sub.user_id,
+          userName: user?.name || '未知用戶',
+          userAvatar: user?.avatar || '👤',
+          timestamp: sub.created_at,
+          approvedAt: sub.approved_at,
+          status: sub.status,
+          photo: sub.photo,
+          points: transaction?.amount || sub.points || task?.points || 10,
+          rejectReason: sub.reject_reason
+        }
+      })
+    } catch (err) {
+      console.error('getReviewHistory 失敗:', err)
+      return []
+    }
+  },
+  
   // 核准任務
   approveSubmission: async (submissionId, adjustedPoints) => {
     console.log('🔍 Approving submission:', submissionId)

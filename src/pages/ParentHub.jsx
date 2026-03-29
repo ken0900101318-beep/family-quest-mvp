@@ -6,7 +6,9 @@ import { useToast } from '../components/Toast'
 export default function ParentHub({ user, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop, users
   const [shopTab, setShopTab] = useState('pending') // pending, history, products, wishes
+  const [reviewTab, setReviewTab] = useState('pending') // ✅ pending, history
   const [pendingRequests, setPendingRequests] = useState([])
+  const [reviewHistory, setReviewHistory] = useState([])
   const [allTasks, setAllTasks] = useState([])
   const [stats, setStats] = useState({})
   const [purchases, setPurchases] = useState([])
@@ -73,11 +75,12 @@ export default function ParentHub({ user, onBack, onLogout }) {
           setTimeout(() => reject(new Error('請求超時')), ms)
         )
         
-        const [pendingSubmissions, allWishes, users] = await Promise.race([
+        const [pendingSubmissions, allWishes, users, history] = await Promise.race([
           Promise.all([
             mockAPI.getPendingSubmissions(),
             mockAPI.getWishes(),
-            mockAPI.getAllUsers()
+            mockAPI.getAllUsers(),
+            mockAPI.getReviewHistory(50, 0) // ✅ 載入審核歷史
           ]),
           timeout(10000) // 10秒超時
         ])
@@ -98,6 +101,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       }))
       
       setPendingRequests(formattedRequests)
+      
+      // ✅ 設定審核歷史
+      setReviewHistory(history)
     
       // 從 Supabase 載入所有任務
       const allTasksData = await mockAPI.getAllTasks()
@@ -649,11 +655,59 @@ export default function ParentHub({ user, onBack, onLogout }) {
         ) : (
           <>
             {activeTab === 'pending' && (
-              <PendingReviews 
-                requests={pendingRequests} 
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
+              <>
+                {/* ✅ 審核分頁切換 */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <button
+                    onClick={() => setReviewTab('pending')}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: reviewTab === 'pending' ? 'linear-gradient(to right, #8b5cf6, #7c3aed)' : '#f3f4f6',
+                      color: reviewTab === 'pending' ? 'white' : '#6b7280',
+                      fontWeight: reviewTab === 'pending' ? '700' : '600',
+                      fontSize: '14px',
+                      borderRadius: '0.75rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    ⏰ 待處理 ({pendingRequests.length})
+                  </button>
+                  <button
+                    onClick={() => setReviewTab('history')}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: reviewTab === 'history' ? 'linear-gradient(to right, #8b5cf6, #7c3aed)' : '#f3f4f6',
+                      color: reviewTab === 'history' ? 'white' : '#6b7280',
+                      fontWeight: reviewTab === 'history' ? '700' : '600',
+                      fontSize: '14px',
+                      borderRadius: '0.75rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    📋 審核歷史 ({reviewHistory.length})
+                  </button>
+                </div>
+                
+                {reviewTab === 'pending' && (
+                  <PendingReviews 
+                    requests={pendingRequests} 
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                  />
+                )}
+                
+                {reviewTab === 'history' && (
+                  <ReviewHistory 
+                    history={reviewHistory}
+                  />
+                )}
+              </>
             )}
             {activeTab === 'tasks' && (
               <TaskManagement 
@@ -3618,6 +3672,148 @@ function UserForm({ user, onSubmit, onClose }) {
           </div>
         </form>
       </div>
+    </div>
+  )
+}
+
+
+// ✅ 審核歷史組件
+function ReviewHistory({ history }) {
+  const [selectedItem, setSelectedItem] = useState(null)
+  
+  if (history.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "5rem", color: "#7e22ce", fontSize: "18px" }}>
+        📋 目前沒有審核歷史記錄
+      </div>
+    )
+  }
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {history.map(item => (
+        <div
+          key={item.id}
+          style={{
+            background: "white",
+            borderRadius: "1rem",
+            padding: "1.5rem",
+            border: item.status === "approved" ? "2px solid #10b981" : "2px solid #ef4444",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "center", flex: 1 }}>
+              <div style={{ fontSize: "48px" }}>{item.userAvatar}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "18px", fontWeight: "bold", color: "#111", marginBottom: "0.25rem" }}>
+                  {item.userName}
+                </div>
+                <div style={{ fontSize: "16px", color: "#6b7280", marginBottom: "0.5rem" }}>
+                  {item.taskTitle}
+                </div>
+                <div style={{ fontSize: "13px", color: "#9ca3af" }}>
+                  提交時間：{new Date(item.timestamp).toLocaleString("zh-TW")}
+                </div>
+                {item.approvedAt && (
+                  <div style={{ fontSize: "13px", color: "#9ca3af" }}>
+                    審核時間：{new Date(item.approvedAt).toLocaleString("zh-TW")}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+              <div style={{
+                background: item.status === "approved" ? "#10b981" : "#ef4444",
+                color: "white",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                fontSize: "14px",
+                fontWeight: "bold"
+              }}>
+                {item.status === "approved" ? "✅ 已核准" : "❌ 已退回"}
+              </div>
+              {item.status === "approved" && (
+                <div style={{
+                  background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "0.5rem",
+                  fontSize: "14px",
+                  fontWeight: "bold"
+                }}>
+                  💰 +{item.points} 點
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {item.photo && (
+            <div style={{ marginBottom: "1rem" }}>
+              <img
+                src={item.photo}
+                alt="任務照片"
+                style={{
+                  width: "100%",
+                  maxHeight: "300px",
+                  objectFit: "cover",
+                  borderRadius: "0.75rem",
+                  cursor: "pointer"
+                }}
+                onClick={() => setSelectedItem(item)}
+              />
+            </div>
+          )}
+          
+          {item.status === "rejected" && item.rejectReason && (
+            <div style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "0.5rem",
+              padding: "1rem",
+              marginTop: "1rem"
+            }}>
+              <div style={{ fontSize: "13px", fontWeight: "bold", color: "#dc2626", marginBottom: "0.25rem" }}>
+                退回原因：
+              </div>
+              <div style={{ fontSize: "14px", color: "#991b1b" }}>
+                {item.rejectReason}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+      
+      {selectedItem && (
+        <div
+          onClick={() => setSelectedItem(null)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.9)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem"
+          }}
+        >
+          <img
+            src={selectedItem.photo}
+            alt="任務照片"
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              borderRadius: "1rem"
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
