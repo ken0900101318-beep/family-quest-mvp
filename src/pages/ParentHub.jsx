@@ -122,6 +122,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 讀取所有交易記錄
       const allTransactions = await mockAPI.getTransactions()
       setTransactions(allTransactions)
+      
+      console.log('📊 交易記錄數量:', allTransactions.length)
     
     // 讀取待審核的許願清單
       const pendingWishes = allWishes.filter(w => w.status === 'pending')
@@ -129,6 +131,43 @@ export default function ParentHub({ user, onBack, onLogout }) {
       
       // 設定用戶列表
       setAllUsers(users)
+      
+      // ✅ 計算統計數據
+      const totalPoints = allTransactions
+        .filter(t => t.type === 'earn')
+        .reduce((sum, t) => sum + t.amount, 0)
+      
+      const completedTasks = allTransactions
+        .filter(t => t.source === 'task_completion')
+        .length
+      
+      const childStats = users
+        .filter(u => u.role === 'child')
+        .map(child => {
+          const childTransactions = allTransactions.filter(t => t.user_id === child.id)
+          const childPoints = childTransactions
+            .filter(t => t.type === 'earn')
+            .reduce((sum, t) => sum + t.amount, 0)
+          const childCompleted = childTransactions
+            .filter(t => t.source === 'task_completion')
+            .length
+          
+          return {
+            name: child.name,
+            points: childPoints,
+            completed: childCompleted,
+            rate: allTasksData.length > 0 ? Math.round((childCompleted / allTasksData.length) * 100) : 0
+          }
+        })
+      
+      setStats({
+        totalPoints,
+        completedTasks,
+        pendingReviews: formattedRequests.length,
+        childStats
+      })
+      
+      console.log('📊 統計數據:', { totalPoints, completedTasks, childStatsCount: childStats.length })
       
       // ✅ 成功載入後，強制關閉loading
       setLoading(false)
@@ -268,6 +307,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
       })
       
       // 10. 計算統計數據
+      console.log('📊 refreshData 交易記錄數量:', allTransactions.length)
+      
       const totalPoints = allTransactions
         .filter(t => t.type === 'earn')
         .reduce((sum, t) => sum + t.amount, 0)
@@ -291,7 +332,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
             name: child.name,
             points: childPoints,
             completed: childCompleted,
-            rate: childCompleted > 0 ? Math.round((childCompleted / tasks.length) * 100) : 0
+            rate: tasks.length > 0 ? Math.round((childCompleted / tasks.length) * 100) : 0
           }
         })
       
@@ -301,6 +342,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
         pendingReviews: pendingSubmissions.length,
         childStats
       })
+      
+      console.log('📊 refreshData 統計:', { totalPoints, completedTasks, childStatsCount: childStats.length })
       
       console.log('✅ refreshData 完成（靜默）')
       
