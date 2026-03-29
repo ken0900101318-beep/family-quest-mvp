@@ -77,9 +77,9 @@ export const mockAPI = {
     console.log('🔑 登入中...', { pin })
     
     try {
-      // 30秒超時保護
+      // 60秒超時保護
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('登入請求超時（30秒）')), 30000)
+        setTimeout(() => reject(new Error('登入請求超時（60秒）')), 60000)
       )
       
       const query = supabase
@@ -326,77 +326,106 @@ export const mockAPI = {
   
   // 提交任務
   submitTask: async (taskId, userId, photoData = null) => {
-    // 防止重複提交：檢查最近30秒內是否有相同的submission（任何狀態）
-    const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString()
-    const { data: recentSubmissions } = await supabase
-      .from('submissions')
-      .select('id, created_at, status')
-      .eq('task_id', taskId)
-      .eq('user_id', userId)
-      .gte('created_at', thirtySecondsAgo)
+    console.log('📝 提交任務中...', { taskId, userId })
     
-    if (recentSubmissions && recentSubmissions.length > 0) {
-      console.warn('⚠️ 防止重複提交：30秒內已提交過', recentSubmissions)
-      throw new Error('請勿重複提交！請等待幾秒後再試。')
-    }
-    
-    // 額外檢查：今日是否已有pending的submission
-    const today = new Date().toISOString().split('T')[0]
-    const { data: todayPending } = await supabase
-      .from('submissions')
-      .select('id, created_at, status')
-      .eq('task_id', taskId)
-      .eq('user_id', userId)
-      .eq('status', 'pending')
-      .gte('created_at', `${today}T00:00:00`)
-      .lte('created_at', `${today}T23:59:59`)
-    
-    if (todayPending && todayPending.length > 0) {
-      console.warn('⚠️ 防止重複提交：今日已有pending的submission', todayPending)
-      throw new Error('今天已經提交過這個任務了，請等待審核！')
-    }
-    
-    // 查詢任務資訊
-    const { data: task } = await supabase
-      .from('tasks')
-      .select('title, points')
-      .eq('id', taskId)
-      .single()
-    
-    // 查詢用戶資訊
-    const { data: user } = await supabase
-      .from('users')
-      .select('name, avatar')
-      .eq('id', userId)
-      .single()
-    
-    // 新增提交記錄
-    const { data, error } = await supabase
-      .from('submissions')
-      .insert({
-        task_id: taskId,
-        user_id: userId,
-        photo: photoData,
-        status: 'pending'
-      })
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Submit task error:', error)
-      throw error
-    }
-    
-    return {
-      id: data.id,
-      taskId: taskId,
-      taskTitle: task?.title || '未知任務',
-      userId: userId,
-      userName: user?.name || '未知用戶',
-      userAvatar: user?.avatar || '👤',
-      timestamp: data.created_at,
-      status: data.status,
-      photo: data.photo
+    try {
+      // 60秒超時保護
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('提交請求超時（60秒）')), 60000)
+      )
+      
+      // 防止重複提交：檢查最近30秒內是否有相同的submission（任何狀態）
+      const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString()
+      
+      const checkRecent = supabase
+        .from('submissions')
+        .select('id, created_at, status')
+        .eq('task_id', taskId)
+        .eq('user_id', userId)
+        .gte('created_at', thirtySecondsAgo)
+      
+      const { data: recentSubmissions } = await Promise.race([checkRecent, timeout])
+      
+      if (recentSubmissions && recentSubmissions.length > 0) {
+        console.warn('⚠️ 防止重複提交：30秒內已提交過', recentSubmissions)
+        throw new Error('請勿重複提交！請等待幾秒後再試。')
+      }
+      
+      // 額外檢查：今日是否已有pending的submission
+      const today = new Date().toISOString().split('T')[0]
+      const checkToday = supabase
+        .from('submissions')
+        .select('id, created_at, status')
+        .eq('task_id', taskId)
+        .eq('user_id', userId)
+        .eq('status', 'pending')
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
+      
+      const { data: todayPending } = await Promise.race([checkToday, timeout])
+      
+      if (todayPending && todayPending.length > 0) {
+        console.warn('⚠️ 防止重複提交：今日已有pending的submission', todayPending)
+        throw new Error('今天已經提交過這個任務了，請等待審核！')
+      }
+      
+      console.log('✅ 防重複檢查通過，開始提交...')
+      
+      // 查詢任務資訊
+      const getTask = supabase
+        .from('tasks')
+        .select('title, points')
+        .eq('id', taskId)
+        .single()
+      
+      const { data: task } = await Promise.race([getTask, timeout])
+      
+      // 查詢用戶資訊
+      const getUser = supabase
+        .from('users')
+        .select('name, avatar')
+        .eq('id', userId)
+        .single()
+      
+      const { data: user } = await Promise.race([getUser, timeout])
+      
+      console.log('✅ 任務和用戶資訊已取得，插入submission...')
+      
+      // 新增提交記錄
+      const insertSubmission = supabase
+        .from('submissions')
+        .insert({
+          task_id: taskId,
+          user_id: userId,
+          photo: photoData,
+          status: 'pending'
+        })
+        .select()
+        .single()
+      
+      const { data, error } = await Promise.race([insertSubmission, timeout])
+      
+      if (error) {
+        console.error('❌ Submit task error:', error)
+        throw error
+      }
+      
+      console.log('✅ 任務提交成功！')
+      
+      return {
+        id: data.id,
+        taskId: taskId,
+        taskTitle: task?.title || '未知任務',
+        userId: userId,
+        userName: user?.name || '未知用戶',
+        userAvatar: user?.avatar || '👤',
+        timestamp: data.created_at,
+        status: data.status,
+        photo: data.photo
+      }
+    } catch (err) {
+      console.error('❌ submitTask 失敗:', err.message)
+      throw err
     }
   },
   
