@@ -1039,7 +1039,7 @@ export const mockAPI = {
       .from('transactions')
       .select(`
         *,
-        users (name, avatar)
+        users!transactions_user_id_fkey (name, avatar)
       `)
       .order('created_at', { ascending: false })
       .limit(100)
@@ -1052,14 +1052,24 @@ export const mockAPI = {
     const { data, error } = await query
     
     if (error) {
-      console.error('Get transactions error:', error)
+      console.error('❌ Get transactions error:', error)
+      console.error('錯誤詳情:', error.message)
       return []
     }
     
+    if (!data || data.length === 0) {
+      console.log('✅ 查詢成功，但沒有交易記錄')
+      return []
+    }
+    
+    console.log('✅ 交易記錄查詢成功:', data.length, '筆')
+    
     return data.map(t => ({
       id: t.id,
+      user_id: t.user_id, // ✅ 加入 user_id 用於統計
       type: t.type,
       amount: t.amount,
+      source: t.source, // ✅ 加入 source 用於統計
       description: t.description,
       userName: t.users?.name || '未知用戶',
       userAvatar: t.users?.avatar || '👤',
