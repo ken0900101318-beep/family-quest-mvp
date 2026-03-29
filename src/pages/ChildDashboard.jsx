@@ -67,42 +67,45 @@ export default function ChildDashboard({ user, onLogout }) {
   }
 
   const handlePhotoSubmit = async (photoData) => {
+    // ✅ 第一步：立即鎖定，防止重複點擊
+    if (isSubmitting) {
+      console.warn('⚠️ 正在提交中，請勿重複點擊')
+      alert('⏳ 正在提交中，請稍候...')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
     console.log('開始提交任務...', { 
       selectedTask,
       taskId: selectedTask?.id, 
       userId: user?.id, 
-      hasPhoto: !!photoData,
-      isSubmitting
+      hasPhoto: !!photoData
     })
-    
-    // 防止重複提交
-    if (isSubmitting) {
-      console.warn('⚠️ 正在提交中，請勿重複點擊')
-      return
-    }
     
     if (!photoData) {
       alert('⚠️ 請先拍照')
+      setIsSubmitting(false)
       return
     }
     
     if (!selectedTask || !selectedTask.id) {
       alert('❌ 任務資料錯誤，請重新選擇')
       setShowCamera(false)
+      setIsSubmitting(false)
       return
     }
     
     try {
-      setIsSubmitting(true)
+      // ✅ 立即關閉相機並顯示提交中訊息
       setShowCamera(false)
+      alert('⏳ 提交中，請稍候...')
       
       const result = await mockAPI.submitTask(selectedTask.id, user.id, photoData)
       console.log('提交成功:', result)
       
-      // 這裡本來就是用原生的 alert，所以根本不需要 Toast
-      setTimeout(() => {
-        alert('✅ 任務已提交成功！\n等待家長審核中...')
-      }, 300)
+      // ✅ 立即顯示成功訊息
+      alert('✅ 任務已提交成功！\n等待家長審核中...')
       
       setSelectedTask(null)
       loadTasks(false) // 背景更新，不顯示 loading
@@ -389,6 +392,7 @@ export default function ChildDashboard({ user, onLogout }) {
           task={selectedTask}
           onSubmit={handlePhotoSubmit}
           onClose={() => { setShowCamera(false); setSelectedTask(null); }}
+          isSubmitting={isSubmitting}
         />
       )}
 
@@ -480,7 +484,7 @@ function NavIcon({ icon, label, active, onClick }) {
   )
 }
 
-function CameraModal({ task, onSubmit, onClose }) {
+function CameraModal({ task, onSubmit, onClose, isSubmitting }) {
   const [photo, setPhoto] = useState(null)
 
   const handleFileSelect = (e) => {
@@ -495,6 +499,11 @@ function CameraModal({ task, onSubmit, onClose }) {
   }
 
   const handleSubmit = () => {
+    if (isSubmitting) {
+      alert('⏳ 正在提交中，請稍候...')
+      return
+    }
+    
     if (!photo) {
       alert('請先拍照')
       return
@@ -632,10 +641,10 @@ function CameraModal({ task, onSubmit, onClose }) {
 
           <button
             onClick={handleSubmit}
-            disabled={!photo}
+            disabled={!photo || isSubmitting}
             style={{
               width: '100%',
-              background: photo 
+              background: (photo && !isSubmitting)
                 ? 'linear-gradient(to right, #10b981, #059669)' 
                 : 'linear-gradient(to right, #9ca3af, #6b7280)',
               color: 'white',
@@ -644,14 +653,14 @@ function CameraModal({ task, onSubmit, onClose }) {
               padding: '1rem',
               borderRadius: '0.75rem',
               border: 'none',
-              cursor: photo ? 'pointer' : 'not-allowed',
-              boxShadow: photo 
+              cursor: (photo && !isSubmitting) ? 'pointer' : 'not-allowed',
+              boxShadow: (photo && !isSubmitting)
                 ? '0 6px 20px rgba(16, 185, 129, 0.4)' 
                 : 'none',
-              opacity: photo ? 1 : 0.6
+              opacity: (photo && !isSubmitting) ? 1 : 0.6
             }}
           >
-            ✅ 提交任務
+            {isSubmitting ? '⏳ 提交中...' : '✅ 提交任務'}
           </button>
         </div>
       </div>
