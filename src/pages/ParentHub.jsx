@@ -22,6 +22,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [taskTab, setTaskTab] = useState('list') // ✅ list, proposals
+  const [taskProposals, setTaskProposals] = useState([])
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [selectedProposal, setSelectedProposal] = useState(null)
+  const [approvalForm, setApprovalForm] = useState({ title: '', points: 10, description: '' })
   
   // 用戶管理
   const [allUsers, setAllUsers] = useState([])
@@ -79,12 +84,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
           setTimeout(() => reject(new Error('請求超時')), ms)
         )
         
-        const [pendingSubmissions, allWishes, users, history] = await Promise.race([
+        const [pendingSubmissions, allWishes, users, history, proposals] = await Promise.race([
           Promise.all([
             mockAPI.getPendingSubmissions(),
             mockAPI.getWishes(),
             mockAPI.getAllUsers(),
-            mockAPI.getReviewHistory(20, 0) // ✅ 載入最近20筆審核歷史
+            mockAPI.getReviewHistory(20, 0), // ✅ 載入最近20筆審核歷史
+            mockAPI.getTaskRequests() // ✅ 載入任務提案
           ]),
           timeout(10000) // 10秒超時
         ])
@@ -111,6 +117,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       if (history.length < 20) {
         setHasMoreHistory(false)
       }
+      
+      // ✅ 設定任務提案（只顯示pending）
+      const pendingProposals = proposals.filter(p => p.status === 'pending')
+      setTaskProposals(pendingProposals)
     
       // 從 Supabase 載入所有任務
       const allTasksData = await mockAPI.getAllTasks()
@@ -579,6 +589,60 @@ export default function ParentHub({ user, onBack, onLogout }) {
       console.error('Delete user error:', error)
     }
   }
+  
+  // ✅ 開啟核准Modal
+  const openApprovalModal = (proposal) => {
+    setSelectedProposal(proposal)
+    setApprovalForm({
+      title: proposal.title,
+      points: proposal.points,
+      description: proposal.description || ''
+    })
+    setShowApprovalModal(true)
+  }
+  
+  // ✅ 核准任務提案
+  const handleApproveProposal = async () => {
+    if (!approvalForm.title.trim()) {
+      showToast('請輸入任務名稱', 'error')
+      return
+    }
+    
+    try {
+      await mockAPI.approveTaskRequest(
+        selectedProposal.id,
+        approvalForm.title.trim(),
+        parseInt(approvalForm.points),
+        approvalForm.description.trim()
+      )
+      
+      showToast(`✅ 已核准「${approvalForm.title}」並發佈為新任務！`, 'success')
+      setShowApprovalModal(false)
+      setSelectedProposal(null)
+      
+      // 重新載入
+      loadData(false)
+    } catch (error) {
+      showToast('核准失敗，請稍後再試', 'error')
+      console.error(error)
+    }
+  }
+  
+  // ✅ 拒絕任務提案
+  const handleRejectProposal = async (proposalId) => {
+    const reason = prompt('請輸入退回原因（可選）：')
+    
+    try {
+      await mockAPI.rejectTaskRequest(proposalId, reason || '未提供原因')
+      showToast('❌ 已退回提案', 'info')
+      
+      // 重新載入
+      loadData(false)
+    } catch (error) {
+      showToast('退回失敗，請稍後再試', 'error')
+      console.error(error)
+    }
+  }
 
   return (
     <div style={{
@@ -760,10 +824,15 @@ export default function ParentHub({ user, onBack, onLogout }) {
               <TaskManagement 
                 tasks={allTasks}
                 pendingSubmissions={pendingRequests}
+                taskTab={taskTab}
+                setTaskTab={setTaskTab}
+                taskProposals={taskProposals}
                 onCreateNew={() => { setEditingTask(null); setShowTaskForm(true); }}
                 onEditTask={handleEditTask}
                 onToggleTask={handleToggleTask}
                 onDeleteTask={handleDeleteTask}
+                onApproveProposal={openApprovalModal}
+                onRejectProposal={handleRejectProposal}
               />
             )}
             {activeTab === 'shop' && (
@@ -815,6 +884,138 @@ export default function ParentHub({ user, onBack, onLogout }) {
             onSubmit={handleSaveUser}
             onClose={() => { setShowUserForm(false); setEditingUser(null); }}
           />
+        )}
+        
+        {/* ✅ 核准提案Modal */}
+        {showApprovalModal && selectedProposal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '1rem',
+              padding: '2rem',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}>
+              <h2 style={{ marginBottom: '1.5rem', color: '#7e22ce', fontSize: '24px', fontWeight: 'bold' }}>
+                ✅ 修改並核准提案
+              </h2>
+              
+              <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f3f4f6', borderRadius: '0.5rem' }}>
+                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  提案人：<strong>{selectedProposal.userName}</strong>
+                </div>
+                <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                  原始點數：<strong>{selectedProposal.points}</strong>
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+                  任務名稱 *
+                </label>
+                <input
+                  type="text"
+                  value={approvalForm.title}
+                  onChange={(e) => setApprovalForm({...approvalForm, title: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px'
+                  }}
+                  placeholder="例如：整理房間"
+                />
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+                  點數 *
+                </label>
+                <input
+                  type="number"
+                  value={approvalForm.points}
+                  onChange={(e) => setApprovalForm({...approvalForm, points: e.target.value})}
+                  min="1"
+                  max="100"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+                  任務說明（可選）
+                </label>
+                <textarea
+                  value={approvalForm.description}
+                  onChange={(e) => setApprovalForm({...approvalForm, description: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="任務的詳細說明..."
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => setShowApprovalModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                    fontWeight: 'bold',
+                    borderRadius: '0.5rem',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleApproveProposal}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    borderRadius: '0.5rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                  }}
+                >
+                  ✅ 確認發佈
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Toast 通知 */}
@@ -1238,7 +1439,7 @@ function ReviewCard({ request, selected, onToggleSelect, onApprove, onReject }) 
 }
 
 // 任務管理
-function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask, pendingSubmissions = [] }) {
+function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDeleteTask, pendingSubmissions = [], taskTab, setTaskTab, taskProposals = [], onApproveProposal, onRejectProposal }) {
   const [selectedMember, setSelectedMember] = useState('all') // all / 哥哥 / 妹妹
   const [filterCategory, setFilterCategory] = useState('all') // all / daily / challenge / longterm / pending / todayIncomplete
   const [todayStats, setTodayStats] = useState({ completed: 0, total: 0 })
@@ -1361,8 +1562,72 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
 
   return (
     <div>
-      {/* 頂部快速過濾器 */}
-      <div style={{
+      {/* ✅ 雙頁籤 */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '0.5rem', 
+        marginBottom: '1.5rem',
+        borderBottom: '2px solid #e5e7eb'
+      }}>
+        <button
+          onClick={() => setTaskTab('list')}
+          style={{
+            padding: '1rem 2rem',
+            background: taskTab === 'list' ? 'linear-gradient(135deg, #7e22ce, #6b21a8)' : 'transparent',
+            color: taskTab === 'list' ? 'white' : '#6b7280',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            border: 'none',
+            borderBottom: taskTab === 'list' ? '3px solid #7e22ce' : '3px solid transparent',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          📋 任務列表
+        </button>
+        <button
+          onClick={() => setTaskTab('proposals')}
+          style={{
+            padding: '1rem 2rem',
+            background: taskTab === 'proposals' ? 'linear-gradient(135deg, #7e22ce, #6b21a8)' : 'transparent',
+            color: taskTab === 'proposals' ? 'white' : '#6b7280',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            border: 'none',
+            borderBottom: taskTab === 'proposals' ? '3px solid #7e22ce' : '3px solid transparent',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            position: 'relative'
+          }}
+        >
+          💡 孩子提案
+          {taskProposals.length > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '0.5rem',
+              right: '0.5rem',
+              background: '#ef4444',
+              color: 'white',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold'
+            }}>
+              {taskProposals.length}
+            </span>
+          )}
+        </button>
+      </div>
+      
+      {/* 任務列表頁籤 */}
+      {taskTab === 'list' && (
+        <>
+          {/* 頂部快速過濾器 */}
+          <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         gap: '1rem',
@@ -1573,6 +1838,111 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
               onDelete={onDeleteTask}
             />
           ))}
+        </div>
+      )}
+        </>
+      )}
+      
+      {/* ✅ 提案列表頁籤 */}
+      {taskTab === 'proposals' && (
+        <div>
+          {taskProposals.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '5rem 2rem',
+              color: '#9ca3af'
+            }}>
+              <div style={{ fontSize: '64px', marginBottom: '1rem' }}>📝</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                尚無提案
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                等待孩子提出新任務申請
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {taskProposals.map(proposal => (
+                <div
+                  key={proposal.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '1rem',
+                    padding: '1.5rem',
+                    border: '2px solid #e5e7eb',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#111' }}>
+                          {proposal.title}
+                        </span>
+                        <span style={{
+                          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1rem',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}>
+                          {proposal.points} 💰
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '0.5rem' }}>
+                        提案人：<strong>{proposal.userName}</strong>
+                      </div>
+                      {proposal.description && (
+                        <div style={{ fontSize: '14px', color: '#374151', marginTop: '0.75rem', lineHeight: '1.6' }}>
+                          {proposal.description}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '0.75rem' }}>
+                        提案時間：{new Date(proposal.createdAt).toLocaleString('zh-TW')}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => onRejectProposal(proposal.id)}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: '#fee2e2',
+                        color: '#dc2626',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        borderRadius: '0.75rem',
+                        border: '2px solid #fecaca',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ❌ 退回
+                    </button>
+                    <button
+                      onClick={() => onApproveProposal(proposal)}
+                      style={{
+                        flex: 2,
+                        padding: '0.75rem',
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        borderRadius: '0.75rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                      }}
+                    >
+                      ✅ 修改並核准
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -11,6 +11,12 @@ export default function TaskSquare({ user }) {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showRequestForm, setShowRequestForm] = useState(false)
+  const [requestForm, setRequestForm] = useState({
+    title: '',
+    points: 10,
+    description: ''
+  })
+  const [submittingRequest, setSubmittingRequest] = useState(false)
   
   // 拍照相關 state
   const [cameraOpen, setCameraOpen] = useState(false)
@@ -74,6 +80,42 @@ export default function TaskSquare({ user }) {
     } catch (error) {
       showToast('申請失敗，請稍後再試', 'error')
       console.error(error)
+    }
+  }
+  
+  // ✅ 提交新任務申請
+  const submitTaskProposal = async () => {
+    if (!requestForm.title.trim()) {
+      showToast('請輸入任務名稱', 'error')
+      return
+    }
+    
+    if (requestForm.points < 1 || requestForm.points > 100) {
+      showToast('點數必須在 1-100 之間', 'error')
+      return
+    }
+    
+    setSubmittingRequest(true)
+    try {
+      await mockAPI.addTaskRequest(
+        user.id,
+        requestForm.title.trim(),
+        parseInt(requestForm.points),
+        requestForm.description.trim()
+      )
+      
+      showToast('✨ 任務申請已送出！等待家長審核', 'success')
+      setShowRequestForm(false)
+      setRequestForm({ title: '', points: 10, description: '' })
+      setActiveTab('myRequests')
+      
+      // 重新載入
+      loadData()
+    } catch (error) {
+      showToast('申請失敗，請稍後再試', 'error')
+      console.error(error)
+    } finally {
+      setSubmittingRequest(false)
     }
   }
 

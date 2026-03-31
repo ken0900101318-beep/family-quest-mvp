@@ -1141,6 +1141,71 @@ export const mockAPI = {
     return data
   },
   
+  // ✅ 核准任務申請並創建任務
+  approveTaskRequest: async (requestId, approvedTitle, approvedPoints, approvedDescription) => {
+    try {
+      // 1. 取得申請資料
+      const { data: request, error: fetchError } = await supabase
+        .from('task_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single()
+      
+      if (fetchError) throw fetchError
+      
+      // 2. 創建新任務
+      const { data: newTask, error: taskError } = await supabase
+        .from('tasks')
+        .insert({
+          family_id: TEST_FAMILY_ID,
+          title: approvedTitle,
+          description: approvedDescription || request.description,
+          points: approvedPoints,
+          category: 'other',
+          daily_limit: 1,
+          is_active: true
+        })
+        .select()
+        .single()
+      
+      if (taskError) throw taskError
+      
+      // 3. 更新申請狀態
+      const { error: updateError } = await supabase
+        .from('task_requests')
+        .update({ 
+          status: 'approved',
+          approved_task_id: newTask.id
+        })
+        .eq('id', requestId)
+      
+      if (updateError) throw updateError
+      
+      return newTask
+    } catch (err) {
+      console.error('❌ Approve task request error:', err)
+      throw err
+    }
+  },
+  
+  // ✅ 拒絕任務申請
+  rejectTaskRequest: async (requestId, reason) => {
+    const { error } = await supabase
+      .from('task_requests')
+      .update({ 
+        status: 'rejected',
+        reject_reason: reason
+      })
+      .eq('id', requestId)
+    
+    if (error) {
+      console.error('❌ Reject task request error:', error)
+      throw error
+    }
+    
+    return true
+  },
+  
   // 取得公告
   getAnnouncements: async () => {
     const { data, error } = await supabase
