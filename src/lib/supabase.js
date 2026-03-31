@@ -1224,19 +1224,27 @@ export const mockAPI = {
   
   // ✅ 拒絕任務申請
   rejectTaskRequest: async (requestId, reason) => {
+    console.log('🚫 開始退回提案:', { requestId, reason })
+    
     const { error } = await supabase
       .from('task_requests')
       .update({ 
-        status: 'rejected',
-        reject_reason: reason
+        status: 'rejected'
+        // ❌ 移除 reject_reason（task_requests表沒有這個欄位）
       })
       .eq('id', requestId)
     
     if (error) {
-      console.error('❌ Reject task request error:', error)
-      throw error
+      console.error('❌ Reject task request error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      throw new Error(`退回提案失敗: ${error.message}`)
     }
     
+    console.log('✅ 提案已退回')
     return true
   },
   

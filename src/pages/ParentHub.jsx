@@ -643,17 +643,20 @@ export default function ParentHub({ user, onBack, onLogout }) {
   
   // ✅ 拒絕任務提案
   const handleRejectProposal = async (proposalId) => {
-    const reason = prompt('請輸入退回原因（可選）：')
+    if (!confirm('確定要退回這個提案嗎？')) {
+      return
+    }
     
     try {
-      await mockAPI.rejectTaskRequest(proposalId, reason || '未提供原因')
+      await mockAPI.rejectTaskRequest(proposalId)
       showToast('❌ 已退回提案', 'info')
       
       // 重新載入
       loadData(false)
     } catch (error) {
-      showToast('退回失敗，請稍後再試', 'error')
-      console.error(error)
+      console.error('❌ 退回提案失敗:', error)
+      const errorMsg = error.message || '退回失敗，請稍後再試'
+      showToast(`❌ ${errorMsg}`, 'error')
     }
   }
 
