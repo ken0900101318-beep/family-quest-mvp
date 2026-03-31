@@ -1161,9 +1161,10 @@ export const mockAPI = {
           title: approvedTitle,
           description: approvedDescription || request.description,
           points: approvedPoints,
-          category: 'other',
-          daily_limit: 1,
-          is_active: true
+          icon: '✨',
+          type: 'daily',
+          target: 'all',
+          status: 'active'
         })
         .select()
         .single()
