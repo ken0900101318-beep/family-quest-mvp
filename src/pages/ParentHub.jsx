@@ -608,8 +608,8 @@ export default function ParentHub({ user, onBack, onLogout }) {
       return
     }
     
-    if (!approvalForm.points || approvalForm.points < 1 || approvalForm.points > 100) {
-      showToast('點數必須在 1-100 之間', 'error')
+    if (!approvalForm.points || approvalForm.points < 1 || approvalForm.points > 1000) {
+      showToast('點數必須在 1-1000 之間', 'error')
       return
     }
     
@@ -966,7 +966,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
                   value={approvalForm.points}
                   onChange={(e) => setApprovalForm({...approvalForm, points: e.target.value})}
                   min="1"
-                  max="100"
+                  max="1000"
                   style={{
                     width: '100%',
                     padding: '0.75rem',

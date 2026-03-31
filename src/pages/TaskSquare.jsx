@@ -90,8 +90,8 @@ export default function TaskSquare({ user }) {
       return
     }
     
-    if (requestForm.points < 1 || requestForm.points > 100) {
-      showToast('點數必須在 1-100 之間', 'error')
+    if (requestForm.points < 1 || requestForm.points > 1000) {
+      showToast('點數必須在 1-1000 之間', 'error')
       return
     }
     
