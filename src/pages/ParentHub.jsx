@@ -608,7 +608,19 @@ export default function ParentHub({ user, onBack, onLogout }) {
       return
     }
     
+    if (!approvalForm.points || approvalForm.points < 1 || approvalForm.points > 100) {
+      showToast('點數必須在 1-100 之間', 'error')
+      return
+    }
+    
     try {
+      console.log('🚀 開始核准提案:', {
+        id: selectedProposal.id,
+        title: approvalForm.title.trim(),
+        points: parseInt(approvalForm.points),
+        description: approvalForm.description.trim()
+      })
+      
       await mockAPI.approveTaskRequest(
         selectedProposal.id,
         approvalForm.title.trim(),
@@ -623,8 +635,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 重新載入
       loadData(false)
     } catch (error) {
-      showToast('核准失敗，請稍後再試', 'error')
-      console.error(error)
+      console.error('❌ 核准提案失敗:', error)
+      const errorMsg = error.message || '核准失敗，請稍後再試'
+      showToast(`❌ ${errorMsg}`, 'error')
     }
   }
   

@@ -1144,6 +1144,8 @@ export const mockAPI = {
   // ✅ 核准任務申請並創建任務
   approveTaskRequest: async (requestId, approvedTitle, approvedPoints, approvedDescription) => {
     try {
+      console.log('🔍 開始核准提案:', { requestId, approvedTitle, approvedPoints })
+      
       // 1. 取得申請資料
       const { data: request, error: fetchError } = await supabase
         .from('task_requests')
@@ -1151,27 +1153,49 @@ export const mockAPI = {
         .eq('id', requestId)
         .single()
       
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        console.error('❌ 取得提案失敗:', fetchError.message, fetchError.details, fetchError.hint)
+        throw new Error(`取得提案失敗: ${fetchError.message}`)
+      }
       
-      // 2. 創建新任務
+      console.log('✅ 提案資料:', request)
+      
+      // 2. 準備任務payload（確保所有必填欄位）
+      const taskPayload = {
+        family_id: TEST_FAMILY_ID,
+        title: approvedTitle.trim(),
+        description: approvedDescription?.trim() || request.description || '',
+        points: Number(approvedPoints), // 確保是數字
+        icon: '✨',
+        type: 'daily',
+        target: null, // null = 所有人
+        status: 'active',
+        is_daily: false // 預設值
+      }
+      
+      console.log('📦 準備插入任務:', taskPayload)
+      
+      // 3. 創建新任務
       const { data: newTask, error: taskError } = await supabase
         .from('tasks')
-        .insert({
-          family_id: TEST_FAMILY_ID,
-          title: approvedTitle,
-          description: approvedDescription || request.description,
-          points: approvedPoints,
-          icon: '✨',
-          type: 'daily',
-          target: null, // null = 所有人
-          status: 'active'
-        })
+        .insert(taskPayload)
         .select()
         .single()
       
-      if (taskError) throw taskError
+      if (taskError) {
+        console.error('❌ 創建任務失敗:', {
+          message: taskError.message,
+          details: taskError.details,
+          hint: taskError.hint,
+          code: taskError.code,
+          payload: taskPayload
+        })
+        throw new Error(`建立任務失敗: ${taskError.message || '請檢查必填欄位'}`)
+      }
       
-      // 3. 更新申請狀態
+      console.log('✅ 任務已創建:', newTask)
+      
+      // 4. 更新申請狀態
       const { error: updateError } = await supabase
         .from('task_requests')
         .update({ 
@@ -1180,11 +1204,20 @@ export const mockAPI = {
         })
         .eq('id', requestId)
       
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error('❌ 更新提案狀態失敗:', updateError.message, updateError.details)
+        // 即使更新失敗，任務也已創建，所以不throw
+        console.warn('⚠️ 任務已創建但提案狀態未更新')
+      }
       
+      console.log('🎉 核准完成！')
       return newTask
     } catch (err) {
-      console.error('❌ Approve task request error:', err)
+      console.error('❌ approveTaskRequest 失敗:', {
+        error: err,
+        message: err.message,
+        stack: err.stack
+      })
       throw err
     }
   },
