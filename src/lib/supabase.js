@@ -1163,7 +1163,7 @@ export const mockAPI = {
           points: approvedPoints,
           icon: '✨',
           type: 'daily',
-          target: 'all',
+          target: null, // null = 所有人
           status: 'active'
         })
         .select()
