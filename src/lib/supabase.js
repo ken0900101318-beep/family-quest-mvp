@@ -1160,7 +1160,7 @@ export const mockAPI = {
       
       console.log('✅ 提案資料:', request)
       
-      // 2. 準備任務payload（確保所有必填欄位）
+      // 2. 準備任務payload（只包含tasks表真實存在的欄位）
       const taskPayload = {
         family_id: TEST_FAMILY_ID,
         title: approvedTitle.trim(),
@@ -1169,8 +1169,8 @@ export const mockAPI = {
         icon: '✨',
         type: 'daily',
         target: null, // null = 所有人
-        status: 'active',
-        is_daily: false // 預設值
+        status: 'active'
+        // ❌ 移除 is_daily（tasks表沒有這個欄位）
       }
       
       console.log('📦 準備插入任務:', taskPayload)
