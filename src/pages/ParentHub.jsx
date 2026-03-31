@@ -37,10 +37,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
   useEffect(() => {
     loadData(true) // 首次載入
     
-    // ✅ 低頻率自動輪詢（60秒）
+    // ✅ 自動輪詢（15秒）- 即時同步任務申請
     const pollInterval = setInterval(() => {
       refreshData() // 靜默刷新
-    }, 60000)
+    }, 15000)
     
     // ✅ 視窗聚焦觸發
     const handleVisibilityChange = () => {
