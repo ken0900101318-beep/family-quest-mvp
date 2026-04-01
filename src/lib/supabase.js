@@ -1195,7 +1195,53 @@ export const mockAPI = {
       
       console.log('✅ 任務已創建:', newTask)
       
-      // 4. 更新申請狀態
+      // 4. 創建任務指派記錄（讓任務出現在兒童端）
+      // 如果target為null，指派給所有用戶
+      if (newTask.target === null) {
+        // 獲取所有用戶
+        const { data: allUsers, error: usersError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('family_id', TEST_FAMILY_ID)
+          .neq('role', 'parent')
+        
+        if (!usersError && allUsers) {
+          const assignments = allUsers.map(u => ({
+            task_id: newTask.id,
+            user_id: u.id,
+            progress: 0,
+            status: 'active'
+          }))
+          
+          const { error: assignError } = await supabase
+            .from('task_assignments')
+            .insert(assignments)
+          
+          if (assignError) {
+            console.error('❌ 創建任務指派失敗:', assignError)
+          } else {
+            console.log(`✅ 已為 ${allUsers.length} 位用戶創建指派`)
+          }
+        }
+      } else {
+        // 只指派給特定用戶
+        const { error: assignError } = await supabase
+          .from('task_assignments')
+          .insert({
+            task_id: newTask.id,
+            user_id: newTask.target,
+            progress: 0,
+            status: 'active'
+          })
+        
+        if (assignError) {
+          console.error('❌ 創建任務指派失敗:', assignError)
+        } else {
+          console.log('✅ 已創建任務指派')
+        }
+      }
+      
+      // 5. 更新申請狀態
       const { error: updateError } = await supabase
         .from('task_requests')
         .update({ 
