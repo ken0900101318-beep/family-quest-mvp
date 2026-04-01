@@ -1199,8 +1199,8 @@ export const mockAPI = {
       const { error: updateError } = await supabase
         .from('task_requests')
         .update({ 
-          status: 'approved',
-          approved_task_id: newTask.id
+          status: 'approved'
+          // ✅ 移除approved_task_id（表中不存在此欄位）
         })
         .eq('id', requestId)
       
