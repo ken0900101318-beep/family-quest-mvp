@@ -1142,7 +1142,7 @@ export const mockAPI = {
   },
   
   // ✅ 核准任務申請並創建任務
-  approveTaskRequest: async (requestId, approvedTitle, approvedPoints, approvedDescription) => {
+  approveTaskRequest: async (requestId, approvedTitle, approvedPoints, approvedDescription, taskType = 'daily', taskTarget = null) => {
     try {
       console.log('🔍 開始核准提案:', { requestId, approvedTitle, approvedPoints })
       
@@ -1167,8 +1167,8 @@ export const mockAPI = {
         description: approvedDescription?.trim() || request.description || '',
         points: Number(approvedPoints), // 確保是數字
         icon: '✨',
-        type: 'daily',
-        target: null, // null = 所有人
+        type: taskType, // ✅ 使用家長選擇的類型
+        target: taskTarget, // ✅ 使用家長選擇的指派對象
         status: 'active'
         // ❌ 移除 is_daily（tasks表沒有這個欄位）
       }

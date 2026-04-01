@@ -26,7 +26,13 @@ export default function ParentHub({ user, onBack, onLogout }) {
   const [taskProposals, setTaskProposals] = useState([])
   const [showApprovalModal, setShowApprovalModal] = useState(false)
   const [selectedProposal, setSelectedProposal] = useState(null)
-  const [approvalForm, setApprovalForm] = useState({ title: '', points: 10, description: '' })
+  const [approvalForm, setApprovalForm] = useState({ 
+    title: '', 
+    points: 10, 
+    description: '',
+    type: 'daily', // 預設每日例行
+    target: null // 預設所有人
+  })
   
   // 用戶管理
   const [allUsers, setAllUsers] = useState([])
@@ -596,7 +602,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
     setApprovalForm({
       title: proposal.title,
       points: proposal.points,
-      description: proposal.description || ''
+      description: proposal.description || '',
+      type: 'daily', // 預設每日例行
+      target: null // 預設所有人
     })
     setShowApprovalModal(true)
   }
@@ -625,7 +633,9 @@ export default function ParentHub({ user, onBack, onLogout }) {
         selectedProposal.id,
         approvalForm.title.trim(),
         parseInt(approvalForm.points),
-        approvalForm.description.trim()
+        approvalForm.description.trim(),
+        approvalForm.type, // 任務類型
+        approvalForm.target // 指派對象
       )
       
       showToast(`✅ 已核准「${approvalForm.title}」並發佈為新任務！`, 'success')
@@ -981,6 +991,53 @@ export default function ParentHub({ user, onBack, onLogout }) {
                     fontSize: '14px'
                   }}
                 />
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+                  任務類型 *
+                </label>
+                <select
+                  value={approvalForm.type}
+                  onChange={(e) => setApprovalForm({...approvalForm, type: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="daily">📅 每日例行</option>
+                  <option value="challenge">🏆 長期挑戰</option>
+                  <option value="extra">⚡ 單次任務</option>
+                </select>
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+                  指派對象 *
+                </label>
+                <select
+                  value={approvalForm.target || ''}
+                  onChange={(e) => setApprovalForm({...approvalForm, target: e.target.value === '' ? null : e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">👨‍👩‍👧‍👦 所有人</option>
+                  {allUsers.filter(u => u.role !== 'parent').map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.avatar} {u.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div style={{ marginBottom: '1.5rem' }}>
