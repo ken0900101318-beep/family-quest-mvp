@@ -632,7 +632,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       setShowApprovalModal(false)
       setSelectedProposal(null)
       
-      // 重新載入
+      // ✅ 立即從State移除該提案
+      setTaskProposals(prev => prev.filter(p => p.id !== selectedProposal.id))
+      
+      // ✅ 重新載入完整資料（確保同步）
       loadData(false)
     } catch (error) {
       console.error('❌ 核准提案失敗:', error)
@@ -651,7 +654,10 @@ export default function ParentHub({ user, onBack, onLogout }) {
       await mockAPI.rejectTaskRequest(proposalId)
       showToast('❌ 已退回提案', 'info')
       
-      // 重新載入
+      // ✅ 立即從State移除該提案
+      setTaskProposals(prev => prev.filter(p => p.id !== proposalId))
+      
+      // ✅ 重新載入完整資料（確保同步）
       loadData(false)
     } catch (error) {
       console.error('❌ 退回提案失敗:', error)
