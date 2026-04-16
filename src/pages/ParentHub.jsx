@@ -835,10 +835,11 @@ export default function ParentHub({ user, onBack, onLogout }) {
                 </div>
                 
                 {reviewTab === 'pending' && (
-                  <PendingReviews 
-                    requests={pendingRequests} 
+                  <PendingReviews
+                    requests={pendingRequests}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    showToast={showToast}
                   />
                 )}
                 
@@ -1148,7 +1149,7 @@ function TabButton({ active, onClick, icon, label, badge }) {
 }
 
 // 待審核
-function PendingReviews({ requests, onApprove, onReject }) {
+function PendingReviews({ requests, onApprove, onReject, showToast }) {
   const [selectedIds, setSelectedIds] = useState([])
   
   const handleSelectAll = () => {

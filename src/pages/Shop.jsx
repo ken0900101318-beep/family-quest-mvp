@@ -272,6 +272,7 @@ export default function Shop({ user }) {
               <WishTab
                 userId={user.id}
                 onOpenWishForm={() => setShowWishForm(true)}
+                showToast={showToast}
               />
             )}
           </>
@@ -465,7 +466,7 @@ function PurchaseCard({ purchase }) {
 }
 
 // 我的願望分頁
-function WishTab({ userId, onOpenWishForm }) {
+function WishTab({ userId, onOpenWishForm, showToast }) {
   const [wishes, setWishes] = useState([])
   const [filter, setFilter] = useState('pending') // pending / all
 
