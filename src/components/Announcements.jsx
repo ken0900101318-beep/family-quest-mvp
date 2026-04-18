@@ -6,15 +6,16 @@ import { useToast } from './Toast'
 export function AnnouncementCard() {
   const [announcements, setAnnouncements] = useState([])
 
-  useEffect(() => {
-    loadAnnouncements()
-  }, [])
-
   const loadAnnouncements = async () => {
     const data = await mockAPI.getAnnouncements()
     // 只顯示最新 3 則
     setAnnouncements(data.slice(0, 3))
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAnnouncements()
+  }, [])
 
   // ✨ 防呆：安全格式化日期
   const safeFormatDate = (dateString) => {
@@ -99,14 +100,15 @@ export function AnnouncementManager({ userId }) {
   const [formData, setFormData] = useState({ title: '', content: '' })
   const { showToast, ToastContainer } = useToast()
 
-  useEffect(() => {
-    loadAnnouncements()
-  }, [])
-
   const loadAnnouncements = async () => {
     const data = await mockAPI.getAnnouncements()
     setAnnouncements(data)
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAnnouncements()
+  }, [])
 
   const handleAdd = async () => {
     if (!formData.title || !formData.content) {

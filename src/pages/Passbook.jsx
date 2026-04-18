@@ -7,14 +7,10 @@ export default function Passbook({ user }) {
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('all') // all / earn / spend
 
-  useEffect(() => {
-    loadTransactions()
-  }, [])
-
   const loadTransactions = async () => {
     // 從 Supabase 讀取交易記錄
     const txns = await mockAPI.getTransactions(user.id)
-    
+
     const allTransactions = txns.map(t => ({
       id: t.id,
       type: t.type,
@@ -22,9 +18,14 @@ export default function Passbook({ user }) {
       description: t.description,
       timestamp: t.created_at
     }))
-    
+
     setTransactions(allTransactions)
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTransactions()
+  }, [])
 
   const filteredTransactions = transactions.filter(t => {
     if (filter === 'all') return true

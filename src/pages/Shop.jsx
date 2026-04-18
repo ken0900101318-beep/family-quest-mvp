@@ -13,23 +13,23 @@ export default function Shop({ user }) {
   const [currentPoints, setCurrentPoints] = useState(user.points)
   const { showToast, ToastContainer } = useToast()
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
   const loadData = async () => {
     setLoading(true)
-    
+
     // 載入商品
     const allProducts = await mockAPI.getProducts()
     setProducts(allProducts)
-    
+
     // 載入購買記錄
     const purchases = await mockAPI.getPurchases(user.id)
     setMyPurchases(purchases)
-    
+
     setLoading(false)
   }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const handlePurchase = async (product) => {
     if (currentPoints < product.price) {
@@ -472,19 +472,20 @@ function WishTab({ userId, onOpenWishForm, showToast }) {
   const [wishes, setWishes] = useState([])
   const [filter, setFilter] = useState('pending') // pending / all
 
-  useEffect(() => {
-    loadWishes()
-  }, [filter, userId])
-
   const loadWishes = async () => {
     const userWishes = await mockAPI.getWishes(userId)
-    
+
     if (filter === 'pending') {
       setWishes(userWishes.filter(w => w.status === 'pending'))
     } else {
       setWishes(userWishes)
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadWishes()
+  }, [filter, userId])
 
   const handleClearHistory = async () => {
     if (confirm('確定要清除所有許願記錄嗎？')) {
