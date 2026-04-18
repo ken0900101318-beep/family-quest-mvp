@@ -2075,8 +2075,12 @@ function GroupedTaskList({ tasks, onEditTask, onToggleTask, onDeleteTask }) {
                 · {grouped[key].length} 項
               </span>
             </div>
-            {/* 清單 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {/* 清單（寬螢幕自動兩欄，窄螢幕單欄） */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+              gap: '0.75rem'
+            }}>
               {grouped[key].map(task => (
                 <TaskRow
                   key={task.id}
@@ -2267,7 +2271,7 @@ function TaskRow({ task, onEdit, onToggle, onDelete }) {
       <AvatarGroup users={task.assignedUsers} />
 
       {/* 中：標題 + 描述 */}
-      <div style={{ flex: 1, minWidth: '160px' }}>
+      <div style={{ flex: 1, minWidth: '120px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '20px', flexShrink: 0 }}>{task.icon}</span>
           <h3 style={{
