@@ -1908,11 +1908,11 @@ function TaskManagement({ tasks, onCreateNew, onEditTask, onToggleTask, onDelete
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
           {filteredTasks.map(task => (
-            <TaskCard 
-              key={task.id} 
-              task={task} 
+            <TaskCard
+              key={task.id}
+              task={task}
               onEdit={onEditTask}
               onToggle={onToggleTask}
               onDelete={onDeleteTask}
@@ -2045,103 +2045,64 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(10px)',
       border: '1px solid #e5e7eb',
-      borderLeft: `4px solid ${isInactive ? '#9ca3af' : config.sideColor}`,
-      borderRadius: '0.5rem',
-      padding: '1rem',
-      opacity: isInactive ? 0.5 : 1,
+      borderLeft: `5px solid ${isInactive ? '#9ca3af' : config.sideColor}`,
+      borderRadius: '0.75rem',
+      padding: '1.25rem',
+      opacity: isInactive ? 0.6 : 1,
       transition: 'all 0.2s',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.875rem'
     }}>
-      {/* 第一行：圖示 + 標題 + 操作按鈕 */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
-        {/* 左側：圖示 + 標題 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: '28px', flexShrink: 0 }}>{task.icon}</span>
-          <h3 style={{ 
-            fontSize: '16px', 
-            fontWeight: '700', 
-            color: '#111827',
-            margin: 0,
-            overflow: 'hidden', 
-            textOverflow: 'ellipsis', 
-            whiteSpace: 'nowrap'
-          }}>
-            {task.title}
-          </h3>
-        </div>
-
-        {/* 右側：操作按鈕組 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
-          <button
-            onClick={() => onEdit(task)}
-            style={{
-              background: '#f3f4f6',
-              color: '#6b7280',
-              border: 'none',
-              borderRadius: '0.375rem',
-              padding: '0.5rem 0.75rem',
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-            onMouseOver={(e) => { e.target.style.background = '#e5e7eb'; e.target.style.color = '#374151' }}
-            onMouseOut={(e) => { e.target.style.background = '#f3f4f6'; e.target.style.color = '#6b7280' }}
-          >
-            ✏️
-          </button>
-
-          <button
-            onClick={() => onToggle(task)}
-            style={{
-              background: isInactive ? '#d1fae5' : '#fee2e2',
-              color: isInactive ? '#059669' : '#dc2626',
-              border: 'none',
-              borderRadius: '0.375rem',
-              padding: '0.5rem 0.75rem',
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-            onMouseOver={(e) => { e.target.style.opacity = '0.8' }}
-            onMouseOut={(e) => { e.target.style.opacity = '1' }}
-          >
-            {isInactive ? '✅' : '🔒'}
-          </button>
-
-          <button
-            onClick={() => {
-              if (confirm(`確定要永久刪除「${task.title}」嗎？此操作無法復原！`)) {
-                onDelete(task.id)
-              }
-            }}
-            style={{
-              background: '#fee2e2',
-              color: '#dc2626',
-              border: 'none',
-              borderRadius: '0.375rem',
-              padding: '0.5rem 0.75rem',
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-            onMouseOver={(e) => { e.target.style.background = '#fecaca'; e.target.style.color = '#b91c1c' }}
-            onMouseOut={(e) => { e.target.style.background = '#fee2e2'; e.target.style.color = '#dc2626' }}
-          >
-            🗑️
-          </button>
-        </div>
+      {/* 第一行：圖示 + 標題（允許兩行折行） */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem' }}>
+        <span style={{ fontSize: '32px', flexShrink: 0, lineHeight: 1 }}>{task.icon}</span>
+        <h3 style={{
+          fontSize: '17px',
+          fontWeight: '700',
+          color: '#111827',
+          margin: 0,
+          lineHeight: 1.4,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          wordBreak: 'break-word',
+          flex: 1
+        }}>
+          {task.title}
+        </h3>
       </div>
 
-      {/* 第二行：點數 + 類型標籤 + 指派對象 */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '0.5rem',
-        fontSize: '13px',
+      {/* 第二行：任務描述（若有） */}
+      {task.description && task.description.trim() && (
+        <div style={{
+          fontSize: '14px',
+          color: '#4b5563',
+          lineHeight: 1.6,
+          paddingLeft: '2.875rem',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          wordBreak: 'break-word'
+        }}>
+          {task.description}
+        </div>
+      )}
+
+      {/* 第三行：點數 + 類型 + 指派對象 */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.625rem',
+        fontSize: '14px',
         color: '#6b7280',
-        paddingLeft: '2.25rem' // 對齊第一行文字（圖示寬度 + gap）
+        paddingLeft: '2.875rem',
+        flexWrap: 'wrap'
       }}>
-        <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+        <span style={{ fontWeight: '700', color: '#f59e0b' }}>
           {task.points} 💰
         </span>
         <span style={{ color: '#d1d5db' }}>·</span>
@@ -2149,20 +2110,19 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
           <span>{config.emoji}</span>
           <span>{config.label}</span>
         </span>
-        
-        {/* 指派對象標籤 */}
+
         {task.assignedUsers && task.assignedUsers.length > 0 && (
           <>
             <span style={{ color: '#d1d5db' }}>·</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
               {task.assignedUsers.map((user, idx) => (
-                <span 
+                <span
                   key={idx}
                   style={{
                     background: '#f3f4f6',
-                    padding: '0.125rem 0.5rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '12px',
+                    padding: '0.25rem 0.625rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '13px',
                     fontWeight: '500',
                     color: '#4b5563',
                     display: 'flex',
@@ -2177,6 +2137,93 @@ function TaskCard({ task, onEdit, onToggle, onDelete }) {
             </div>
           </>
         )}
+      </div>
+
+      {/* 第四行：操作按鈕（橫排、帶文字） */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        paddingTop: '0.25rem',
+        borderTop: '1px solid #f3f4f6'
+      }}>
+        <button
+          onClick={() => onEdit(task)}
+          style={{
+            flex: 1,
+            background: '#f3f4f6',
+            color: '#374151',
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: '0.625rem 0.5rem',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.375rem'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#e5e7eb' }}
+          onMouseOut={(e) => { e.currentTarget.style.background = '#f3f4f6' }}
+        >
+          <span>✏️</span>
+          <span>編輯</span>
+        </button>
+
+        <button
+          onClick={() => onToggle(task)}
+          style={{
+            flex: 1,
+            background: isInactive ? '#d1fae5' : '#fef3c7',
+            color: isInactive ? '#059669' : '#b45309',
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: '0.625rem 0.5rem',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.375rem'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.opacity = '0.8' }}
+          onMouseOut={(e) => { e.currentTarget.style.opacity = '1' }}
+        >
+          <span>{isInactive ? '✅' : '🔒'}</span>
+          <span>{isInactive ? '啟用' : '停用'}</span>
+        </button>
+
+        <button
+          onClick={() => {
+            if (confirm(`確定要永久刪除「${task.title}」嗎？此操作無法復原！`)) {
+              onDelete(task.id)
+            }
+          }}
+          style={{
+            flex: 1,
+            background: '#fee2e2',
+            color: '#dc2626',
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: '0.625rem 0.5rem',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.375rem'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#fecaca' }}
+          onMouseOut={(e) => { e.currentTarget.style.background = '#fee2e2' }}
+        >
+          <span>🗑️</span>
+          <span>刪除</span>
+        </button>
       </div>
     </div>
   )
