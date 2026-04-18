@@ -50,7 +50,7 @@ export default function Shop({ user }) {
         
         showToast('兌換成功！家長已收到通知', 'success')
         loadData()
-      } catch (err) {
+      } catch {
         showToast('兌換失敗，請稍後再試', 'error')
       }
     }

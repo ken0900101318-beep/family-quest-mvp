@@ -450,7 +450,7 @@ export default function ParentHub({ user, onBack, onLogout }) {
       // 從待審核列表中移除
       setPendingRequests(prev => prev.filter(r => r.id !== request.id))
       showToast(`已拒絕「${request.title}」`, 'error')
-    } catch (err) {
+    } catch {
       showToast('拒絕失敗，請稍後再試', 'error')
     }
   }

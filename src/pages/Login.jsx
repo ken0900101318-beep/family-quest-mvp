@@ -66,7 +66,7 @@ export default function Login({ onLogin }) {
         setError('密碼錯誤，請重試')
         setPin('')
       }
-    } catch (err) {
+    } catch {
       setError('登入失敗，請稍後再試')
     } finally {
       setLoading(false)

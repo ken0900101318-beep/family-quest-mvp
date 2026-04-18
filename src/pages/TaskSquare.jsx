@@ -172,7 +172,7 @@ export default function TaskSquare({ user }) {
       setCurrentTask(null)
       setCapturedPhoto(null)
       loadData()
-    } catch (err) {
+    } catch {
       showToast('提交失敗，請稍後再試', 'error')
     }
   }
