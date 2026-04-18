@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { mockAPI, mockData } from '../lib/supabase'
+import { mockAPI } from '../lib/supabase'
 import { AnnouncementManager } from '../components/Announcements'
 import { useToast } from '../components/Toast'
 import ReviewHistory from '../components/ReviewHistory'
 
-export default function ParentHub({ user, onBack, onLogout }) {
+export default function ParentHub({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('pending') // pending, tasks, stats, shop, users
   const [shopTab, setShopTab] = useState('pending') // pending, history, products, wishes
   const [reviewTab, setReviewTab] = useState('pending') // ✅ pending, history
