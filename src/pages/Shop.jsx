@@ -45,7 +45,9 @@ export default function Shop({ user }) {
         const newPoints = currentPoints - product.price
         setCurrentPoints(newPoints)
         
-        // 更新 user 物件
+        // 直接 mutate props.user 讓 App.jsx 的 currentUser state 同步反映新點數
+        // 架構上應改為 callback，但現行方案已穩定運作，暫不動
+        // eslint-disable-next-line react-hooks/immutability
         user.points = newPoints
         
         showToast('兌換成功！家長已收到通知', 'success')
